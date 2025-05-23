@@ -77,16 +77,32 @@ public class IsEnemyTooCloseCondition : BTConditionNode
 // 적이 공격 중인지 확인하는 조건 노드
 public class IsEnemyAttackingCondition : BTConditionNode
 {
+    private Animator enemyAnimator; // 적의 애니메이터를 저장할 변수
+
     public IsEnemyAttackingCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
+
     protected override bool CheckCondition()
     {
-        // 플레이스홀더: 실제 게임에서는 적의 애니메이션 상태를 확인하거나,
-        // 발사체가 날아오는지, 또는 적이 공격 준비 동작 중인지 등을 확인해야 합니다.
-        // 이 예제에서는 적이 가까이 있을 경우 10% 확률로 true를 반환하도록 만듭니다.
-        if (blackboard.enemyTransform != null && blackboard.enemyDistance < 5f)
-        { // 적이 가까이 있을 때만
-          // return Random.value < 0.1f; // 예시: 적이 가까우면 10% 확률
+        // 블랙보드에 적 정보가 없으면 당연히 공격 중이 아님
+        if (blackboard.enemyTransform == null) return false;
+
+        // 이전에 적의 Animator를 가져오지 않았다면 한번만 가져와서 저장 (매번 GetComponent하는 것을 방지)
+        if (enemyAnimator == null)
+        {
+            enemyAnimator = blackboard.enemyTransform.GetComponent<Animator>();
         }
-        return false; // 기본적으로 false. 적절한 구현 필요.
+
+        // 적에게 Animator가 없으면 판단 불가
+        if (enemyAnimator == null) return false;
+
+        // 적 Animator의 첫 번째 레이어(기본값 0)의 현재 상태 정보 확인
+        // "Attack" 이라는 태그를 가진 애니메이션 상태가 재생 중이면 true를 반환
+        if (enemyAnimator.GetCurrentAnimatorStateInfo(0).IsTag("Attack"))
+        {
+            Debug.Log("상태 감지: 적이 공격 중입니다!");
+            return true;
+        }
+
+        return false;
     }
 }

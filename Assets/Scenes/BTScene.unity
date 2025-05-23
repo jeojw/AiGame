@@ -280,6 +280,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ch20_nonPBR@Great Sword Idle
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 4685287785c2a6449a3fcdd2d7752e68, type: 3}
+      propertyPath: m_TagString
+      value: Enemy
+      objectReference: {fileID: 0}
     - target: {fileID: 5866666021909216657, guid: 4685287785c2a6449a3fcdd2d7752e68, type: 3}
       propertyPath: m_Controller
       value: 
@@ -373,6 +377,7 @@ MonoBehaviour:
   attackRange: 2
   closeRangeThreshold: 5
   lowHealthThreshold: 30
+  evadeDistance: 2
   defensiveStanceRange: 7
   counterAttackHealthThreshold: 50
 --- !u!1 &769727714
@@ -587,6 +592,7 @@ MonoBehaviour:
   attackRange: 2
   closeRangeThreshold: 5
   lowHealthThreshold: 30
+  evadeDistance: 2
   offensiveAttackRange: 2
   repositionDistance: 4
   fleeHealthThreshold: 20
@@ -641,6 +647,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 7754925f6f739274baa212ed9963fe95, type: 3}
       propertyPath: m_Name
       value: Paladin J Nordstrom@Sword And Shield Idle
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 7754925f6f739274baa212ed9963fe95, type: 3}
+      propertyPath: m_TagString
+      value: Enemy
       objectReference: {fileID: 0}
     - target: {fileID: 5866666021909216657, guid: 7754925f6f739274baa212ed9963fe95, type: 3}
       propertyPath: m_Controller

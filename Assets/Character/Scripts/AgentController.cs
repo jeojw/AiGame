@@ -8,18 +8,24 @@ public abstract class AgentController : MonoBehaviour
     public float attackRange = 2f;      // 공격 범위
     public float closeRangeThreshold = 5f; // "너무 가까움" 판단 기준 거리
     public float lowHealthThreshold = 30f; // 체력 낮음 판단 기준 (비율 또는 절대값)
+    public float evadeDistance = 2.0f; // 회피 시 이동할 거리
 
     protected AgentBlackboard blackboard; // 블랙보드 참조
     protected BTNode rootNode;            // 행동 트리의 루트 노드
 
+    private Animator animator; // Animator 참조 변수
+    private CharacterController characterController;
+
     protected virtual void Awake()
     {
         blackboard = new AgentBlackboard();
-        blackboard.maxHealth = 100f; // 문서에 따라 설정
+        blackboard.maxHealth = 100f; // 문서에 따라 설정 [cite: 10]
         blackboard.currentHealth = blackboard.maxHealth;
-        blackboard.attackCooldownDuration = 2.5f; // 공격 쿨타임
-        blackboard.defendCooldownDuration = 2.5f; // 방어 쿨타임
-        blackboard.evadeCooldownDuration = 5f;    // 회피 쿨타임
+        blackboard.attackCooldownDuration = 2.5f; // 공격 쿨타임 [cite: 10]
+        blackboard.defendCooldownDuration = 2.5f; // 방어 쿨타임 [cite: 10]
+        blackboard.evadeCooldownDuration = 5f;    // 회피 쿨타임 [cite: 10]
+        animator = GetComponent<Animator>(); // Animator 컴포넌트 가져오기
+        characterController = GetComponent<CharacterController>(); // CharacterController 컴포넌트 가져오기
     }
 
     protected virtual void Start()
@@ -32,37 +38,37 @@ public abstract class AgentController : MonoBehaviour
 
     protected virtual void Update()
     {
-        if (enemy == null) // 적이 없다면
+        if (enemy == null)
         {
-            // 잠재적으로 적을 찾거나 대기 상태 유지
-            // 현재는 적이 할당되었거나 찾아졌다고 가정
-            FindEnemy(); // 간단한 적 찾기 로직
+            FindEnemy(); // 적이 없으면 찾기
         }
 
         // 블랙보드 업데이트
         if (enemy != null)
         {
-            blackboard.UpdateEnemyInfo(enemy, Vector3.Distance(transform.position, enemy.position), 100f); // 적 체력은 100f로 가정, 실제 값으로 대체 필요
+            // [수정됨] 적의 실제 체력을 가져오도록 수정
+            float enemyCurrentHealth = 100f; // 기본값
+            AgentController enemyController = enemy.GetComponent<AgentController>();
+            if (enemyController != null)
+            {
+                enemyCurrentHealth = enemyController.blackboard.currentHealth;
+            }
+            blackboard.UpdateEnemyInfo(enemy, Vector3.Distance(transform.position, enemy.position), enemyCurrentHealth);
         }
         else
         {
             blackboard.enemyTransform = null; // 적 없음
         }
 
-
         if (rootNode != null) // 루트 노드가 있다면
         {
             rootNode.Tick(); // 행동 트리 실행
         }
-
-        // 디버그용
-        // Debug.Log($"에이전트 체력: {blackboard.currentHealth}, 적과의 거리: {blackboard.enemyDistance}");
     }
 
     void FindEnemy()
     {
-        // 예시: 태그로 찾기, 더 정교한 방식 가능
-        GameObject enemyObject = GameObject.FindGameObjectWithTag("Enemy"); // 적이 "Enemy" 태그를 가지고 있는지 확인
+        GameObject enemyObject = GameObject.FindGameObjectWithTag("Enemy"); // "Enemy" 태그로 적 찾기
         if (enemyObject != null)
         {
             enemy = enemyObject.transform;
@@ -74,84 +80,126 @@ public abstract class AgentController : MonoBehaviour
     {
         if (Vector3.Distance(transform.position, targetPosition) > stopDistance)
         {
-            transform.position = Vector3.MoveTowards(transform.position, targetPosition, speed * Time.deltaTime);
-            transform.LookAt(targetPosition); // 기본적인 바라보기
-            // 이동 애니메이션 재생
-            Debug.Log("행동: 목표 지점으로 이동 중");
-            return NodeStatus.RUNNING; // 아직 이동 중
+            Vector3 direction = (targetPosition - transform.position).normalized;
+            characterController.Move(direction * speed * Time.deltaTime); // CharacterController로 이동
+            transform.LookAt(new Vector3(targetPosition.x, transform.position.y, targetPosition.z)); // Y축 고정하여 바라보기
+
+            if (animator != null) animator.SetFloat("Speed", speed);
+            Debug.Log("행동: 목표 지점으로 이동 중 (CharacterController)");
+            return NodeStatus.RUNNING;
         }
-        return NodeStatus.SUCCESS; // 도착
+        else
+        {
+            if (animator != null) animator.SetFloat("Speed", 0f);
+        }
+        return NodeStatus.SUCCESS;
     }
 
     public virtual NodeStatus MoveAwayFrom(Vector3 targetPosition, float speed, float moveDistance)
     {
+        // [수정됨] CharacterController를 사용하여 충돌을 인식하며 이동하도록 수정
         Vector3 direction = (transform.position - targetPosition).normalized;
-        transform.position += direction * speed * Time.deltaTime;
+        characterController.Move(direction * speed * Time.deltaTime);
         transform.LookAt(transform.position + direction); // 이동 방향으로 바라보기
-        // 이동 애니메이션 재생
-        Debug.Log("행동: 목표 지점으로부터 멀어지는 중");
-        // 이 행동은 한 스텝 이동 후 성공으로 간주하거나 일정 시간 동안 실행될 수 있습니다.
-        // 단순화를 위해, 한 스텝 이동 후 SUCCESS를 반환하도록 합니다.
+
+        if (animator != null) animator.SetFloat("Speed", speed); // 멀어지는 움직임도 이동 애니메이션 재생
+
+        Debug.Log("행동: 목표 지점으로부터 멀어지는 중 (CharacterController)");
+        // 이 행동은 한 스텝 이동 후 성공으로 간주하여, BT가 다음 판단을 빠르게 하도록 함
         return NodeStatus.SUCCESS;
     }
-
 
     public virtual NodeStatus PerformAttack()
     {
         Debug.Log("행동: 공격 수행!");
-        blackboard.SetActionCooldown(AgentBlackboard.ATTACK_COOLDOWN_KEY); // 공격 쿨타임 설정
-        // 공격 애니메이션 실행
-        // 여기에 데미지 로직 구현 (예: SphereCast, 애니메이션 이벤트)
+        blackboard.SetActionCooldown(AgentBlackboard.ATTACK_COOLDOWN_KEY); // 공격 쿨타임 설정 [cite: 10]
+        transform.LookAt(new Vector3(enemy.position.x, transform.position.y, enemy.position.z)); // 공격 전 적을 바라보도록 함
+
+        if (animator != null)
+        {
+            animator.SetTrigger("IsAttacking");
+        }
+
+        // 데미지 처리 로직은 애니메이션 이벤트나 별도 시스템으로 구현하는 것이 더 정확하지만, 여기서는 즉시 발동으로 가정
+        float attackDamage = 10f; // 예시 공격력
+        // SphereCast를 이용한 범위 공격 판정
+        if (Physics.SphereCast(transform.position + Vector3.up, 0.5f, transform.forward, out RaycastHit hit, attackRange))
+        {
+            if (hit.collider.CompareTag("Enemy"))
+            {
+                AgentController enemyController = hit.collider.GetComponent<AgentController>();
+                if (enemyController != null)
+                {
+                    Debug.Log(gameObject.name + "이(가) " + enemy.name + "을(를) 공격하여 " + attackDamage + " 데미지를 입혔습니다.");
+                    enemyController.HandleDamage(attackDamage);
+                }
+            }
+        }
         return NodeStatus.SUCCESS;
     }
 
     public virtual NodeStatus PerformDefend()
     {
         Debug.Log("행동: 방어 수행!");
-        blackboard.SetActionCooldown(AgentBlackboard.DEFEND_COOLDOWN_KEY); // 방어 쿨타임 설정
-        blackboard.StartInvincibility(blackboard.defendCooldownDuration); // 방어는 지속 시간 동안 무적 상태로 만듦
-        // 방어 애니메이션 실행
-        // 실제 게임에서는 무적 시간이 더 짧거나 애니메이션 상태와 연동될 수 있습니다.
-        // 무적 상태 해제 메커니즘이 필요합니다. 단순화를 위해 AgentController 또는 블랙보드에서 처리합니다.
-        Invoke(nameof(StopDefendInvincibility), blackboard.defendCooldownDuration); // 방어 지속 시간 후 무적 해제
+        blackboard.SetActionCooldown(AgentBlackboard.DEFEND_COOLDOWN_KEY); // 방어 쿨타임 설정 [cite: 10]
+        blackboard.StartInvincibility(blackboard.defendCooldownDuration); // 방어 시간 동안 무적 [cite: 10]
+
+        if (animator != null)
+        {
+            animator.SetTrigger("IsDefending");
+        }
+        Invoke(nameof(StopDefendInvincibility), blackboard.defendCooldownDuration);
         return NodeStatus.SUCCESS;
     }
+
+    public virtual NodeStatus PerformEvade()
+    {
+        Debug.Log("행동: 회피 수행!");
+        blackboard.SetActionCooldown(AgentBlackboard.EVADE_COOLDOWN_KEY); // 회피 쿨타임 설정 [cite: 10]
+        blackboard.StartInvincibility(1.0f); // 회피 중 짧은 시간 무적 [cite: 10]
+        Invoke(nameof(StopEvadeInvincibility), 1.0f);
+
+        if (animator != null)
+        {
+            animator.SetTrigger("IsEvading");
+        }
+
+
+
+        return NodeStatus.SUCCESS;
+    }
+
+    public virtual NodeStatus Idle()
+    {
+        Debug.Log("행동: 대기 중");
+        if (animator != null)
+        {
+            animator.SetFloat("Speed", 0f);
+        }
+        return NodeStatus.SUCCESS;
+    }
+
     private void StopDefendInvincibility()
     {
         blackboard.EndInvincibility();
         Debug.Log("방어 무적 상태 종료.");
     }
 
-
-    public virtual NodeStatus PerformEvade()
-    {
-        Debug.Log("행동: 회피 수행!");
-        blackboard.SetActionCooldown(AgentBlackboard.EVADE_COOLDOWN_KEY); // 회피 쿨타임 설정
-        blackboard.StartInvincibility(1.0f); // 회피는 짧은 시간 동안 무적 상태 부여 (예: 1초)
-        Invoke(nameof(StopEvadeInvincibility), 1.0f); // 예시: 1초간 무적
-        // 회피 이동 구현 (예: 특정 방향으로 빠른 대쉬)
-        // 예시: 뒤로 대쉬
-        transform.Translate(Vector3.back * 2f, Space.Self); // 자신의 뒤쪽으로 2 유닛 대쉬
-        // 회피 애니메이션 실행
-        return NodeStatus.SUCCESS;
-    }
     private void StopEvadeInvincibility()
     {
         blackboard.EndInvincibility();
         Debug.Log("회피 무적 상태 종료.");
     }
 
-    public virtual NodeStatus Idle()
-    {
-        Debug.Log("행동: 대기 중");
-        // 대기 애니메이션 실행
-        return NodeStatus.SUCCESS;
-    }
-
     // --- 충돌/데미지 처리 ---
-    // 일반적으로 충돌 스크립트나 발사체 피격 시 호출됩니다.
     public void HandleDamage(float damage)
     {
+        if (blackboard.isInvincible) // 방어나 회피 중에는 데미지 무효화
+        {
+            Debug.Log(gameObject.name + "이(가) 공격을 무효화했습니다.");
+            return;
+        }
+
         blackboard.TakeDamage(damage);
         if (blackboard.currentHealth <= 0)
         {
@@ -162,7 +210,15 @@ public abstract class AgentController : MonoBehaviour
     protected virtual void Die()
     {
         Debug.Log(gameObject.name + "이(가) 죽었습니다.");
-        // 죽음 애니메이션 재생, 스크립트 비활성화 등
-        Destroy(gameObject, 2f); // 예시: 2초 후 오브젝트 파괴
+        if (animator != null)
+        {
+            animator.SetTrigger("Die"); // 죽음 애니메이션 실행
+        }
+
+        // 스크립트 비활성화하여 더 이상 행동하지 않도록 함
+        this.enabled = false;
+
+        // 일정 시간 후 오브젝트 파괴
+        Destroy(gameObject, 3f);
     }
 }
