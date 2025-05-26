@@ -63,22 +63,4 @@ public class OffensiveAgentController : AgentController
             new IdleAction(blackboard, transform)
         });
     }
-
-
-
-    // 필요시 사용할 NotNode (또는 이를 피하도록 로직 재구성)
-    /*
-    public class NotNode : BTConditionNode
-    {
-        private BTConditionNode conditionToNegate; // 부정할 조건
-        public NotNode(BTConditionNode condition) : base(condition.blackboard, condition.agentTransform)
-        { // blackboard와 transform 전달
-            this.conditionToNegate = condition;
-        }
-        protected override bool CheckCondition()
-        {
-            return !conditionToNegate.CheckCondition(); // 조건의 반대 결과 반환
-        }
-    }
-    */
 }

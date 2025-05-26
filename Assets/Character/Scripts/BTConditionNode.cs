@@ -6,6 +6,11 @@ public abstract class BTConditionNode : BTNode
 {
     public BTConditionNode(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
 
+    public bool Evaluate()
+    {
+        return CheckCondition();
+    }
+
     // Tick() 메소드는 조건을 확인하고 결과를 반환합니다.
     public override NodeStatus Tick()
     {

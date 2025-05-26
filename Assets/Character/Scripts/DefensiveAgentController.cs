@@ -57,7 +57,7 @@ public class DefensiveAgentController : AgentController
                         new FleeAction(blackboard, transform, 4f) // 약간 멀어지기
                     }),
                     new BTSequence(blackboard, transform, new List<BTNode> { // 적이 이상적인 방어 거리보다 멀면 조심스럽게 접근 또는 유지
-                        //new OffensiveAgentController.NotNode(new IsEnemyInAttackRangeCondition(blackboard, transform, defensiveStanceRange)),
+                        new NotNode(new IsEnemyInAttackRangeCondition(blackboard, transform, defensiveStanceRange)),
                         new MoveTowardsEnemyAction(blackboard, transform, 3f, defensiveStanceRange * 0.9f)
                     })
                 })

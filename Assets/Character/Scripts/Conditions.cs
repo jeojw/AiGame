@@ -12,9 +12,8 @@ public class IsEnemyInAttackRangeCondition : BTConditionNode
     }
     protected override bool CheckCondition()
     {
-        if (blackboard.enemyTransform == null) return false; // 적이 없으면 실패
-
-        return blackboard.enemyDistance <= attackRange; // 적과의 거리가 공격 범위 이내이면 성공
+        if (blackboard.enemyTransform == null) return false;
+        return blackboard.enemyDistance <= attackRange;
     }
 }
 
@@ -86,8 +85,8 @@ public class IsEnemyAttackingCondition : BTConditionNode
         // 발사체가 날아오는지, 또는 적이 공격 준비 동작 중인지 등을 확인해야 합니다.
         // 이 예제에서는 적이 가까이 있을 경우 10% 확률로 true를 반환하도록 만듭니다.
         if (blackboard.enemyTransform != null && blackboard.enemyDistance < 5f)
-        { // 적이 가까이 있을 때만
-          // return Random.value < 0.1f; // 예시: 적이 가까우면 10% 확률
+        {
+            // return Random.value < 0.1f; // 예시: 적이 가까우면 10% 확률
         }
         return false; // 기본적으로 false. 적절한 구현 필요.
     }
@@ -96,10 +95,8 @@ public class IsEnemyAttackingCondition : BTConditionNode
 public class IsGetAttackCondition : BTConditionNode
 {
     public IsGetAttackCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
-
     protected override bool CheckCondition()
     {
-
         return false;
     }
 }
