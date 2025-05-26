@@ -1,4 +1,5 @@
 // File: AgentController.cs (AgentController.cs 파일)
+using UnityEditor;
 using UnityEngine;
 
 public abstract class AgentController : MonoBehaviour
@@ -6,8 +7,13 @@ public abstract class AgentController : MonoBehaviour
     public Transform enemy; // 인스펙터에서 할당
     public float detectionRadius = 20f; // 적 감지 반경
     public float attackRange = 2f;      // 공격 범위
-    public float closeRangeThreshold = 5f; // "너무 가까움" 판단 기준 거리
+    public float closeRangeThreshold = 1f; // "너무 가까움" 판단 기준 거리
     public float lowHealthThreshold = 30f; // 체력 낮음 판단 기준 (비율 또는 절대값)
+
+    private Rigidbody rb;
+    private AnimationController animationController;
+    private bool attackFinished = false;
+    private bool getAttackFinished = false;
 
     protected AgentBlackboard blackboard; // 블랙보드 참조
     protected BTNode rootNode;            // 행동 트리의 루트 노드
@@ -17,14 +23,23 @@ public abstract class AgentController : MonoBehaviour
         blackboard = new AgentBlackboard();
         blackboard.maxHealth = 100f; // 문서에 따라 설정
         blackboard.currentHealth = blackboard.maxHealth;
-        blackboard.attackCooldownDuration = 2.5f; // 공격 쿨타임
-        blackboard.defendCooldownDuration = 2.5f; // 방어 쿨타임
-        blackboard.evadeCooldownDuration = 5f;    // 회피 쿨타임
+        rb = GetComponent<Rigidbody>();
+        animationController = GetComponent<AnimationController>();
     }
 
     protected virtual void Start()
     {
         InitializeBehaviorTree(); // 행동 트리 초기화
+
+        animationController.onAttackFinished += () =>
+        {
+            attackFinished = true;
+        };
+
+        animationController.onGetAttackFinished += () =>
+        {
+            getAttackFinished = true;
+        };
     }
 
     // 행동 트리를 초기화하는 추상 메소드 (파생 클래스에서 구현)
@@ -74,9 +89,10 @@ public abstract class AgentController : MonoBehaviour
     {
         if (Vector3.Distance(transform.position, targetPosition) > stopDistance)
         {
-            transform.position = Vector3.MoveTowards(transform.position, targetPosition, speed * Time.deltaTime);
+            rb.MovePosition(transform.position + speed * Time.deltaTime * (targetPosition - transform.position).normalized);
             transform.LookAt(targetPosition); // 기본적인 바라보기
-            // 이동 애니메이션 재생
+
+            animationController.PlayWalk();
             Debug.Log("행동: 목표 지점으로 이동 중");
             return NodeStatus.RUNNING; // 아직 이동 중
         }
@@ -98,11 +114,18 @@ public abstract class AgentController : MonoBehaviour
 
     public virtual NodeStatus PerformAttack()
     {
-        Debug.Log("행동: 공격 수행!");
+        animationController.StopWalk();
         blackboard.SetActionCooldown(AgentBlackboard.ATTACK_COOLDOWN_KEY); // 공격 쿨타임 설정
-        // 공격 애니메이션 실행
-        // 여기에 데미지 로직 구현 (예: SphereCast, 애니메이션 이벤트)
+        animationController.PlayAttack();
+
+        if (!attackFinished)
+            return NodeStatus.RUNNING;
+
+        animationController.StopAttack();
+        attackFinished = false;
         return NodeStatus.SUCCESS;
+        // 여기에 데미지 로직 구현 (예: SphereCast, 애니메이션 이벤트)
+
     }
 
     public virtual NodeStatus PerformDefend()
@@ -122,6 +145,16 @@ public abstract class AgentController : MonoBehaviour
         Debug.Log("방어 무적 상태 종료.");
     }
 
+    public virtual NodeStatus GetAttack()
+    {
+        animationController.PlayGetAttack();
+        if (!getAttackFinished)
+            return NodeStatus.RUNNING;
+
+        animationController.StopGetAttack();
+        getAttackFinished = false;
+        return NodeStatus.SUCCESS;
+    }
 
     public virtual NodeStatus PerformEvade()
     {
@@ -142,9 +175,9 @@ public abstract class AgentController : MonoBehaviour
     }
 
     public virtual NodeStatus Idle()
-    {
+    {        
         Debug.Log("행동: 대기 중");
-        // 대기 애니메이션 실행
+
         return NodeStatus.SUCCESS;
     }
 
