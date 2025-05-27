@@ -29,6 +29,8 @@ public abstract class AgentController : MonoBehaviour
 
     protected virtual void Start()
     {
+        Debug.Log($"[{gameObject.name}] animationController: {animationController}");
+
         InitializeBehaviorTree(); // 행동 트리 초기화
 
         animationController.onAttackFinished += () =>
@@ -88,7 +90,7 @@ public abstract class AgentController : MonoBehaviour
     public virtual NodeStatus MoveTowards(Vector3 targetPosition, float speed, float stopDistance)
     {
         float currentDistance = Vector3.Distance(transform.position, targetPosition);
-        Debug.Log($"현재 거리: {currentDistance}, 목표 거리: {stopDistance}");
+        //Debug.Log($"현재 거리: {currentDistance}, 목표 거리: {stopDistance}");
 
         if (currentDistance > stopDistance)
         {
@@ -128,6 +130,12 @@ public abstract class AgentController : MonoBehaviour
 
     public virtual NodeStatus PerformAttack()
     {
+        // 추가
+        if (enemy != null)
+            transform.LookAt(enemy.position); // 공격 전 적 바라보기
+
+        Debug.Log($"행동: {gameObject.name} 공격 중");
+
         animationController.StopWalk();
         blackboard.SetActionCooldown(AgentBlackboard.ATTACK_COOLDOWN_KEY); // 공격 쿨타임 설정
         animationController.PlayAttack();
@@ -139,7 +147,6 @@ public abstract class AgentController : MonoBehaviour
         attackFinished = false;
         return NodeStatus.SUCCESS;
         // 여기에 데미지 로직 구현 (예: SphereCast, 애니메이션 이벤트)
-
     }
 
     public virtual NodeStatus PerformDefend()

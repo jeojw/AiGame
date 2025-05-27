@@ -39,10 +39,10 @@ public class DefensiveAgentController : AgentController
             // 2. 기회가 생기고 (예: 적이 공격 후 취약할 때) 안전하면 반격
             new BTSequence(blackboard, transform, new List<BTNode>
             {
-                // new CanCounterAttackCondition(blackboard, transform), // 특정 로직 필요 (예: 적이 회복 애니메이션 중)
+                //new CanCounterAttackCondition(blackboard, transform), // 특정 로직 필요 (예: 적이 회복 애니메이션 중)
                 new IsEnemyInAttackRangeCondition(blackboard, transform, attackRange), // 반격하려면 범위 내에 있어야 함
                 new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.ATTACK_COOLDOWN_KEY), // 공격 쿨타임 준비
-                new OffensiveAgentController.NotNode(new IsHealthLowCondition(blackboard, transform, counterAttackHealthThreshold)), // 너무 위험하면 반격하지 않음
+                new NotNode(new IsHealthLowCondition(blackboard, transform, counterAttackHealthThreshold)), // 너무 위험하면 반격하지 않음
                 new AttackEnemyAction(blackboard, transform) // 공격 행동
             }),
 
@@ -58,7 +58,7 @@ public class DefensiveAgentController : AgentController
                         new FleeAction(blackboard, transform, 4f) // 약간 멀어지기
                     }),
                     new BTSequence(blackboard, transform, new List<BTNode> { // 적이 이상적인 방어 거리보다 멀면 조심스럽게 접근 또는 유지
-                        //new NotNode(new IsEnemyInAttackRangeCondition(blackboard, transform, defensiveStanceRange)),
+                        new NotNode(new IsEnemyInAttackRangeCondition(blackboard, transform, defensiveStanceRange)),
                         new MoveTowardsEnemyAction(blackboard, transform, 3f, defensiveStanceRange * 0.9f)
                     })
                 })

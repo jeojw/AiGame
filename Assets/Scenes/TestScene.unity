@@ -745,7 +745,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 6e22c960f37b3f34295af02d718798a1, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 77.06
+      value: 81.38
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6e22c960f37b3f34295af02d718798a1, type: 3}
       propertyPath: m_LocalPosition.y
@@ -753,7 +753,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6e22c960f37b3f34295af02d718798a1, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 45.82
+      value: 46.22
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6e22c960f37b3f34295af02d718798a1, type: 3}
       propertyPath: m_LocalRotation.w
@@ -831,6 +831,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6e22c960f37b3f34295af02d718798a1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1590399723}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6e22c960f37b3f34295af02d718798a1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1590399726}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6e22c960f37b3f34295af02d718798a1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1590399728}
   m_SourcePrefab: {fileID: 100100000, guid: 6e22c960f37b3f34295af02d718798a1, type: 3}
 --- !u!1 &639296163 stripped
 GameObject:
@@ -1244,7 +1250,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f253388e2be8314fac9ac685931a4f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemy: {fileID: 0}
+  enemy: {fileID: 1590399721}
   detectionRadius: 20
   attackRange: 2
   closeRangeThreshold: 5
@@ -1650,6 +1656,37 @@ CapsuleCollider:
   m_Height: 1.7125018
   m_Direction: 1
   m_Center: {x: 0.005853474, y: 0.8700534, z: 1.4758375e-11}
+--- !u!114 &1590399726
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 639296163}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c0e6227b94822c4d93e9a422d1cbf27, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enemy: {fileID: 672228504}
+  detectionRadius: 20
+  attackRange: 2
+  closeRangeThreshold: 1
+  lowHealthThreshold: 30
+  defensiveStanceRange: 7
+  counterAttackHealthThreshold: 50
+--- !u!114 &1590399728
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 639296163}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f57a39bd21120e744936f98b3b33eb5e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1604211500
 PrefabInstance:
   m_ObjectHideFlags: 0

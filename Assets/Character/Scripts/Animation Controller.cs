@@ -34,6 +34,16 @@ public class AnimationController : MonoBehaviour
         animator.SetBool("isWalk", false);
     }
 
+    public void PlayRun()
+    {
+        animator.SetBool("isRun", true);
+    }
+
+    public void StopRun()
+    {
+        animator.SetBool("isRun", false);
+    }
+
     public void PlayAttack()
     {
         animator.SetBool("isAttack", true);
@@ -59,7 +69,7 @@ public class AnimationController : MonoBehaviour
         animator.SetBool("getAttack", false);
     }
 
-    public void PlayCrounch()
+    public void PlayCrouch()
     {
         animator.SetBool("isCrouch", true);
     }
