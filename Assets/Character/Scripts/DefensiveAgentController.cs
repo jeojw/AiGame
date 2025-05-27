@@ -40,13 +40,21 @@ public class DefensiveAgentController : AgentController
             // 2. 기회가 생기고 (예: 적이 공격 후 취약할 때) 안전하면 반격
             new BTSequence(blackboard, transform, new List<BTNode>
             {
+<<<<<<< HEAD
                 // new CanCounterAttackCondition(blackboard, transform), // 반격 타이밍을 위한 별도 조건 (추후 구현)
                 new IsEnemyInAttackRangeCondition(blackboard, transform, attackRange), // 반격하려면 범위 내에 있어야 함
                 new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.ATTACK_COOLDOWN_KEY), // 공격 쿨타임 준비
                 // [복원됨] 너무 위험하면 반격하지 않도록 체력 조건 다시 활성화
                 new NotNode(new IsHealthLowCondition(blackboard, transform, counterAttackHealthThreshold)),
+=======
+                //new CanCounterAttackCondition(blackboard, transform), // 특정 로직 필요 (예: 적이 회복 애니메이션 중)
+                new IsEnemyInAttackRangeCondition(blackboard, transform, attackRange), // 반격하려면 범위 내에 있어야 함
+                new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.ATTACK_COOLDOWN_KEY), // 공격 쿨타임 준비
+                new NotNode(new IsHealthLowCondition(blackboard, transform, counterAttackHealthThreshold)), // 너무 위험하면 반격하지 않음
+>>>>>>> test01_branch
                 new AttackEnemyAction(blackboard, transform) // 공격 행동
             }),
+
 
             // 3. 방어적 위치 유지 / 체력 관리
             new BTSequence(blackboard, transform, new List<BTNode>
@@ -58,8 +66,12 @@ public class DefensiveAgentController : AgentController
                         // [복원됨] FleeAction(도망) 행동 다시 활성화
                         //new FleeAction(blackboard, transform, 4f)
                     }),
+<<<<<<< HEAD
                     new BTSequence(blackboard, transform, new List<BTNode> { // 적이 이상적인 방어 거리보다 멀면 조심스럽게 접근
                         // [복원됨] NotNode를 사용하여 조건 논리 다시 활성화
+=======
+                    new BTSequence(blackboard, transform, new List<BTNode> { // 적이 이상적인 방어 거리보다 멀면 조심스럽게 접근 또는 유지
+>>>>>>> test01_branch
                         new NotNode(new IsEnemyInAttackRangeCondition(blackboard, transform, defensiveStanceRange)),
                         new MoveTowardsEnemyAction(blackboard, transform, 3f, defensiveStanceRange * 0.9f)
                     })

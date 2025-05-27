@@ -1,4 +1,5 @@
 // File: Conditions.cs (Conditions.cs 파일)
+using System.Runtime.Remoting.Messaging;
 using UnityEngine;
 
 // 적이 공격 범위 내에 있는지 확인하는 조건 노드
@@ -11,8 +12,8 @@ public class IsEnemyInAttackRangeCondition : BTConditionNode
     }
     protected override bool CheckCondition()
     {
-        if (blackboard.enemyTransform == null) return false; // 적이 없으면 실패
-        return blackboard.enemyDistance <= attackRange; // 적과의 거리가 공격 범위 이내이면 성공
+        if (blackboard.enemyTransform == null) return false;
+        return blackboard.enemyDistance <= attackRange;
     }
 }
 
@@ -83,6 +84,7 @@ public class IsEnemyAttackingCondition : BTConditionNode
 
     protected override bool CheckCondition()
     {
+<<<<<<< HEAD
         // 블랙보드에 적 정보가 없으면 당연히 공격 중이 아님
         if (blackboard.enemyTransform == null) return false;
 
@@ -90,6 +92,14 @@ public class IsEnemyAttackingCondition : BTConditionNode
         if (enemyAnimator == null)
         {
             enemyAnimator = blackboard.enemyTransform.GetComponent<Animator>();
+=======
+        // 플레이스홀더: 실제 게임에서는 적의 애니메이션 상태를 확인하거나,
+        // 발사체가 날아오는지, 또는 적이 공격 준비 동작 중인지 등을 확인해야 합니다.
+        // 이 예제에서는 적이 가까이 있을 경우 10% 확률로 true를 반환하도록 만듭니다.
+        if (blackboard.enemyTransform != null && blackboard.enemyDistance < 5f)
+        {
+            // return Random.value < 0.1f; // 예시: 적이 가까우면 10% 확률
+>>>>>>> test01_branch
         }
 
         // 적에게 Animator가 없으면 판단 불가
@@ -103,6 +113,15 @@ public class IsEnemyAttackingCondition : BTConditionNode
             return true;
         }
 
+        return false;
+    }
+}
+
+public class IsGetAttackCondition : BTConditionNode
+{
+    public IsGetAttackCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
+    protected override bool CheckCondition()
+    {
         return false;
     }
 }

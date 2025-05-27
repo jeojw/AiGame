@@ -9,6 +9,12 @@ TagManager:
   - ScreenCamera
   - cockpit_capitalLaser
   - Enemy
+<<<<<<< HEAD
+=======
+  - Sword
+  - Shield
+  - Body
+>>>>>>> test01_branch
   layers:
   - Default
   - TransparentFX
@@ -24,19 +30,19 @@ TagManager:
   - Camera
   - MainCameraOnly
   - Oasis_TerrainBake
+  - OffensiverBody
+  - DefensiverBody
+  - OffensiverSword
+  - DefensiverSword
+  - DefensiverShield
   - 
   - 
   - 
   - 
   - 
   - 
-  - Cockpit
-  - Cockpit_3DSkybox
-  - Cockpit_3DSkybox_BG
-  - Cockpit_Ally
-  - Cockpit_Invader
-  - Cockpit_BG
-  - Cockpit_DepthClear
+  - 
+  - 
   - 
   - 
   - 

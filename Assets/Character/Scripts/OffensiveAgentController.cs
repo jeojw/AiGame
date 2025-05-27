@@ -4,8 +4,8 @@ using System.Collections.Generic;
 
 public class OffensiveAgentController : AgentController
 {
-    public float offensiveAttackRange = 2.0f; // 공격형 에이전트의 공격 범위 (기본값과 다를 수 있음)
-    public float repositionDistance = 4.0f;   // 선호하는 전투 거리 (재배치 기준)
+    public float offensiveAttackRange = 4.0f; // 공격형 에이전트의 공격 범위 (기본값과 다를 수 있음)
+    public float repositionDistance = 10.0f;   // 선호하는 전투 거리 (재배치 기준)
     public float fleeHealthThreshold = 20f;   // 도망을 고려할 체력 기준치
 
     protected override void InitializeBehaviorTree()
@@ -29,7 +29,7 @@ public class OffensiveAgentController : AgentController
                 new IsEnemyVisibleCondition(blackboard, transform), // 적이 보이는가?
                 new IsEnemyInAttackRangeCondition(blackboard, transform, offensiveAttackRange), // 적이 공격 범위 내에 있는가?
                 new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.ATTACK_COOLDOWN_KEY), // 공격 쿨타임이 준비되었는가?
-                new AttackEnemyAction(blackboard, transform) // 공격 행동
+                new AttackEnemyAction(blackboard, transform), // 공격 행동
             }),
 
             // 3. 재배치: 너무 멀면 적에게 다가가거나, 거리 유지
@@ -39,7 +39,7 @@ public class OffensiveAgentController : AgentController
                 // 이동 선택: 더 가까이 가거나, 너무 가까우면 약간 후퇴 (문서에는 명시되지 않았지만 공격에 유용)
                 new BTSelector(blackboard, transform, new List<BTNode> {
                     new BTSequence(blackboard, transform, new List<BTNode> { // 공격 범위 밖이면 더 가까이 이동
-                        //new NotNode(new IsEnemyInAttackRangeCondition(blackboard, transform, offensiveAttackRange)), // 사용자 정의 NotNode 또는 로직 재구성 필요
+                        new NotNode(new IsEnemyInAttackRangeCondition(blackboard, transform, offensiveAttackRange)), // 사용자 정의 NotNode 또는 로직 재구성 필요
                         new MoveTowardsEnemyAction(blackboard, transform, 5f, offensiveAttackRange * 0.9f) // 공격 범위 약간 안쪽까지 이동
                     }),
                     // 필요시 더 정교한 재배치 추가 (예: 좌우 이동, 특정 거리 유지).
@@ -53,24 +53,14 @@ public class OffensiveAgentController : AgentController
                 new MoveTowardsEnemyAction(blackboard, transform, 5f, offensiveAttackRange * 0.9f)
             }),
 
+            new BTSequence(blackboard, transform, new List<BTNode> {
+                new IsGetAttackCondition(blackboard, transform),
+                new GetAttackAction(blackboard, transform),
+            }),
+
+
             // 5. 적이 없거나 다른 조건이 충족되지 않으면 대기
             new IdleAction(blackboard, transform)
         });
     }
-
-    // 필요시 사용할 NotNode (또는 이를 피하도록 로직 재구성)
-    /*
-    public class NotNode : BTConditionNode
-    {
-        private BTConditionNode conditionToNegate; // 부정할 조건
-        public NotNode(BTConditionNode condition) : base(condition.blackboard, condition.agentTransform)
-        { // blackboard와 transform 전달
-            this.conditionToNegate = condition;
-        }
-        protected override bool CheckCondition()
-        {
-            return !conditionToNegate.CheckCondition(); // 조건의 반대 결과 반환
-        }
-    }
-    */
 }
