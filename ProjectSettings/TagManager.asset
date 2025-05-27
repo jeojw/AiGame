@@ -4,37 +4,35 @@
 TagManager:
   serializedVersion: 3
   tags:
-  - MainLight
   - CinemachineTarget
-  - ScreenCamera
   - cockpit_capitalLaser
-  - Enemy
-<<<<<<< HEAD
-=======
-  - Sword
-  - Shield
+  - ScreenCamera
   - Body
->>>>>>> test01_branch
+  - Enemy
+  - Shield
+  - Sword
+  - Offensiver
+  - Defensiver
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - Temp_Post
+  - 
   - Water
   - UI
-  - Terminal
-  - Location
-  - LookInteractor
-  - Screen
-  - Occluder
-  - Camera
-  - MainCameraOnly
-  - Oasis_TerrainBake
-  - OffensiverBody
-  - DefensiverBody
-  - OffensiverSword
-  - DefensiverSword
-  - DefensiverShield
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
   - 
   - 
   - 
@@ -54,5 +52,3 @@ TagManager:
     locked: 0
   m_RenderingLayers:
   - Default
-  - Screen
-  - Lamps

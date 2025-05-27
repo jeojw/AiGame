@@ -8,6 +8,7 @@ public class AgentBlackboard
     private float _maxHealth = 100f; // 최대 체력
     private float _currentHealth;    // 현재 체력
     private bool _isInvincible = false; // 무적 상태 여부
+    private bool _isAttacking = false; // [추가] 공격 상태 여부
 
     public float maxHealth
     {
@@ -23,6 +24,13 @@ public class AgentBlackboard
     {
         get { return _isInvincible; }
         set { _isInvincible = value; }
+    }
+
+    // 추가
+    public bool isAttacking
+    {
+        get { return _isAttacking; }
+        set { _isAttacking = value; }
     }
 
     // 적 정보

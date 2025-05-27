@@ -84,7 +84,6 @@ public class IsEnemyAttackingCondition : BTConditionNode
 
     protected override bool CheckCondition()
     {
-<<<<<<< HEAD
         // 블랙보드에 적 정보가 없으면 당연히 공격 중이 아님
         if (blackboard.enemyTransform == null) return false;
 
@@ -92,24 +91,32 @@ public class IsEnemyAttackingCondition : BTConditionNode
         if (enemyAnimator == null)
         {
             enemyAnimator = blackboard.enemyTransform.GetComponent<Animator>();
-=======
-        // 플레이스홀더: 실제 게임에서는 적의 애니메이션 상태를 확인하거나,
-        // 발사체가 날아오는지, 또는 적이 공격 준비 동작 중인지 등을 확인해야 합니다.
-        // 이 예제에서는 적이 가까이 있을 경우 10% 확률로 true를 반환하도록 만듭니다.
-        if (blackboard.enemyTransform != null && blackboard.enemyDistance < 5f)
-        {
-            // return Random.value < 0.1f; // 예시: 적이 가까우면 10% 확률
->>>>>>> test01_branch
+
+            // 플레이스홀더: 실제 게임에서는 적의 애니메이션 상태를 확인하거나,
+            // 발사체가 날아오는지, 또는 적이 공격 준비 동작 중인지 등을 확인해야 합니다.
+            // 이 예제에서는 적이 가까이 있을 경우 10% 확률로 true를 반환하도록 만듭니다.
+            if (blackboard.enemyTransform != null && blackboard.enemyDistance < 5f)
+            {
+                return Random.value < 0.1f; // 예시: 적이 가까우면 10% 확률
+            }
+
+            // 적에게 Animator가 없으면 판단 불가
+            if (enemyAnimator == null) return false;
+
+            // 적 Animator의 첫 번째 레이어(기본값 0)의 현재 상태 정보 확인
+            // "Attack" 이라는 태그를 가진 애니메이션 상태가 재생 중이면 true를 반환
+            if (enemyAnimator.GetCurrentAnimatorStateInfo(0).IsTag("Attack"))
+            {
+                Debug.Log("상태 감지: 적이 공격 중입니다!");
+                return true;
+            }
+
+            return false;
         }
 
-        // 적에게 Animator가 없으면 판단 불가
-        if (enemyAnimator == null) return false;
-
-        // 적 Animator의 첫 번째 레이어(기본값 0)의 현재 상태 정보 확인
-        // "Attack" 이라는 태그를 가진 애니메이션 상태가 재생 중이면 true를 반환
         if (enemyAnimator.GetCurrentAnimatorStateInfo(0).IsTag("Attack"))
         {
-            Debug.Log("상태 감지: 적이 공격 중입니다!");
+            Debug.Log("상태 감지: 적이 공격 중입니다! (캐시된 애니메이터)");
             return true;
         }
 
@@ -122,6 +129,50 @@ public class IsGetAttackCondition : BTConditionNode
     public IsGetAttackCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
     protected override bool CheckCondition()
     {
+        return false;
+    }
+}
+
+// [추가] 반격 중 적이 공격 중인지 확인하는 조건 노드
+public class IsEnemyAttackingDuringCounterAttackCondition : BTConditionNode
+{
+    private Animator enemyAnimator; // 적 애니메이터 참조
+
+    public IsEnemyAttackingDuringCounterAttackCondition(AgentBlackboard blackboard, Transform agentTransform)
+        : base(blackboard, agentTransform) { }
+
+    protected override bool CheckCondition()
+    {
+        // 내가 반격 중이 아니라면 이 조건은 실패
+        if (!blackboard.isAttacking)
+        {
+            return false;
+        }
+
+        // 적이 존재하지 않으면 실패
+        if (blackboard.enemyTransform == null)
+        {
+            return false;
+        }
+
+        // Animator 캐싱
+        if (enemyAnimator == null)
+        {
+            enemyAnimator = blackboard.enemyTransform.GetComponent<Animator>();
+            if (enemyAnimator == null)
+            {
+                Debug.LogWarning("적 애니메이터가 없습니다.");
+                return false;
+            }
+        }
+
+        // 적이 공격 중
+        if (IsEnemyAttackingCondition(blackboard, agentTransform) == true))
+        {
+            Debug.Log("반격 중 적이 공격 중입니다!");
+            return true;
+        }
+
         return false;
     }
 }
