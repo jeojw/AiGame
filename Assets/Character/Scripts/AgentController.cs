@@ -87,17 +87,31 @@ public abstract class AgentController : MonoBehaviour
     // --- 행동 메소드 (ActionNode에서 호출됨) ---
     public virtual NodeStatus MoveTowards(Vector3 targetPosition, float speed, float stopDistance)
     {
-        if (Vector3.Distance(transform.position, targetPosition) > stopDistance)
-        {
-            rb.MovePosition(transform.position + speed * Time.deltaTime * (targetPosition - transform.position).normalized);
-            transform.LookAt(targetPosition); // 기본적인 바라보기
+        float currentDistance = Vector3.Distance(transform.position, targetPosition);
+        Debug.Log($"현재 거리: {currentDistance}, 목표 거리: {stopDistance}");
 
+        if (currentDistance > stopDistance)
+        {
+            // 아직 도착하지 않았으면 이동
+            rb.MovePosition(transform.position + speed * Time.deltaTime * (targetPosition - transform.position).normalized);
+            transform.LookAt(targetPosition);
             animationController.PlayWalk();
             Debug.Log("행동: 목표 지점으로 이동 중");
-            return NodeStatus.RUNNING; // 아직 이동 중
+            return NodeStatus.RUNNING;
         }
-        return NodeStatus.SUCCESS; // 도착
+        else
+        {
+            // 도착했을 경우
+            animationController.PlayIdle(); // 도착했으니 대기 모션
+            Debug.Log("행동: 목표 지점 도착");
+            return NodeStatus.SUCCESS;
+        }
+
+        // 안전 장치: 정상 흐름이라면 여기까지 절대 도달하지 않음
+        Debug.LogWarning("이동 행동에서 비정상 경로로 도달함");
+        return NodeStatus.FAILURE;
     }
+
 
     public virtual NodeStatus MoveAwayFrom(Vector3 targetPosition, float speed, float moveDistance)
     {

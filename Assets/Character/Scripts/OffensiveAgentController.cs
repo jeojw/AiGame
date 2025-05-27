@@ -39,7 +39,7 @@ public class OffensiveAgentController : AgentController
                 // 이동 선택: 더 가까이 가거나, 너무 가까우면 약간 후퇴 (문서에는 명시되지 않았지만 공격에 유용)
                 new BTSelector(blackboard, transform, new List<BTNode> {
                     new BTSequence(blackboard, transform, new List<BTNode> { // 공격 범위 밖이면 더 가까이 이동
-                        //new NotNode(new IsEnemyInAttackRangeCondition(blackboard, transform, offensiveAttackRange)), // 사용자 정의 NotNode 또는 로직 재구성 필요
+                        new NotNode(new IsEnemyInAttackRangeCondition(blackboard, transform, offensiveAttackRange)), // 사용자 정의 NotNode 또는 로직 재구성 필요
                         new MoveTowardsEnemyAction(blackboard, transform, 5f, offensiveAttackRange * 0.9f) // 공격 범위 약간 안쪽까지 이동
                     }),
                     // 필요시 더 정교한 재배치 추가 (예: 좌우 이동, 특정 거리 유지).
