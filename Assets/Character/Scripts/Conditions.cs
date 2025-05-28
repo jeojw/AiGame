@@ -99,10 +99,44 @@ public class IsEnemyAttackingCondition : BTConditionNode
         // "Attack" 이라는 태그를 가진 애니메이션 상태가 재생 중이면 true를 반환
         if (enemyAnimator.GetCurrentAnimatorStateInfo(0).IsTag("Attack"))
         {
-            Debug.Log("상태 감지: 적이 공격 중입니다!");
             return true;
         }
 
         return false;
+    }
+}
+
+public class CanCounterAttackCondition : BTConditionNode
+{
+    private Animator enemyAnimator;
+    private bool wasLastFrameAttack; // 이전 프레임의 공격 상태를 기억
+
+    public CanCounterAttackCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform)
+    {
+        if (blackboard.enemyTransform != null)
+            enemyAnimator = blackboard.enemyTransform.GetComponent<Animator>();
+    }
+
+    protected override bool CheckCondition()
+    {
+        if (enemyAnimator == null)
+        {
+            if (blackboard.enemyTransform != null)
+                enemyAnimator = blackboard.enemyTransform.GetComponent<Animator>();
+            if (enemyAnimator == null) return false;
+        }
+
+        bool isCurrentlyAttack = enemyAnimator.GetCurrentAnimatorStateInfo(0).IsTag("Attack");
+
+        // 핵심 로직: 이전 프레임에는 공격 중이었지만, 현재 프레임에는 공격 중이 아닐 때 = 공격이 끝난 직후
+        bool canCounter = wasLastFrameAttack && !isCurrentlyAttack;
+
+        // 다음 프레임을 위해 현재 상태를 저장
+        wasLastFrameAttack = isCurrentlyAttack;
+
+        if (canCounter)
+            Debug.Log("카운터 기회 포착!");
+
+        return canCounter;
     }
 }

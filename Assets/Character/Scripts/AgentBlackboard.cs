@@ -4,33 +4,33 @@ using System.Collections.Generic;
 
 public class AgentBlackboard
 {
-    // 에이전트 능력치
-    public float maxHealth = 100f; // 최대 체력
-    public float currentHealth;    // 현재 체력
-    public bool isInvincible = false; // 무적 상태 여부
+    
+    public float maxHealth = 100f;
+    public float currentHealth;
+    public bool isInvincible = false;
 
-    // 적 정보
-    public Transform enemyTransform; // 적의 Transform
-    public float enemyDistance;      // 적과의 거리
-    public float enemyHealth;        // 적의 체력 (알 수 있다고 가정)
+    public bool canCounterAttack = false;
+    public float defenseInitiationTime = -1f;
 
-    // 쿨타임 (행동 이름, 종료 시간)
+    public float currentAttackDamageMultiplier = 1.0f;
+
+    public Transform enemyTransform;
+    public float enemyDistance;
+    public float enemyHealth;
     public Dictionary<string, float> actionCooldowns = new Dictionary<string, float>();
-    public const string ATTACK_COOLDOWN_KEY = "Attack"; // 공격 쿨타임 키
-    public const string DEFEND_COOLDOWN_KEY = "Defend"; // 방어 쿨타임 키
-    public const string EVADE_COOLDOWN_KEY = "Evade";   // 회피 쿨타임 키
-
-    public float attackCooldownDuration = 2.5f; // 공격 쿨타임 지속 시간
-    public float defendCooldownDuration = 2.5f; // 방어 쿨타임 지속 시간
-    public float evadeCooldownDuration = 5.0f;  // 회피 쿨타임 지속 시간
-
+    public const string ATTACK_COOLDOWN_KEY = "Attack";
+    public const string DEFEND_COOLDOWN_KEY = "Defend";
+    public const string EVADE_COOLDOWN_KEY = "Evade";
+    public float attackCooldownDuration = 2.5f;
+    public float defendCooldownDuration = 2.5f;
+    public float evadeCooldownDuration = 5.0f;
 
     public AgentBlackboard()
     {
-        currentHealth = maxHealth; // 현재 체력을 최대 체력으로 초기화
+        currentHealth = maxHealth;
     }
 
-    // 적 정보 업데이트 메소드
+    // ... UpdateEnemyInfo, IsActionReady, SetActionCooldown 메소드는 그대로 ...
     public void UpdateEnemyInfo(Transform enemy, float distance, float health)
     {
         this.enemyTransform = enemy;
@@ -38,13 +38,11 @@ public class AgentBlackboard
         this.enemyHealth = health;
     }
 
-    // 특정 행동이 사용 가능한지 (쿨타임이 지났는지) 확인하는 메소드
     public bool IsActionReady(string actionKey)
     {
         return !actionCooldowns.ContainsKey(actionKey) || Time.time >= actionCooldowns[actionKey];
     }
 
-    // 특정 행동의 쿨타임을 설정하는 메소드
     public void SetActionCooldown(string actionKey)
     {
         float duration = 0f;
@@ -58,28 +56,18 @@ public class AgentBlackboard
         }
     }
 
-    // 데미지를 받는 메소드
+    // --- [수정] TakeDamage 메소드를 원래의 단순한 형태로 복원 ---
     public void TakeDamage(float amount)
     {
-        if (!isInvincible) // 무적 상태가 아니라면
-        {
-            currentHealth -= amount;
-            if (currentHealth < 0) currentHealth = 0;
-            Debug.Log($"에이전트가 {amount} 데미지를 받음, 현재 체력: {currentHealth}");
-        }
-        else
-        {
-            Debug.Log("에이전트가 무적 상태이므로 데미지를 받지 않음.");
-        }
+        currentHealth -= amount;
+        if (currentHealth < 0) currentHealth = 0;
+        // 상세 로그 생성 기능은 AgentController로 이동했습니다.
     }
 
-    // 무적 상태 시작 메소드
     public void StartInvincibility(float duration)
     {
         isInvincible = true;
-        // 실제로는 에이전트 컨트롤러에서 코루틴을 사용하여 무적 상태를 해제할 수 있습니다.
     }
-    // 무적 상태 종료 메소드
     public void EndInvincibility()
     {
         isInvincible = false;
