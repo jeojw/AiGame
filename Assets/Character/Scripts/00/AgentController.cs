@@ -4,56 +4,6 @@ using System.Collections;
 
 public abstract class AgentController : MonoBehaviour
 {
-    // ... ¸ğµç º¯¼ö¿Í Awake, Start, Update µî ´Ù¸¥ ¸Ş¼ÒµåµéÀº ±×´ë·Î ...
-
-    // --- [¼öÁ¤] PerformAttack ¸Ş¼Òµå ---
-    // ÀÌÁ¦ °ø°İ ¾Ö´Ï¸ŞÀÌ¼Ç¸¸ ½ÃÀÛ½ÃÅ°°í, ½ÇÁ¦ µ¥¹ÌÁö ÆÇÁ¤Àº ¾Ö´Ï¸ŞÀÌ¼Ç ÀÌº¥Æ®·Î ³Ñ±é´Ï´Ù.
-    public virtual NodeStatus PerformAttack(float damageMultiplier = 1.0f)
-    {
-        Debug.Log("<color=blue>" + gameObject.name + " - PerformAttack: °ø°İ ¾Ö´Ï¸ŞÀÌ¼Ç ½ÃÀÛ! (Àû¿ëµÉ ¹èÀ²: " + damageMultiplier + ")</color>");
-        blackboard.SetActionCooldown(AgentBlackboard.ATTACK_COOLDOWN_KEY);
-        blackboard.canCounterAttack = false; // °ø°İ ½Ã ¹İ°İ ±âÈ¸ ÃÊ±âÈ­
-
-        // [Ãß°¡] ¾Ö´Ï¸ŞÀÌ¼Ç ÀÌº¥Æ®¿¡¼­ »ç¿ëÇÒ µ¥¹ÌÁö ¹èÀ²À» ºí·¢º¸µå¿¡ ÀúÀå
-        blackboard.currentAttackDamageMultiplier = damageMultiplier;
-
-        if (animator != null)
-        {
-            animator.SetTrigger("IsAttacking");
-        }
-        // ½ÇÁ¦ µ¥¹ÌÁö ÆÇÁ¤ ·ÎÁ÷(SphereCast µî)Àº ¾Æ·¡ ActuallyDealDamage() ¸Ş¼Òµå·Î ÀÌµ¿Çß½À´Ï´Ù.
-        return NodeStatus.SUCCESS;
-    }
-
-    // --- [Ãß°¡] ¾Ö´Ï¸ŞÀÌ¼Ç ÀÌº¥Æ®¿¡¼­ È£ÃâµÉ ½ÇÁ¦ µ¥¹ÌÁö Ã³¸® ¸Ş¼Òµå ---
-    public void ActuallyDealDamage() // ÀÌ ¸Ş¼Òµå¸¦ °ø°İ ¾Ö´Ï¸ŞÀÌ¼ÇÀÇ Æ¯Á¤ ÇÁ·¹ÀÓ¿¡ ÀÌº¥Æ®·Î Ãß°¡ÇØ¾ß ÇÕ´Ï´Ù.
-    {
-        Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: ¾Ö´Ï¸ŞÀÌ¼Ç ÀÌº¥Æ® ¹ß»ı! ½ÇÁ¦ °ø°İ ÆÇÁ¤ ½ÃÀÛ!</color>");
-
-        // ºí·¢º¸µå¿¡¼­ ÇöÀç °ø°İÀÇ µ¥¹ÌÁö ¹èÀ²À» °¡Á®¿È
-        float finalDamage = this.attackDamage * blackboard.currentAttackDamageMultiplier;
-
-        if (Physics.SphereCast(transform.position + Vector3.up, 0.5f, transform.forward, out RaycastHit hit, attackRange))
-        {
-            Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: SphereCast ÀûÁß! -> " + hit.collider.gameObject.name + "</color>");
-            if (hit.collider.CompareTag("Enemy"))
-            {
-                AgentController enemyController = hit.collider.GetComponent<AgentController>();
-                if (enemyController != null)
-                {
-                    Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: " + enemyController.gameObject.name + "¿¡°Ô HandleDamage È£Ãâ.</color>");
-                    enemyController.HandleDamage(finalDamage, this);
-                }
-            }
-        }
-        else
-        {
-            Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: SphereCast Çê½ºÀ®.</color>");
-        }
-    }
-
-    // (ÀüÃ¼ ÄÚµå¸¦ ¿øÇÏ½Ã¸é ÀÌÀü ´äº¯ÀÇ AgentController ÄÚµå¿¡¼­ À§ µÎ ¸Ş¼Òµå¿Í Blackboard ¼öÁ¤À» Àû¿ëÇÏ½Ã¸é µË´Ï´Ù.)
-    #region Unchanged_Methods_And_Variables
     public Transform enemy;
     public float detectionRadius = 20f;
     public float attackRange = 2f;
@@ -64,8 +14,10 @@ public abstract class AgentController : MonoBehaviour
     public float evadeDuration = 0.3f;
     public float attackDamage = 10f;
     public float defenseGracePeriod = 0.2f;
+
     protected AgentBlackboard blackboard;
     protected BTNode rootNode;
+
     private Animator animator;
     private CharacterController characterController;
     private Vector3 playerVelocity;
@@ -83,11 +35,14 @@ public abstract class AgentController : MonoBehaviour
         animator = GetComponent<Animator>();
         characterController = GetComponent<CharacterController>();
     }
+
     protected virtual void Start()
     {
         InitializeBehaviorTree();
     }
+
     protected abstract void InitializeBehaviorTree();
+
     protected virtual void Update()
     {
         if (enemy == null) FindEnemy();
@@ -118,6 +73,7 @@ public abstract class AgentController : MonoBehaviour
         }
         if (rootNode != null) rootNode.Tick();
     }
+
     void SmoothLookAtEnemy()
     {
         Vector3 direction = enemy.position - transform.position;
@@ -128,6 +84,7 @@ public abstract class AgentController : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
         }
     }
+
     void FindEnemy()
     {
         GameObject enemyObject = GameObject.FindGameObjectWithTag("Enemy");
@@ -136,6 +93,7 @@ public abstract class AgentController : MonoBehaviour
             enemy = enemyObject.transform;
         }
     }
+
     public virtual NodeStatus MoveTowards(Vector3 targetPosition, float speed, float stopDistance)
     {
         if (Vector3.Distance(transform.position, targetPosition) > stopDistance)
@@ -153,6 +111,7 @@ public abstract class AgentController : MonoBehaviour
         }
         return NodeStatus.SUCCESS;
     }
+
     public virtual NodeStatus MoveAwayFrom(Vector3 targetPosition, float speed, float moveDistance)
     {
         Vector3 direction = (transform.position - targetPosition);
@@ -167,9 +126,46 @@ public abstract class AgentController : MonoBehaviour
         if (animator != null) animator.SetFloat("Speed", speed);
         return NodeStatus.SUCCESS;
     }
+
+    public virtual NodeStatus PerformAttack(float damageMultiplier = 1.0f)
+    {
+        Debug.Log("<color=blue>" + gameObject.name + " - PerformAttack: ê³µê²© ì• ë‹ˆë©”ì´ì…˜ ì‹œì‘! (ë°°ìœ¨: " + damageMultiplier + ")</color>");
+        blackboard.SetActionCooldown(AgentBlackboard.ATTACK_COOLDOWN_KEY);
+        blackboard.canCounterAttack = false;
+        blackboard.currentAttackDamageMultiplier = damageMultiplier;
+        if (animator != null)
+        {
+            animator.SetTrigger("IsAttacking");
+        }
+        return NodeStatus.SUCCESS;
+    }
+
+    public void ActuallyDealDamage()
+    {
+        Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: ì• ë‹ˆë©”ì´ì…˜ ì´ë²¤íŠ¸ ë°œìƒ! ì‹¤ì œ ê³µê²© íŒì • ì‹œì‘!</color>");
+        float finalDamage = this.attackDamage * blackboard.currentAttackDamageMultiplier;
+        if (Physics.SphereCast(transform.position + Vector3.up, 0.5f, transform.forward, out RaycastHit hit, attackRange))
+        {
+            Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: SphereCast ì ì¤‘! -> " + hit.collider.gameObject.name + "</color>");
+            if (hit.collider.CompareTag("Enemy"))
+            {
+                AgentController enemyController = hit.collider.GetComponent<AgentController>();
+                if (enemyController != null)
+                {
+                    Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: " + enemyController.gameObject.name + "ì—ê²Œ HandleDamage í˜¸ì¶œ.</color>");
+                    enemyController.HandleDamage(finalDamage, this);
+                }
+            }
+        }
+        else
+        {
+            Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: SphereCast í—›ìŠ¤ìœ™.</color>");
+        }
+    }
+
     public virtual NodeStatus PerformDefend()
     {
-        Debug.Log(gameObject.name + " - PerformDefend: È£ÃâµÊ. ¹æ¾î ½ÃÀÛ ½Ãµµ.");
+        Debug.Log(gameObject.name + " - PerformDefend: í˜¸ì¶œë¨. ë°©ì–´ ì‹œì‘ ì‹œë„.");
         blackboard.SetActionCooldown(AgentBlackboard.DEFEND_COOLDOWN_KEY);
         blackboard.StartInvincibility(blackboard.defendCooldownDuration);
         blackboard.defenseInitiationTime = Time.time;
@@ -181,9 +177,10 @@ public abstract class AgentController : MonoBehaviour
         Invoke(nameof(StopDefendInvincibility), blackboard.defendCooldownDuration);
         return NodeStatus.SUCCESS;
     }
+
     public virtual NodeStatus PerformEvade()
     {
-        Debug.Log("Çàµ¿: È¸ÇÇ ¼öÇà!");
+        Debug.Log("í–‰ë™: íšŒí”¼ ìˆ˜í–‰!");
         blackboard.SetActionCooldown(AgentBlackboard.EVADE_COOLDOWN_KEY);
         blackboard.StartInvincibility(evadeDuration);
         Invoke(nameof(StopEvadeInvincibility), evadeDuration);
@@ -198,6 +195,7 @@ public abstract class AgentController : MonoBehaviour
         activeEvadeCoroutine = StartCoroutine(EvadeCoroutine());
         return NodeStatus.SUCCESS;
     }
+
     private IEnumerator EvadeCoroutine()
     {
         float randomDirection = Random.value > 0.5f ? 1f : -1f;
@@ -212,33 +210,48 @@ public abstract class AgentController : MonoBehaviour
         }
         activeEvadeCoroutine = null;
     }
+
     public virtual NodeStatus Idle()
     {
-        Debug.Log("Çàµ¿: ´ë±â Áß");
+        Debug.Log("í–‰ë™: ëŒ€ê¸° ì¤‘");
         if (animator != null)
         {
             animator.SetFloat("Speed", 0f);
         }
         return NodeStatus.SUCCESS;
     }
+
+    // --- [ì¶”ê°€] GetAttack ë©”ì†Œë“œ (ê¸°ë³¸ í˜•íƒœ) ---
+    // GetAttackAction ë…¸ë“œê°€ í˜¸ì¶œí•  ë©”ì†Œë“œì…ë‹ˆë‹¤.
+    // ì´ ë©”ì†Œë“œ ì•ˆì— ì–´ë–¤ ë¡œì§ì„ ë„£ì„ì§€ëŠ” ì‚¬ìš©ìë‹˜ê»˜ì„œ ê²°ì •í•´ì£¼ì…”ì•¼ í•©ë‹ˆë‹¤.
+    public virtual NodeStatus GetAttack()
+    {
+        Debug.Log(gameObject.name + " - GetAttack: í˜¸ì¶œë¨ (í˜„ì¬ëŠ” ì•„ë¬´ ë™ì‘ë„ í•˜ì§€ ì•ŠìŒ)");
+        // ì˜ˆì‹œ: í”¼ê²© ì• ë‹ˆë©”ì´ì…˜ì„ ì¬ìƒí•˜ê±°ë‚˜, íŠ¹ì • ìƒíƒœë¡œ ì „í™˜í•˜ëŠ” ë¡œì§
+        // if (animator != null) animator.SetTrigger("IsHit");
+        return NodeStatus.SUCCESS; // ë˜ëŠ” ìƒí™©ì— ë”°ë¼ FAILURE/RUNNING ë°˜í™˜
+    }
+
     private void StopDefendInvincibility()
     {
         blackboard.EndInvincibility();
         blackboard.defenseInitiationTime = -1f;
-        Debug.Log(gameObject.name + " ¹æ¾î ¹«Àû »óÅÂ ¹× À¯¿¹ ½Ã°£ Á¾·á.");
+        Debug.Log(gameObject.name + " ë°©ì–´ ë¬´ì  ìƒíƒœ ë° ìœ ì˜ˆ ì‹œê°„ ì¢…ë£Œ.");
     }
+
     private void StopEvadeInvincibility()
     {
         blackboard.EndInvincibility();
-        Debug.Log(gameObject.name + " È¸ÇÇ ¹«Àû »óÅÂ Á¾·á.");
+        Debug.Log(gameObject.name + " íšŒí”¼ ë¬´ì  ìƒíƒœ ì¢…ë£Œ.");
     }
+
     public void HandleDamage(float damage, AgentController attacker)
     {
-        Debug.Log(gameObject.name + " - HandleDamage: È£ÃâµÊ! °ø°İÀÚ: " + attacker.gameObject.name + ", isInvincible: " + blackboard.isInvincible);
+        Debug.Log(gameObject.name + " - HandleDamage: í˜¸ì¶œë¨! ê³µê²©ì: " + attacker.gameObject.name + ", isInvincible: " + blackboard.isInvincible);
         if (animator != null)
         {
             AnimatorStateInfo currentAnimState = animator.GetCurrentAnimatorStateInfo(0);
-            Debug.Log(gameObject.name + " - HandleDamage: ÇöÀç ¾Ö´Ï¸ŞÀÌ¼Ç ÅÂ±× 'Defend' ¿©ºÎ: " + currentAnimState.IsTag("Defend"));
+            Debug.Log(gameObject.name + " - HandleDamage: í˜„ì¬ ì• ë‹ˆë©”ì´ì…˜ íƒœê·¸ 'Defend' ì—¬ë¶€: " + currentAnimState.IsTag("Defend"));
         }
         float damageTaken = damage;
         if (blackboard.isInvincible)
@@ -247,19 +260,19 @@ public abstract class AgentController : MonoBehaviour
             bool inGracePeriod = blackboard.defenseInitiationTime > -0.5f && (Time.time - blackboard.defenseInitiationTime) < defenseGracePeriod;
             if (inDefendAnim || inGracePeriod)
             {
-                Debug.Log("<color=green>" + gameObject.name + ": ¡Ú¡Ú¡Ú ¹æ¾î ¼º°ø! (¾Ö´Ï¸ŞÀÌ¼Ç: " + inDefendAnim + ", À¯¿¹½Ã°£: " + inGracePeriod + ") Ä«¿îÅÍ ±âÈ¸ È°¼ºÈ­! ¡Ú¡Ú¡Ú" + "</color>");
+                Debug.Log("<color=green>" + gameObject.name + ": â˜…â˜…â˜… ë°©ì–´ ì„±ê³µ! (ì• ë‹ˆë©”ì´ì…˜: " + inDefendAnim + ", ìœ ì˜ˆì‹œê°„: " + inGracePeriod + ") ì¹´ìš´í„° ê¸°íšŒ í™œì„±í™”! â˜…â˜…â˜…" + "</color>");
                 blackboard.canCounterAttack = true;
                 blackboard.defenseInitiationTime = -1f;
                 damageTaken = damage * 0.1f;
             }
             else if (animator != null && animator.GetCurrentAnimatorStateInfo(0).IsTag("Evade"))
             {
-                Debug.Log(gameObject.name + ": È¸ÇÇ ¼º°ø! µ¥¹ÌÁö ¾øÀ½.");
+                Debug.Log(gameObject.name + ": íšŒí”¼ ì„±ê³µ! ë°ë¯¸ì§€ ì—†ìŒ.");
                 damageTaken = 0f;
             }
             else
             {
-                Debug.LogWarning(gameObject.name + ": ¾Ë ¼ö ¾ø´Â ¹«Àû »óÅÂ¿¡¼­ ÇÇ°İ. ÀÏ´Ü Ä¨µ¥¹ÌÁö Àû¿ë.");
+                Debug.LogWarning(gameObject.name + ": ì•Œ ìˆ˜ ì—†ëŠ” ë¬´ì  ìƒíƒœì—ì„œ í”¼ê²©. ì¼ë‹¨ ì¹©ë°ë¯¸ì§€ ì ìš©.");
                 damageTaken = damage * 0.1f;
             }
             blackboard.TakeDamage(damageTaken);
@@ -268,7 +281,7 @@ public abstract class AgentController : MonoBehaviour
         {
             blackboard.TakeDamage(damageTaken);
         }
-        string logMessage = string.Format("[µ¥¹ÌÁö] {0} -> {1} | ¿äÃ»µ¥¹ÌÁö: {2}, ½ÇÁ¦ ÀÔÀº µ¥¹ÌÁö: {3} | ³²Àº Ã¼·Â: ({0}) {4}/{5}, ({1}) {6}/{7}",
+        string logMessage = string.Format("[ë°ë¯¸ì§€] {0} -> {1} | ìš”ì²­ë°ë¯¸ì§€: {2}, ì‹¤ì œ ì…ì€ ë°ë¯¸ì§€: {3} | ë‚¨ì€ ì²´ë ¥: ({0}) {4}/{5}, ({1}) {6}/{7}",
             attacker.gameObject.name,
             this.gameObject.name,
             damage.ToString("F1"),
@@ -284,9 +297,10 @@ public abstract class AgentController : MonoBehaviour
             Die();
         }
     }
+
     protected virtual void Die()
     {
-        Debug.Log(gameObject.name + "ÀÌ(°¡) Á×¾ú½À´Ï´Ù.");
+        Debug.Log(gameObject.name + "ì´(ê°€) ì£½ì—ˆìŠµë‹ˆë‹¤.");
         if (animator != null)
         {
             animator.SetTrigger("Die");
@@ -294,5 +308,24 @@ public abstract class AgentController : MonoBehaviour
         this.enabled = false;
         Destroy(gameObject, 3f);
     }
-    #endregion
+
+    // --- [ì¶”ê°€] GetAttackAction ë‚´ë¶€ í´ë˜ìŠ¤ ---
+    // (ì‚¬ìš©ìë‹˜ì˜ Actions.cs íŒŒì¼ì— ìˆë˜ ë‚´ìš©ì„ AgentController ë‚´ë¶€ë¡œ ì˜®ê²¨ì™”ìŠµë‹ˆë‹¤.
+    // ì´ë ‡ê²Œ í•˜ë©´ AgentControllerì™€ ë°€ì ‘í•˜ê²Œ ê´€ë ¨ëœ ì‘ì€ ë…¸ë“œë“¤ì„ í•œ ê³³ì—ì„œ ê´€ë¦¬í•˜ê¸° í¸í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
+    // ë³„ë„ì˜ Actions.cs íŒŒì¼ì— ê·¸ëŒ€ë¡œ ë‘ì…”ë„ ë¬´ë°©í•©ë‹ˆë‹¤.)
+    public class GetAttackAction : BTActionNode
+    {
+        public GetAttackAction(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
+
+        public override NodeStatus Tick()
+        {
+            AgentController controller = agentTransform.GetComponent<AgentController>();
+            if (controller != null)
+            {
+                // AgentControllerì— ì¶”ê°€ëœ GetAttack() ë©”ì†Œë“œë¥¼ í˜¸ì¶œí•©ë‹ˆë‹¤.
+                return controller.GetAttack();
+            }
+            return NodeStatus.FAILURE;
+        }
+    }
 }

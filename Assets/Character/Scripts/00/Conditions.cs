@@ -1,4 +1,5 @@
 // File: Conditions.cs (Conditions.cs 파일)
+using System.Runtime.Remoting.Messaging;
 using UnityEngine;
 
 // 적이 공격 범위 내에 있는지 확인하는 조건 노드
@@ -12,6 +13,7 @@ public class IsEnemyInAttackRangeCondition : BTConditionNode
     protected override bool CheckCondition()
     {
         if (blackboard.enemyTransform == null) return false; // 적이 없으면 실패
+
         return blackboard.enemyDistance <= attackRange; // 적과의 거리가 공격 범위 이내이면 성공
     }
 }
@@ -138,5 +140,16 @@ public class CanCounterAttackCondition : BTConditionNode
             Debug.Log("카운터 기회 포착!");
 
         return canCounter;
+    }
+}
+
+public class IsGetAttackCondition : BTConditionNode
+{
+    public IsGetAttackCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
+
+    protected override bool CheckCondition()
+    {
+
+        return false;
     }
 }
