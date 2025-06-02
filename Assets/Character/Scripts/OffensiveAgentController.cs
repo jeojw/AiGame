@@ -15,7 +15,13 @@ public class OffensiveAgentController : AgentController
 
         rootNode = new BTSelector(blackboard, transform, new List<BTNode>
         {
-            // 1. 최우선 순위: 체력이 매우 낮고 회피가 준비되었으면 회피
+            // [수정] 0. 피격 시의 대응을 최우선 순위로
+            new BTSequence(blackboard, transform, new List<BTNode> {
+                new IsGetAttackCondition(blackboard, transform),
+                new GetAttackAction(blackboard, transform),
+            }),
+
+            // 1. 체력이 매우 낮고 회피가 준비되었으면 회피
             new BTSequence(blackboard, transform, new List<BTNode>
             {
                 new IsHealthLowCondition(blackboard, transform, fleeHealthThreshold), // 체력이 도망 기준치 이하인가?
@@ -32,19 +38,26 @@ public class OffensiveAgentController : AgentController
                 new AttackEnemyAction(blackboard, transform), // 공격 행동
             }),
 
-            // 3. 재배치: 너무 멀면 적에게 다가가거나, 거리 유지
+            // 3. 적이 보일 경우 거리 조정 (재배치 포함)
             new BTSequence(blackboard, transform, new List<BTNode>
             {
-                new IsEnemyVisibleCondition(blackboard, transform), // 적이 보이는가?
-                // 이동 선택: 더 가까이 가거나, 너무 가까우면 약간 후퇴 (문서에는 명시되지 않았지만 공격에 유용)
-                new BTSelector(blackboard, transform, new List<BTNode> {
-                    new BTSequence(blackboard, transform, new List<BTNode> { // 공격 범위 밖이면 더 가까이 이동
-                        new NotNode(new IsEnemyInAttackRangeCondition(blackboard, transform, offensiveAttackRange)), // 사용자 정의 NotNode 또는 로직 재구성 필요
-                        new MoveTowardsEnemyAction(blackboard, transform, 5f, offensiveAttackRange * 0.9f) // 공격 범위 약간 안쪽까지 이동
+                new IsEnemyVisibleCondition(blackboard, transform),
+                new BTSelector(blackboard, transform, new List<BTNode>
+                {
+                    // 아직 공격 범위 밖이면 접근
+                    new BTSequence(blackboard, transform, new List<BTNode>
+                    {
+                        new NotNode(new IsEnemyInAttackRangeCondition(blackboard, transform, offensiveAttackRange)),
+                        new MoveTowardsEnemyAction(blackboard, transform, 5f, offensiveAttackRange * 0.9f)
                     }),
-                    // 필요시 더 정교한 재배치 추가 (예: 좌우 이동, 특정 거리 유지).
-                    // 현재는 공격 범위로 들어가는 것만 보장.
-                }),
+
+                    // 공격 범위 안이나 너무 가까우면 뒤로 살짝 이동
+                    new BTSequence(blackboard, transform, new List<BTNode>
+                    {
+                        new IsEnemyTooCloseCondition(blackboard, transform, 1.0f),
+                        new MoveAwayFromEnemyAction(blackboard, transform, 3f, 1.5f)
+                    }),
+                })
             }),
 
             // 4. 기본 행동: 적이 보이지만 다른 행동 조건이 충족되지 않으면 접근 (후순위)
@@ -52,12 +65,6 @@ public class OffensiveAgentController : AgentController
                 new IsEnemyVisibleCondition(blackboard, transform),
                 new MoveTowardsEnemyAction(blackboard, transform, 5f, offensiveAttackRange * 0.9f)
             }),
-
-            new BTSequence(blackboard, transform, new List<BTNode> {
-                new IsGetAttackCondition(blackboard, transform),
-                new GetAttackAction(blackboard, transform),
-            }),
-
 
             // 5. 적이 없거나 다른 조건이 충족되지 않으면 대기
             new IdleAction(blackboard, transform)

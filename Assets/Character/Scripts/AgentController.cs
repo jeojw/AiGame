@@ -130,57 +130,86 @@ public abstract class AgentController : MonoBehaviour
     }
 
 
-    public virtual NodeStatus MoveAwayFrom(Vector3 targetPosition, float speed, float moveDistance)
+    // [수정]
+    public virtual NodeStatus MoveAwayFrom(Vector3 targetPosition, float speed, float desiredDistance)
     {
-        // [수정됨] CharacterController를 사용하여 충돌을 인식하며 이동하도록 수정
         Vector3 direction = (transform.position - targetPosition).normalized;
-        characterController.Move(direction * speed * Time.deltaTime);
-        transform.LookAt(transform.position + direction); // 이동 방향으로 바라보기
+        float currentDistance = Vector3.Distance(transform.position, targetPosition);
 
-        if (animator != null) animator.SetFloat("Speed", speed); // 멀어지는 움직임도 이동 애니메이션 재생
+        // 목표 거리보다 충분히 멀면 멈추기
+        if (currentDistance >= desiredDistance)
+        {
+            if (animator != null) animator.SetFloat("Speed", 0f);
 
-        Debug.Log("행동: 목표 지점으로부터 멀어지는 중 (CharacterController)");
-        // 이 행동은 한 스텝 이동 후 성공으로 간주하여, BT가 다음 판단을 빠르게 하도록 함
-        return NodeStatus.SUCCESS;
+            Debug.Log("행동: 목표 지점으로부터 멀어지는 중 - 완료");
+
+            return NodeStatus.SUCCESS; // 거리 확보 완료
+        }
+
+        // 아직 거리 부족하면 이동
+        Vector3 moveVector = direction * speed * Time.deltaTime;
+        characterController.Move(moveVector);
+        transform.LookAt(transform.position + direction);
+
+        if (animator != null) animator.SetFloat("Speed", speed);
+
+        Debug.Log("행동: 목표 지점으로부터 멀어지는 중");
+
+        return NodeStatus.RUNNING; // 이동 중임을 알림
     }
-    
+
+
     // [수정]
     public virtual NodeStatus PerformAttack()
     {
-        Debug.Log("행동: 공격 수행!");
-
-        // 공격 중 시작 플래그
-        blackboard.isAttacking = true;
-
-        // 쿨타임 설정
-        blackboard.SetActionCooldown(AgentBlackboard.ATTACK_COOLDOWN_KEY);
-
-        // 적 바라보기
-        if (enemy != null)
-            transform.LookAt(new Vector3(enemy.position.x, transform.position.y, enemy.position.z));
-
-        // 공격 애니메이션 트리거
-        if (animator != null)
-            animator.SetTrigger("IsAttacking");
-
-        // 데미지 판정
-        float attackDamage = 10f;
-        if (Physics.SphereCast(transform.position + Vector3.up, 0.5f, transform.forward, out RaycastHit hit, attackRange))
+        // 인터럽트
+        if (blackboard.enemyHealth > 0 && blackboard.enemyTransform != null)
         {
-            if (hit.collider.CompareTag("Enemy"))
+            AgentController enemyController = blackboard.enemyTransform.GetComponent<AgentController>();
+            if (enemyController != null && enemyController.blackboard.isAttacking)
             {
-                AgentController enemyController = hit.collider.GetComponent<AgentController>();
-                if (enemyController != null)
-                {
-                    Debug.Log(gameObject.name + "이(가) " + enemy.name + "을(를) 공격하여 " + attackDamage + " 데미지를 입혔습니다.");
-                    enemyController.HandleDamage(attackDamage);
-                }
+                Debug.Log("공격 중 적이 반격함 → 공격 중단하고 회피/방어 고려");
+                blackboard.isAttacking = false;
+                attackFinished = false;
+                return NodeStatus.FAILURE; // 공격 행동 실패로 간주하고 상위 BT가 다시 판단하게
             }
         }
 
-        // 애니메이션 제어
-        animationController.StopWalk();
-        animationController.PlayAttack();
+        Debug.Log("행동: 공격 수행!");
+
+        if (!blackboard.IsActionReady(AgentBlackboard.ATTACK_COOLDOWN_KEY))
+            return NodeStatus.FAILURE;
+
+        if (!blackboard.isAttacking)
+        {
+            blackboard.isAttacking = true;
+            // 공격 애니메이션 재생 및 데미지 판정
+            if (enemy != null)
+                transform.LookAt(new Vector3(enemy.position.x, transform.position.y, enemy.position.z));
+
+            if (animator != null)
+                animator.SetTrigger("IsAttacking");
+
+            // 데미지 판정
+            float attackDamage = 10f;
+
+            if (Physics.SphereCast(transform.position + Vector3.up, 0.8f, transform.forward, out RaycastHit hit, attackRange))
+            {
+                if (hit.collider.CompareTag("Enemy"))
+                {
+                    AgentController enemyController = hit.collider.GetComponent<AgentController>();
+                    if (enemyController != null)
+                    {
+                        Debug.Log(gameObject.name + "이(가) " + enemy.name + "을(를) 공격하여 " + attackDamage + " 데미지를 입혔습니다.");
+                        enemyController.HandleDamage(attackDamage);
+                    }
+                }
+            }
+
+            // 애니메이션 제어
+            animationController.StopWalk();
+            animationController.PlayAttack();
+        }
 
         // 공격이 아직 끝나지 않았으면 RUNNING
         if (!attackFinished)
@@ -192,6 +221,8 @@ public abstract class AgentController : MonoBehaviour
 
         // 공격 중 종료 플래그
         blackboard.isAttacking = false;
+
+        blackboard.SetActionCooldown(AgentBlackboard.ATTACK_COOLDOWN_KEY);
 
         return NodeStatus.SUCCESS;
     }
@@ -230,6 +261,11 @@ public abstract class AgentController : MonoBehaviour
     public virtual NodeStatus Idle()
     {
         Debug.Log("행동: 대기 중");
+        
+        // [추가] 대기중 서로 상대방을 보도록
+        if (enemy != null)
+            transform.LookAt(new Vector3(enemy.position.x, transform.position.y, enemy.position.z));
+
         if (animator != null)
         {
             animator.SetFloat("Speed", 0f);

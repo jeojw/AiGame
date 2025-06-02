@@ -1,3 +1,4 @@
+
 // File: DefensiveAgentController.cs (DefensiveAgentController.cs 파일)
 using UnityEngine;
 using System.Collections.Generic;
@@ -14,28 +15,6 @@ public class DefensiveAgentController : AgentController
 
         rootNode = new BTSelector(blackboard, transform, new List<BTNode>
         {
-            // [추가] 1. 반격 중 적이 공격하면 반격 취소 + 회피 or 방어
-            new BTSequence(blackboard, transform, new List<BTNode>
-            {
-                new IsEnemyAttackingDuringCounterAttackCondition(blackboard, transform),
-                new BTSelector(blackboard, transform, new List<BTNode> // 체력이 낮고 회피 가능하면 회피, 아니면 방어
-                {
-                    new BTSequence(blackboard, transform, new List<BTNode> { // 체력이 낮으면 회피
-                        new IsHealthLowCondition(blackboard, transform, lowHealthThreshold),
-                        new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.EVADE_COOLDOWN_KEY),
-                        new EvadeAction(blackboard, transform)
-                    }),
-                    new BTSequence(blackboard, transform, new List<BTNode> { // 방어가 준비되었으면 방어
-                        new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.DEFEND_COOLDOWN_KEY),
-                        new DefendAction(blackboard, transform)
-                    }),
-                    new BTSequence(blackboard, transform, new List<BTNode> { // 방어가 준비 안됐지만 회피는 가능하면 회피 (후순위)
-                        new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.EVADE_COOLDOWN_KEY),
-                        new EvadeAction(blackboard, transform)
-                    })
-                })
-            }),
-
             // 1. 최우선 순위: 적이 공격 중이면 방어 또는 회피
             new BTSequence(blackboard, transform, new List<BTNode>
             {
@@ -62,15 +41,12 @@ public class DefensiveAgentController : AgentController
             // 2. 기회가 생기고 (예: 적이 공격 후 취약할 때) 안전하면 반격
             new BTSequence(blackboard, transform, new List<BTNode>
             {
-                // new CanCounterAttackCondition(blackboard, transform), // 반격 타이밍을 위한 별도 조건 (추후 구현)
+                // new IsEnemyAttackingCondition(blackboard, transform), // 적이 선제공격했는가?
                 new IsEnemyInAttackRangeCondition(blackboard, transform, attackRange), // 반격하려면 범위 내에 있어야 함
                 new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.ATTACK_COOLDOWN_KEY), // 공격 쿨타임 준비
                 // [복원됨] 너무 위험하면 반격하지 않도록 체력 조건 다시 활성화
                 new NotNode(new IsHealthLowCondition(blackboard, transform, counterAttackHealthThreshold)),
                 //new CanCounterAttackCondition(blackboard, transform), // 특정 로직 필요 (예: 적이 회복 애니메이션 중)
-                new IsEnemyInAttackRangeCondition(blackboard, transform, attackRange), // 반격하려면 범위 내에 있어야 함
-                new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.ATTACK_COOLDOWN_KEY), // 공격 쿨타임 준비
-                new NotNode(new IsHealthLowCondition(blackboard, transform, counterAttackHealthThreshold)), // 너무 위험하면 반격하지 않음
                 new AttackEnemyAction(blackboard, transform) // 공격 행동
             }),
 

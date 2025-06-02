@@ -10,7 +10,7 @@ public class IsEnemyInAttackRangeCondition : BTConditionNode
     {
         this.attackRange = range;
     }
-    protected override bool CheckCondition()
+    public override bool CheckCondition()
     {
         if (blackboard.enemyTransform == null) return false;
         return blackboard.enemyDistance <= attackRange;
@@ -21,7 +21,7 @@ public class IsEnemyInAttackRangeCondition : BTConditionNode
 public class IsEnemyVisibleCondition : BTConditionNode
 {
     public IsEnemyVisibleCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
-    protected override bool CheckCondition()
+    public override bool CheckCondition()
     {
         // 기본적인 확인: enemyTransform이 할당되었는가?
         // 실제로는 시야 확보를 위해 Raycast 등을 사용해야 합니다.
@@ -37,7 +37,7 @@ public class IsHealthLowCondition : BTConditionNode
     {
         this.healthThreshold = threshold;
     }
-    protected override bool CheckCondition()
+    public override bool CheckCondition()
     {
         return blackboard.currentHealth <= healthThreshold; // 현재 체력이 기준치 이하이면 성공
     }
@@ -51,7 +51,7 @@ public class IsCooldownReadyCondition : BTConditionNode
     {
         this.actionKey = key;
     }
-    protected override bool CheckCondition()
+    public override bool CheckCondition()
     {
         return blackboard.IsActionReady(actionKey); // 해당 행동이 준비되었으면 성공
     }
@@ -65,7 +65,7 @@ public class IsEnemyTooCloseCondition : BTConditionNode
     {
         this.closeThreshold = threshold;
     }
-    protected override bool CheckCondition()
+    public override bool CheckCondition()
     {
         if (blackboard.enemyTransform == null) return false; // 적이 없으면 실패
         return blackboard.enemyDistance < closeThreshold; // 적과의 거리가 기준치 미만이면 성공
@@ -82,7 +82,7 @@ public class IsEnemyAttackingCondition : BTConditionNode
 
     public IsEnemyAttackingCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
 
-    protected override bool CheckCondition()
+    public override bool CheckCondition()
     {
         // 블랙보드에 적 정보가 없으면 당연히 공격 중이 아님
         if (blackboard.enemyTransform == null) return false;
@@ -127,7 +127,7 @@ public class IsEnemyAttackingCondition : BTConditionNode
 public class IsGetAttackCondition : BTConditionNode
 {
     public IsGetAttackCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
-    protected override bool CheckCondition()
+    public override bool CheckCondition()
     {
         return false;
     }
@@ -141,7 +141,7 @@ public class IsEnemyAttackingDuringCounterAttackCondition : BTConditionNode
     public IsEnemyAttackingDuringCounterAttackCondition(AgentBlackboard blackboard, Transform agentTransform)
         : base(blackboard, agentTransform) { }
 
-    protected override bool CheckCondition()
+    public override bool CheckCondition()
     {
         // 내가 반격 중이 아니라면 이 조건은 실패
         if (!blackboard.isAttacking)
@@ -167,7 +167,8 @@ public class IsEnemyAttackingDuringCounterAttackCondition : BTConditionNode
         }
 
         // 적이 공격 중
-        if (IsEnemyAttackingCondition(blackboard, agentTransform) == true))
+        var enemyAttackingCondition = new IsEnemyAttackingCondition(blackboard, agentTransform);
+        if (enemyAttackingCondition.CheckCondition())
         {
             Debug.Log("반격 중 적이 공격 중입니다!");
             return true;
@@ -175,4 +176,4 @@ public class IsEnemyAttackingDuringCounterAttackCondition : BTConditionNode
 
         return false;
     }
-}
+} 

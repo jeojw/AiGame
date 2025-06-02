@@ -13,7 +13,7 @@ public class NotNode : BTConditionNode
         this.conditionToNegate = condition;
     }
 
-    protected override bool CheckCondition()
+    public override bool CheckCondition()
     {
         return !conditionToNegate.Evaluate(); // 조건의 반대 결과 반환
     }

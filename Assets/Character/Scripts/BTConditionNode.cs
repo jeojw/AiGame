@@ -18,5 +18,5 @@ public abstract class BTConditionNode : BTNode
     }
 
     // 실제 조건 확인 로직을 구현하는 추상 메소드
-    protected abstract bool CheckCondition();
+    public abstract bool CheckCondition();
 }

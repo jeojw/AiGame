@@ -5,7 +5,7 @@ using UnityEngine;
 public class MoveTowardsEnemyAction : BTActionNode
 {
     private float moveSpeed = 10f;        // 이동 속도
-    private float stoppingDistance = 0.5f; // 멈추는 거리 (충돌 전 멈춤)'
+    private float stoppingDistance = 1.5f; // 멈추는 거리 (충돌 전 멈춤)'
 
     public MoveTowardsEnemyAction(AgentBlackboard blackboard, Transform agentTransform, float speed, float stopDist) : base(blackboard, agentTransform)
     {
@@ -24,6 +24,39 @@ public class MoveTowardsEnemyAction : BTActionNode
         return NodeStatus.FAILURE;
     }
 }
+
+// [추가] 적에게서 물러나는 행동 노드(도망X, 전술적 재배치)
+public class MoveAwayFromEnemyAction : BTActionNode
+{
+    private float moveSpeed = 10f;             // 이동 속도
+    private float desiredDistance = 1.8f;       // 적과 이 정도 이상 거리를 벌리고 싶음
+    private float stopBuffer = 0.1f;     // 미세 거리 여유
+
+    public MoveAwayFromEnemyAction(AgentBlackboard blackboard, Transform agentTransform, float speed, float desiredDist) : base(blackboard, agentTransform)
+    {
+        this.moveSpeed = speed;
+        this.desiredDistance = desiredDist;
+    }
+
+    public override NodeStatus Tick()
+    {
+        if (blackboard.enemyTransform == null) return NodeStatus.FAILURE;
+
+        float currentDistance = Vector3.Distance(agentTransform.position, blackboard.enemyTransform.position);
+
+        if (currentDistance > desiredDistance + stopBuffer)
+            return NodeStatus.SUCCESS;
+
+        AgentController controller = agentTransform.GetComponent<AgentController>();
+        if (controller != null)
+        {
+            return controller.MoveAwayFrom(blackboard.enemyTransform.position, moveSpeed, desiredDistance);
+        }
+
+        return NodeStatus.FAILURE;
+    }
+}
+
 
 // 적을 공격하는 행동 노드
 public class AttackEnemyAction : BTActionNode
@@ -70,7 +103,7 @@ public class EvadeAction : BTActionNode
     }
 }
 
-// 도망가는 행동 노드 (예시)
+// 도망가는 행동 노드
 public class FleeAction : BTActionNode
 {
     private float moveSpeed; // 이동 속도
