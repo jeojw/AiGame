@@ -9,10 +9,9 @@ public class AgentBlackboard
     public float currentHealth;
     public bool isInvincible = false;
 
-    public bool canCounterAttack = false;
-    public float defenseInitiationTime = -1f;
-
-    public float currentAttackDamageMultiplier = 1.0f;
+    public bool canCounterAttack = false;        // 반격 가능 상태 플래그
+    public float defenseInitiationTime = -1f;    // 방어 시작 시간 (유예 시간 판정용, -1f는 비활성)
+    public float currentAttackDamageMultiplier = 1.0f; // 현재 공격에 적용될 데미지 배율
 
     // 적 정보
     public Transform enemyTransform;
