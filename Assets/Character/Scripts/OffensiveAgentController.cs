@@ -1,4 +1,4 @@
-// File: OffensiveAgentController.cs (OffensiveAgentController.cs ÆÄÀÏ)
+// File: OffensiveAgentController.cs (OffensiveAgentController.cs ï¿½ï¿½ï¿½ï¿½)
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -14,7 +14,7 @@ public class OffensiveAgentController : AgentController
 
         {
 
-            // 1. °ø°Ý: ÀûÀÌ °ø°Ý ¹üÀ§ ³»¿¡ ÀÖ°í, ´Ù¸¥ À§ÇùÀÌ ¾øÀ¸¸é Áï½Ã °ø°ÝÇÕ´Ï´Ù. ÀÌ°ÍÀÌ ÃÖ¿ì¼± ¸ñÇ¥ÀÔ´Ï´Ù.
+            // 1. ï¿½ï¿½ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ö°ï¿½, ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½. ï¿½Ì°ï¿½ï¿½ï¿½ ï¿½Ö¿ì¼± ï¿½ï¿½Ç¥ï¿½Ô´Ï´ï¿½.
             new BTSequence(blackboard, transform, new List<BTNode>
             {
                 new IsEnemyInAttackRangeCondition(blackboard, transform, offensiveAttackRange),
@@ -22,7 +22,7 @@ public class OffensiveAgentController : AgentController
                 new AttackEnemyAction(blackboard, transform)
             }),
 
-            // 2. ¼±Á¦Àû È¸ÇÇ: Ã¼·ÂÀÌ ³·À» ¶§ »Ó¸¸ ¾Æ´Ï¶ó, ÀûÀÌ °ø°ÝÇÏ¸é ÀÏ´Ü È¸ÇÇÇÏ¿© °ø°Ý Èå¸§À» ²÷½À´Ï´Ù.
+            // 2. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½: Ã¼ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ó¸ï¿½ ï¿½Æ´Ï¶ï¿½, ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ ï¿½Ï´ï¿½ È¸ï¿½ï¿½ï¿½Ï¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½å¸§ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.
             new BTSequence(blackboard, transform, new List<BTNode>
             {
                 new IsEnemyAttackingCondition(blackboard, transform),
@@ -32,20 +32,20 @@ public class OffensiveAgentController : AgentController
 
             
 
-            // 3. °Å¸® Á¼È÷±â: °ø°Ý ¹üÀ§ ¹Û¿¡ ÀÖ´Ù¸é, ´Ü¼øÇÏ°í Àúµ¹ÀûÀ¸·Î ÀûÀ» ÇâÇØ Á¢±ÙÇÕ´Ï´Ù.
+            // 3. ï¿½Å¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Û¿ï¿½ ï¿½Ö´Ù¸ï¿½, ï¿½Ü¼ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
             new BTSequence(blackboard, transform, new List<BTNode>
             {
-                // NotNode¸¦ ÀÌ¿ëÇØ '°ø°Ý ¹üÀ§ ¾È¿¡ ÀÖÁö ¾Ê´Ù¸é' ÀÌ¶ó´Â Á¶°ÇÀ» ¸¸µì´Ï´Ù.
+                // NotNodeï¿½ï¿½ ï¿½Ì¿ï¿½ï¿½ï¿½ 'ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½È¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ê´Ù¸ï¿½' ï¿½Ì¶ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.
                 new NotNode(new IsEnemyInAttackRangeCondition(blackboard, transform, offensiveAttackRange)),
                 new MoveTowardsEnemyAction(blackboard, transform, 9f, offensiveAttackRange * 0.9f)
             }),
 
-            // 4. ±âº» ´ë±â »óÅÂ: À§ ¸ðµç Á¶°Ç¿¡ ÇØ´çÇÏÁö ¾ÊÀ» ¶§¸¸ ´ë±âÇÕ´Ï´Ù.
+            // 4. ï¿½âº» ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ç¿ï¿½ ï¿½Ø´ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
             new IdleAction(blackboard, transform)
         });
     }
 
-    // NotNode Å¬·¡½º Á¤ÀÇ
+    // NotNode Å¬ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     public class NotNode : BTConditionNode
     {
         private BTConditionNode conditionToNegate;

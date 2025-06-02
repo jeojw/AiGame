@@ -1,4 +1,4 @@
-// File: AgentBlackboard.cs (AgentBlackboard.cs ÆÄÀÏ)
+// File: AgentBlackboard.cs (AgentBlackboard.cs ï¿½ï¿½ï¿½ï¿½)
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -30,7 +30,7 @@ public class AgentBlackboard
         currentHealth = maxHealth;
     }
 
-    // ... UpdateEnemyInfo, IsActionReady, SetActionCooldown ¸Þ¼Òµå´Â ±×´ë·Î ...
+    // ... UpdateEnemyInfo, IsActionReady, SetActionCooldown ï¿½Þ¼Òµï¿½ï¿½ ï¿½×´ï¿½ï¿½ ...
     public void UpdateEnemyInfo(Transform enemy, float distance, float health)
     {
         this.enemyTransform = enemy;
@@ -45,23 +45,22 @@ public class AgentBlackboard
 
     public void SetActionCooldown(string actionKey)
     {
-        float duration = 0f;
-        if (actionKey == ATTACK_COOLDOWN_KEY) duration = attackCooldownDuration;
-        else if (actionKey == DEFEND_COOLDOWN_KEY) duration = defendCooldownDuration;
-        else if (actionKey == EVADE_COOLDOWN_KEY) duration = evadeCooldownDuration;
-
-        if (duration > 0)
+        float duration = actionKey switch
         {
-            actionCooldowns[actionKey] = Time.time + duration;
-        }
+            _ATTACK_COOLDOWN_KEY => attackCooldownDuration,
+            _DEFEND_COOLDOWN_KEY => defendCooldownDuration,
+            _EVADE_COOLDOWN_KEY => evadeCooldownDuration,
+            _ => 0f
+        };
+        actionCooldowns[actionKey] = Time.time + duration;
     }
 
-    // --- [¼öÁ¤] TakeDamage ¸Þ¼Òµå¸¦ ¿ø·¡ÀÇ ´Ü¼øÇÑ ÇüÅÂ·Î º¹¿ø ---
+    // --- [ï¿½ï¿½ï¿½ï¿½] TakeDamage ï¿½Þ¼Òµå¸¦ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ü¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â·ï¿½ ï¿½ï¿½ï¿½ï¿½ ---
     public void TakeDamage(float amount)
     {
         currentHealth -= amount;
         if (currentHealth < 0) currentHealth = 0;
-        // »ó¼¼ ·Î±× »ý¼º ±â´ÉÀº AgentController·Î ÀÌµ¿Çß½À´Ï´Ù.
+        // ï¿½ï¿½ ï¿½Î±ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ AgentControllerï¿½ï¿½ ï¿½Ìµï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½.
     }
 
     public void StartInvincibility(float duration)

@@ -4,55 +4,55 @@ using System.Collections;
 
 public abstract class AgentController : MonoBehaviour
 {
-    // ... ¸ðµç º¯¼ö¿Í Awake, Start, Update µî ´Ù¸¥ ¸Þ¼ÒµåµéÀº ±×´ë·Î ...
+    // ... ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Awake, Start, Update ï¿½ï¿½ ï¿½Ù¸ï¿½ ï¿½Þ¼Òµï¿½ï¿½ï¿½ï¿½ ï¿½×´ï¿½ï¿½ ...
 
-    // --- [¼öÁ¤] PerformAttack ¸Þ¼Òµå ---
-    // ÀÌÁ¦ °ø°Ý ¾Ö´Ï¸ÞÀÌ¼Ç¸¸ ½ÃÀÛ½ÃÅ°°í, ½ÇÁ¦ µ¥¹ÌÁö ÆÇÁ¤Àº ¾Ö´Ï¸ÞÀÌ¼Ç ÀÌº¥Æ®·Î ³Ñ±é´Ï´Ù.
+    // --- [ï¿½ï¿½ï¿½ï¿½] PerformAttack ï¿½Þ¼Òµï¿½ ---
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼Ç¸ï¿½ ï¿½ï¿½ï¿½Û½ï¿½Å°ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½Ìºï¿½Æ®ï¿½ï¿½ ï¿½Ñ±ï¿½Ï´ï¿½.
     public virtual NodeStatus PerformAttack(float damageMultiplier = 1.0f)
     {
-        Debug.Log("<color=blue>" + gameObject.name + " - PerformAttack: °ø°Ý ¾Ö´Ï¸ÞÀÌ¼Ç ½ÃÀÛ! (Àû¿ëµÉ ¹èÀ²: " + damageMultiplier + ")</color>");
+        Debug.Log("<color=blue>" + gameObject.name + " - PerformAttack: ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½ï¿½! (ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: " + damageMultiplier + ")</color>");
         blackboard.SetActionCooldown(AgentBlackboard.ATTACK_COOLDOWN_KEY);
-        blackboard.canCounterAttack = false; // °ø°Ý ½Ã ¹Ý°Ý ±âÈ¸ ÃÊ±âÈ­
+        blackboard.canCounterAttack = false; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ý°ï¿½ ï¿½ï¿½È¸ ï¿½Ê±ï¿½È­
 
-        // [Ãß°¡] ¾Ö´Ï¸ÞÀÌ¼Ç ÀÌº¥Æ®¿¡¼­ »ç¿ëÇÒ µ¥¹ÌÁö ¹èÀ²À» ºí·¢º¸µå¿¡ ÀúÀå
+        // [ï¿½ß°ï¿½] ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½Ìºï¿½Æ®ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½å¿¡ ï¿½ï¿½ï¿½ï¿½
         blackboard.currentAttackDamageMultiplier = damageMultiplier;
 
         if (animator != null)
         {
             animator.SetTrigger("IsAttacking");
         }
-        // ½ÇÁ¦ µ¥¹ÌÁö ÆÇÁ¤ ·ÎÁ÷(SphereCast µî)Àº ¾Æ·¡ ActuallyDealDamage() ¸Þ¼Òµå·Î ÀÌµ¿Çß½À´Ï´Ù.
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½(SphereCast ï¿½ï¿½)ï¿½ï¿½ ï¿½Æ·ï¿½ ActuallyDealDamage() ï¿½Þ¼Òµï¿½ï¿½ ï¿½Ìµï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½.
         return NodeStatus.SUCCESS;
     }
 
-    // --- [Ãß°¡] ¾Ö´Ï¸ÞÀÌ¼Ç ÀÌº¥Æ®¿¡¼­ È£ÃâµÉ ½ÇÁ¦ µ¥¹ÌÁö Ã³¸® ¸Þ¼Òµå ---
-    public void ActuallyDealDamage() // ÀÌ ¸Þ¼Òµå¸¦ °ø°Ý ¾Ö´Ï¸ÞÀÌ¼ÇÀÇ Æ¯Á¤ ÇÁ·¹ÀÓ¿¡ ÀÌº¥Æ®·Î Ãß°¡ÇØ¾ß ÇÕ´Ï´Ù.
+    // --- [ï¿½ß°ï¿½] ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½Ìºï¿½Æ®ï¿½ï¿½ï¿½ï¿½ È£ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½ ï¿½Þ¼Òµï¿½ ---
+    public void ActuallyDealDamage() // ï¿½ï¿½ ï¿½Þ¼Òµå¸¦ ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ï¿½ï¿½ Æ¯ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿ï¿½ ï¿½Ìºï¿½Æ®ï¿½ï¿½ ï¿½ß°ï¿½ï¿½Ø¾ï¿½ ï¿½Õ´Ï´ï¿½.
     {
-        Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: ¾Ö´Ï¸ÞÀÌ¼Ç ÀÌº¥Æ® ¹ß»ý! ½ÇÁ¦ °ø°Ý ÆÇÁ¤ ½ÃÀÛ!</color>");
+        Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½Ìºï¿½Æ® ï¿½ß»ï¿½! ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½!</color>");
 
-        // ºí·¢º¸µå¿¡¼­ ÇöÀç °ø°ÝÀÇ µ¥¹ÌÁö ¹èÀ²À» °¡Á®¿È
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½å¿¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         float finalDamage = this.attackDamage * blackboard.currentAttackDamageMultiplier;
 
         if (Physics.SphereCast(transform.position + Vector3.up, 0.5f, transform.forward, out RaycastHit hit, attackRange))
         {
-            Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: SphereCast ÀûÁß! -> " + hit.collider.gameObject.name + "</color>");
+            Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: SphereCast ï¿½ï¿½ï¿½ï¿½! -> " + hit.collider.gameObject.name + "</color>");
             if (hit.collider.CompareTag("Enemy"))
             {
                 AgentController enemyController = hit.collider.GetComponent<AgentController>();
                 if (enemyController != null)
                 {
-                    Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: " + enemyController.gameObject.name + "¿¡°Ô HandleDamage È£Ãâ.</color>");
+                    Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: " + enemyController.gameObject.name + "ï¿½ï¿½ï¿½ï¿½ HandleDamage È£ï¿½ï¿½.</color>");
                     enemyController.HandleDamage(finalDamage, this);
                 }
             }
         }
         else
         {
-            Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: SphereCast Çê½ºÀ®.</color>");
+            Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: SphereCast ï¿½ê½ºï¿½ï¿½.</color>");
         }
     }
 
-    // (ÀüÃ¼ ÄÚµå¸¦ ¿øÇÏ½Ã¸é ÀÌÀü ´äº¯ÀÇ AgentController ÄÚµå¿¡¼­ À§ µÎ ¸Þ¼Òµå¿Í Blackboard ¼öÁ¤À» Àû¿ëÇÏ½Ã¸é µË´Ï´Ù.)
+    // (ï¿½ï¿½Ã¼ ï¿½Úµå¸¦ ï¿½ï¿½ï¿½Ï½Ã¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½äº¯ï¿½ï¿½ AgentController ï¿½Úµå¿¡ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½Þ¼Òµï¿½ï¿½ Blackboard ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï½Ã¸ï¿½ ï¿½Ë´Ï´ï¿½.)
     #region Unchanged_Methods_And_Variables
     public Transform enemy;
     public float detectionRadius = 20f;
@@ -169,7 +169,7 @@ public abstract class AgentController : MonoBehaviour
     }
     public virtual NodeStatus PerformDefend()
     {
-        Debug.Log(gameObject.name + " - PerformDefend: È£ÃâµÊ. ¹æ¾î ½ÃÀÛ ½Ãµµ.");
+        Debug.Log(gameObject.name + " - PerformDefend: È£ï¿½ï¿½ï¿½. ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ãµï¿½.");
         blackboard.SetActionCooldown(AgentBlackboard.DEFEND_COOLDOWN_KEY);
         blackboard.StartInvincibility(blackboard.defendCooldownDuration);
         blackboard.defenseInitiationTime = Time.time;
@@ -183,7 +183,7 @@ public abstract class AgentController : MonoBehaviour
     }
     public virtual NodeStatus PerformEvade()
     {
-        Debug.Log("Çàµ¿: È¸ÇÇ ¼öÇà!");
+        Debug.Log("ï¿½àµ¿: È¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½!");
         blackboard.SetActionCooldown(AgentBlackboard.EVADE_COOLDOWN_KEY);
         blackboard.StartInvincibility(evadeDuration);
         Invoke(nameof(StopEvadeInvincibility), evadeDuration);
@@ -214,7 +214,7 @@ public abstract class AgentController : MonoBehaviour
     }
     public virtual NodeStatus Idle()
     {
-        Debug.Log("Çàµ¿: ´ë±â Áß");
+        Debug.Log("ï¿½àµ¿: ï¿½ï¿½ï¿½ ï¿½ï¿½");
         if (animator != null)
         {
             animator.SetFloat("Speed", 0f);
@@ -225,20 +225,20 @@ public abstract class AgentController : MonoBehaviour
     {
         blackboard.EndInvincibility();
         blackboard.defenseInitiationTime = -1f;
-        Debug.Log(gameObject.name + " ¹æ¾î ¹«Àû »óÅÂ ¹× À¯¿¹ ½Ã°£ Á¾·á.");
+        Debug.Log(gameObject.name + " ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½.");
     }
     private void StopEvadeInvincibility()
     {
         blackboard.EndInvincibility();
-        Debug.Log(gameObject.name + " È¸ÇÇ ¹«Àû »óÅÂ Á¾·á.");
+        Debug.Log(gameObject.name + " È¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.");
     }
     public void HandleDamage(float damage, AgentController attacker)
     {
-        Debug.Log(gameObject.name + " - HandleDamage: È£ÃâµÊ! °ø°ÝÀÚ: " + attacker.gameObject.name + ", isInvincible: " + blackboard.isInvincible);
+        Debug.Log(gameObject.name + " - HandleDamage: È£ï¿½ï¿½ï¿½! ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: " + attacker.gameObject.name + ", isInvincible: " + blackboard.isInvincible);
         if (animator != null)
         {
             AnimatorStateInfo currentAnimState = animator.GetCurrentAnimatorStateInfo(0);
-            Debug.Log(gameObject.name + " - HandleDamage: ÇöÀç ¾Ö´Ï¸ÞÀÌ¼Ç ÅÂ±× 'Defend' ¿©ºÎ: " + currentAnimState.IsTag("Defend"));
+            Debug.Log(gameObject.name + " - HandleDamage: ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½Â±ï¿½ 'Defend' ï¿½ï¿½ï¿½ï¿½: " + currentAnimState.IsTag("Defend"));
         }
         float damageTaken = damage;
         if (blackboard.isInvincible)
@@ -247,19 +247,19 @@ public abstract class AgentController : MonoBehaviour
             bool inGracePeriod = blackboard.defenseInitiationTime > -0.5f && (Time.time - blackboard.defenseInitiationTime) < defenseGracePeriod;
             if (inDefendAnim || inGracePeriod)
             {
-                Debug.Log("<color=green>" + gameObject.name + ": ¡Ú¡Ú¡Ú ¹æ¾î ¼º°ø! (¾Ö´Ï¸ÞÀÌ¼Ç: " + inDefendAnim + ", À¯¿¹½Ã°£: " + inGracePeriod + ") Ä«¿îÅÍ ±âÈ¸ È°¼ºÈ­! ¡Ú¡Ú¡Ú" + "</color>");
+                Debug.Log("<color=green>" + gameObject.name + ": ï¿½Ú¡Ú¡ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½! (ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½: " + inDefendAnim + ", ï¿½ï¿½ï¿½ï¿½ï¿½Ã°ï¿½: " + inGracePeriod + ") Ä«ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¸ È°ï¿½ï¿½È­! ï¿½Ú¡Ú¡ï¿½" + "</color>");
                 blackboard.canCounterAttack = true;
                 blackboard.defenseInitiationTime = -1f;
                 damageTaken = damage * 0.1f;
             }
             else if (animator != null && animator.GetCurrentAnimatorStateInfo(0).IsTag("Evade"))
             {
-                Debug.Log(gameObject.name + ": È¸ÇÇ ¼º°ø! µ¥¹ÌÁö ¾øÀ½.");
+                Debug.Log(gameObject.name + ": È¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½! ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.");
                 damageTaken = 0f;
             }
             else
             {
-                Debug.LogWarning(gameObject.name + ": ¾Ë ¼ö ¾ø´Â ¹«Àû »óÅÂ¿¡¼­ ÇÇ°Ý. ÀÏ´Ü Ä¨µ¥¹ÌÁö Àû¿ë.");
+                Debug.LogWarning(gameObject.name + ": ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â¿ï¿½ï¿½ï¿½ ï¿½Ç°ï¿½. ï¿½Ï´ï¿½ Ä¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.");
                 damageTaken = damage * 0.1f;
             }
             blackboard.TakeDamage(damageTaken);
@@ -268,7 +268,7 @@ public abstract class AgentController : MonoBehaviour
         {
             blackboard.TakeDamage(damageTaken);
         }
-        string logMessage = string.Format("[µ¥¹ÌÁö] {0} -> {1} | ¿äÃ»µ¥¹ÌÁö: {2}, ½ÇÁ¦ ÀÔÀº µ¥¹ÌÁö: {3} | ³²Àº Ã¼·Â: ({0}) {4}/{5}, ({1}) {6}/{7}",
+        string logMessage = string.Format("[ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½] {0} -> {1} | ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {2}, ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {3} | ï¿½ï¿½ï¿½ï¿½ Ã¼ï¿½ï¿½: ({0}) {4}/{5}, ({1}) {6}/{7}",
             attacker.gameObject.name,
             this.gameObject.name,
             damage.ToString("F1"),
@@ -286,7 +286,7 @@ public abstract class AgentController : MonoBehaviour
     }
     protected virtual void Die()
     {
-        Debug.Log(gameObject.name + "ÀÌ(°¡) Á×¾ú½À´Ï´Ù.");
+        Debug.Log(gameObject.name + "ï¿½ï¿½(ï¿½ï¿½) ï¿½×¾ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.");
         if (animator != null)
         {
             animator.SetTrigger("Die");
