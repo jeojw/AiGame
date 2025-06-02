@@ -4,56 +4,6 @@ using System.Collections;
 
 public abstract class AgentController : MonoBehaviour
 {
-    // ... ��� ������ Awake, Start, Update �� �ٸ� �޼ҵ���� �״�� ...
-
-    // --- [����] PerformAttack �޼ҵ� ---
-    // ���� ���� �ִϸ��̼Ǹ� ���۽�Ű��, ���� ������ ������ �ִϸ��̼� �̺�Ʈ�� �ѱ�ϴ�.
-    public virtual NodeStatus PerformAttack(float damageMultiplier = 1.0f)
-    {
-        Debug.Log("<color=blue>" + gameObject.name + " - PerformAttack: ���� �ִϸ��̼� ����! (����� ����: " + damageMultiplier + ")</color>");
-        blackboard.SetActionCooldown(AgentBlackboard.ATTACK_COOLDOWN_KEY);
-        blackboard.canCounterAttack = false; // ���� �� �ݰ� ��ȸ �ʱ�ȭ
-
-        // [�߰�] �ִϸ��̼� �̺�Ʈ���� ����� ������ ������ �������忡 ����
-        blackboard.currentAttackDamageMultiplier = damageMultiplier;
-
-        if (animator != null)
-        {
-            animator.SetTrigger("IsAttacking");
-        }
-        // ���� ������ ���� ����(SphereCast ��)�� �Ʒ� ActuallyDealDamage() �޼ҵ�� �̵��߽��ϴ�.
-        return NodeStatus.SUCCESS;
-    }
-
-    // --- [�߰�] �ִϸ��̼� �̺�Ʈ���� ȣ��� ���� ������ ó�� �޼ҵ� ---
-    public void ActuallyDealDamage() // �� �޼ҵ带 ���� �ִϸ��̼��� Ư�� �����ӿ� �̺�Ʈ�� �߰��ؾ� �մϴ�.
-    {
-        Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: �ִϸ��̼� �̺�Ʈ �߻�! ���� ���� ���� ����!</color>");
-
-        // �������忡�� ���� ������ ������ ������ ������
-        float finalDamage = this.attackDamage * blackboard.currentAttackDamageMultiplier;
-
-        if (Physics.SphereCast(transform.position + Vector3.up, 0.5f, transform.forward, out RaycastHit hit, attackRange))
-        {
-            Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: SphereCast ����! -> " + hit.collider.gameObject.name + "</color>");
-            if (hit.collider.CompareTag("Enemy"))
-            {
-                AgentController enemyController = hit.collider.GetComponent<AgentController>();
-                if (enemyController != null)
-                {
-                    Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: " + enemyController.gameObject.name + "���� HandleDamage ȣ��.</color>");
-                    enemyController.HandleDamage(finalDamage, this);
-                }
-            }
-        }
-        else
-        {
-            Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: SphereCast �꽺��.</color>");
-        }
-    }
-
-    // (��ü �ڵ带 ���Ͻø� ���� �亯�� AgentController �ڵ忡�� �� �� �޼ҵ�� Blackboard ������ �����Ͻø� �˴ϴ�.)
-    #region Unchanged_Methods_And_Variables
     public Transform enemy;
     public float detectionRadius = 20f;
     public float attackRange = 2f;
@@ -64,8 +14,10 @@ public abstract class AgentController : MonoBehaviour
     public float evadeDuration = 0.3f;
     public float attackDamage = 10f;
     public float defenseGracePeriod = 0.2f;
+
     protected AgentBlackboard blackboard;
     protected BTNode rootNode;
+
     private Animator animator;
     private CharacterController characterController;
     private Vector3 playerVelocity;
@@ -83,11 +35,14 @@ public abstract class AgentController : MonoBehaviour
         animator = GetComponent<Animator>();
         characterController = GetComponent<CharacterController>();
     }
+
     protected virtual void Start()
     {
         InitializeBehaviorTree();
     }
+
     protected abstract void InitializeBehaviorTree();
+
     protected virtual void Update()
     {
         if (enemy == null) FindEnemy();
@@ -118,6 +73,7 @@ public abstract class AgentController : MonoBehaviour
         }
         if (rootNode != null) rootNode.Tick();
     }
+
     void SmoothLookAtEnemy()
     {
         Vector3 direction = enemy.position - transform.position;
@@ -128,6 +84,7 @@ public abstract class AgentController : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
         }
     }
+
     void FindEnemy()
     {
         GameObject enemyObject = GameObject.FindGameObjectWithTag("Enemy");
@@ -136,6 +93,7 @@ public abstract class AgentController : MonoBehaviour
             enemy = enemyObject.transform;
         }
     }
+
     public virtual NodeStatus MoveTowards(Vector3 targetPosition, float speed, float stopDistance)
     {
         if (Vector3.Distance(transform.position, targetPosition) > stopDistance)
@@ -153,6 +111,7 @@ public abstract class AgentController : MonoBehaviour
         }
         return NodeStatus.SUCCESS;
     }
+
     public virtual NodeStatus MoveAwayFrom(Vector3 targetPosition, float speed, float moveDistance)
     {
         Vector3 direction = (transform.position - targetPosition);
@@ -167,9 +126,46 @@ public abstract class AgentController : MonoBehaviour
         if (animator != null) animator.SetFloat("Speed", speed);
         return NodeStatus.SUCCESS;
     }
+
+    public virtual NodeStatus PerformAttack(float damageMultiplier = 1.0f)
+    {
+        Debug.Log("<color=blue>" + gameObject.name + " - PerformAttack: 공격 애니메이션 시작! (배율: " + damageMultiplier + ")</color>");
+        blackboard.SetActionCooldown(AgentBlackboard.ATTACK_COOLDOWN_KEY);
+        blackboard.canCounterAttack = false;
+        blackboard.currentAttackDamageMultiplier = damageMultiplier;
+        if (animator != null)
+        {
+            animator.SetTrigger("IsAttacking");
+        }
+        return NodeStatus.SUCCESS;
+    }
+
+    public void ActuallyDealDamage()
+    {
+        Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: 애니메이션 이벤트 발생! 실제 공격 판정 시작!</color>");
+        float finalDamage = this.attackDamage * blackboard.currentAttackDamageMultiplier;
+        if (Physics.SphereCast(transform.position + Vector3.up, 0.5f, transform.forward, out RaycastHit hit, attackRange))
+        {
+            Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: SphereCast 적중! -> " + hit.collider.gameObject.name + "</color>");
+            if (hit.collider.CompareTag("Enemy"))
+            {
+                AgentController enemyController = hit.collider.GetComponent<AgentController>();
+                if (enemyController != null)
+                {
+                    Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: " + enemyController.gameObject.name + "에게 HandleDamage 호출.</color>");
+                    enemyController.HandleDamage(finalDamage, this);
+                }
+            }
+        }
+        else
+        {
+            Debug.Log("<color=red>" + gameObject.name + " - ActuallyDealDamage: SphereCast 헛스윙.</color>");
+        }
+    }
+
     public virtual NodeStatus PerformDefend()
     {
-        Debug.Log(gameObject.name + " - PerformDefend: ȣ���. ��� ���� �õ�.");
+        Debug.Log(gameObject.name + " - PerformDefend: 호출됨. 방어 시작 시도.");
         blackboard.SetActionCooldown(AgentBlackboard.DEFEND_COOLDOWN_KEY);
         blackboard.StartInvincibility(blackboard.defendCooldownDuration);
         blackboard.defenseInitiationTime = Time.time;
@@ -181,9 +177,10 @@ public abstract class AgentController : MonoBehaviour
         Invoke(nameof(StopDefendInvincibility), blackboard.defendCooldownDuration);
         return NodeStatus.SUCCESS;
     }
+
     public virtual NodeStatus PerformEvade()
     {
-        Debug.Log("�ൿ: ȸ�� ����!");
+        Debug.Log("행동: 회피 수행!");
         blackboard.SetActionCooldown(AgentBlackboard.EVADE_COOLDOWN_KEY);
         blackboard.StartInvincibility(evadeDuration);
         Invoke(nameof(StopEvadeInvincibility), evadeDuration);
@@ -198,6 +195,7 @@ public abstract class AgentController : MonoBehaviour
         activeEvadeCoroutine = StartCoroutine(EvadeCoroutine());
         return NodeStatus.SUCCESS;
     }
+
     private IEnumerator EvadeCoroutine()
     {
         float randomDirection = Random.value > 0.5f ? 1f : -1f;
@@ -212,33 +210,48 @@ public abstract class AgentController : MonoBehaviour
         }
         activeEvadeCoroutine = null;
     }
+
     public virtual NodeStatus Idle()
     {
-        Debug.Log("�ൿ: ��� ��");
+        Debug.Log("행동: 대기 중");
         if (animator != null)
         {
             animator.SetFloat("Speed", 0f);
         }
         return NodeStatus.SUCCESS;
     }
+
+    // --- [추가] GetAttack 메소드 (기본 형태) ---
+    // GetAttackAction 노드가 호출할 메소드입니다.
+    // 이 메소드 안에 어떤 로직을 넣을지는 사용자님께서 결정해주셔야 합니다.
+    public virtual NodeStatus GetAttack()
+    {
+        Debug.Log(gameObject.name + " - GetAttack: 호출됨 (현재는 아무 동작도 하지 않음)");
+        // 예시: 피격 애니메이션을 재생하거나, 특정 상태로 전환하는 로직
+        // if (animator != null) animator.SetTrigger("IsHit");
+        return NodeStatus.SUCCESS; // 또는 상황에 따라 FAILURE/RUNNING 반환
+    }
+
     private void StopDefendInvincibility()
     {
         blackboard.EndInvincibility();
         blackboard.defenseInitiationTime = -1f;
-        Debug.Log(gameObject.name + " ��� ���� ���� �� ���� �ð� ����.");
+        Debug.Log(gameObject.name + " 방어 무적 상태 및 유예 시간 종료.");
     }
+
     private void StopEvadeInvincibility()
     {
         blackboard.EndInvincibility();
-        Debug.Log(gameObject.name + " ȸ�� ���� ���� ����.");
+        Debug.Log(gameObject.name + " 회피 무적 상태 종료.");
     }
+
     public void HandleDamage(float damage, AgentController attacker)
     {
-        Debug.Log(gameObject.name + " - HandleDamage: ȣ���! ������: " + attacker.gameObject.name + ", isInvincible: " + blackboard.isInvincible);
+        Debug.Log(gameObject.name + " - HandleDamage: 호출됨! 공격자: " + attacker.gameObject.name + ", isInvincible: " + blackboard.isInvincible);
         if (animator != null)
         {
             AnimatorStateInfo currentAnimState = animator.GetCurrentAnimatorStateInfo(0);
-            Debug.Log(gameObject.name + " - HandleDamage: ���� �ִϸ��̼� �±� 'Defend' ����: " + currentAnimState.IsTag("Defend"));
+            Debug.Log(gameObject.name + " - HandleDamage: 현재 애니메이션 태그 'Defend' 여부: " + currentAnimState.IsTag("Defend"));
         }
         float damageTaken = damage;
         if (blackboard.isInvincible)
@@ -247,19 +260,19 @@ public abstract class AgentController : MonoBehaviour
             bool inGracePeriod = blackboard.defenseInitiationTime > -0.5f && (Time.time - blackboard.defenseInitiationTime) < defenseGracePeriod;
             if (inDefendAnim || inGracePeriod)
             {
-                Debug.Log("<color=green>" + gameObject.name + ": �ڡڡ� ��� ����! (�ִϸ��̼�: " + inDefendAnim + ", �����ð�: " + inGracePeriod + ") ī���� ��ȸ Ȱ��ȭ! �ڡڡ�" + "</color>");
+                Debug.Log("<color=green>" + gameObject.name + ": ★★★ 방어 성공! (애니메이션: " + inDefendAnim + ", 유예시간: " + inGracePeriod + ") 카운터 기회 활성화! ★★★" + "</color>");
                 blackboard.canCounterAttack = true;
                 blackboard.defenseInitiationTime = -1f;
                 damageTaken = damage * 0.1f;
             }
             else if (animator != null && animator.GetCurrentAnimatorStateInfo(0).IsTag("Evade"))
             {
-                Debug.Log(gameObject.name + ": ȸ�� ����! ������ ����.");
+                Debug.Log(gameObject.name + ": 회피 성공! 데미지 없음.");
                 damageTaken = 0f;
             }
             else
             {
-                Debug.LogWarning(gameObject.name + ": �� �� ���� ���� ���¿��� �ǰ�. �ϴ� Ĩ������ ����.");
+                Debug.LogWarning(gameObject.name + ": 알 수 없는 무적 상태에서 피격. 일단 칩데미지 적용.");
                 damageTaken = damage * 0.1f;
             }
             blackboard.TakeDamage(damageTaken);
@@ -268,7 +281,7 @@ public abstract class AgentController : MonoBehaviour
         {
             blackboard.TakeDamage(damageTaken);
         }
-        string logMessage = string.Format("[������] {0} -> {1} | ��û������: {2}, ���� ���� ������: {3} | ���� ü��: ({0}) {4}/{5}, ({1}) {6}/{7}",
+        string logMessage = string.Format("[데미지] {0} -> {1} | 요청데미지: {2}, 실제 입은 데미지: {3} | 남은 체력: ({0}) {4}/{5}, ({1}) {6}/{7}",
             attacker.gameObject.name,
             this.gameObject.name,
             damage.ToString("F1"),
@@ -284,9 +297,10 @@ public abstract class AgentController : MonoBehaviour
             Die();
         }
     }
+
     protected virtual void Die()
     {
-        Debug.Log(gameObject.name + "��(��) �׾����ϴ�.");
+        Debug.Log(gameObject.name + "이(가) 죽었습니다.");
         if (animator != null)
         {
             animator.SetTrigger("Die");
@@ -294,5 +308,24 @@ public abstract class AgentController : MonoBehaviour
         this.enabled = false;
         Destroy(gameObject, 3f);
     }
-    #endregion
+
+    // --- [추가] GetAttackAction 내부 클래스 ---
+    // (사용자님의 Actions.cs 파일에 있던 내용을 AgentController 내부로 옮겨왔습니다.
+    // 이렇게 하면 AgentController와 밀접하게 관련된 작은 노드들을 한 곳에서 관리하기 편할 수 있습니다.
+    // 별도의 Actions.cs 파일에 그대로 두셔도 무방합니다.)
+    public class GetAttackAction : BTActionNode
+    {
+        public GetAttackAction(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
+
+        public override NodeStatus Tick()
+        {
+            AgentController controller = agentTransform.GetComponent<AgentController>();
+            if (controller != null)
+            {
+                // AgentController에 추가된 GetAttack() 메소드를 호출합니다.
+                return controller.GetAttack();
+            }
+            return NodeStatus.FAILURE;
+        }
+    }
 }
