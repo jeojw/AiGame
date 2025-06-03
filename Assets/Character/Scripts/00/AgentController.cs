@@ -59,7 +59,10 @@ public abstract class AgentController : MonoBehaviour
             AgentController enemyCtrl = enemy.GetComponent<AgentController>();
             if (enemyCtrl != null) enemyCurrentHealth = enemyCtrl.blackboard.currentHealth;
             blackboard.UpdateEnemyInfo(enemy, Vector3.Distance(transform.position, enemy.position), enemyCurrentHealth);
-            if (!isPerformingAction) SmoothLookAtEnemy();
+            if (!isPerformingAction && (animator != null && animator.GetFloat("Speed") < 0.1f))
+            {
+                SmoothLookAtEnemy();
+            }
         }
         else
         {

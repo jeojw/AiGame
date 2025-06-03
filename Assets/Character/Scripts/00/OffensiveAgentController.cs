@@ -37,7 +37,7 @@ public class OffensiveAgentController : AgentController
             {
                 // NotNode�� �̿��� '���� ���� �ȿ� ���� �ʴٸ�' �̶�� ������ ����ϴ�.
                 new NotNode(new IsEnemyInAttackRangeCondition(blackboard, transform, offensiveAttackRange)),
-                new MoveTowardsEnemyAction(blackboard, transform, 3f, offensiveAttackRange * 0.9f)
+                new MoveTowardsEnemyAction(blackboard, transform, 3f, offensiveAttackRange * 1.0f)
             }),
 
             // 4. �⺻ ��� ����: �� ��� ���ǿ� �ش����� ���� ���� ����մϴ�.
