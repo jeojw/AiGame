@@ -67,7 +67,7 @@ public abstract class AgentController : MonoBehaviour
         }
         if (!isPerformingAction)
         {
-            rb.MovePosition(playerVelocity * Time.deltaTime);
+            rb.MovePosition(transform.position + playerVelocity * Time.deltaTime);
         }
         if (rootNode != null) rootNode.Tick();
     }
@@ -79,7 +79,7 @@ public abstract class AgentController : MonoBehaviour
         if (direction.sqrMagnitude > 0.001f)
         {
             Quaternion targetRotation = Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
+            rb.MoveRotation(Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime));
         }
     }
 
@@ -129,7 +129,7 @@ public abstract class AgentController : MonoBehaviour
         if (direction.sqrMagnitude > 0.001f)
         {
             Quaternion targetRotation = Quaternion.LookRotation(direction);
-            rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime));
+            rb.MoveRotation(Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime));
         }
         if (animator != null) animator.SetFloat("Speed", speed);
         return NodeStatus.SUCCESS;
