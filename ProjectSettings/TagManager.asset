@@ -12,6 +12,8 @@ TagManager:
   - Sword
   - Shield
   - Body
+  - Defensiver
+  - Offensiver
   layers:
   - Default
   - TransparentFX

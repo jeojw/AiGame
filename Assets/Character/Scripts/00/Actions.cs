@@ -4,8 +4,8 @@ using UnityEngine;
 // 적에게 다가가는 행동 노드
 public class MoveTowardsEnemyAction : BTActionNode
 {
-    private float moveSpeed = 10f;        // 이동 속도
-    private float stoppingDistance = 0.5f; // 멈추는 거리 (충돌 전 멈춤)'
+    private float moveSpeed;        // 이동 속도
+    private float stoppingDistance; // 멈추는 거리 (충돌 전 멈춤)'
 
     public MoveTowardsEnemyAction(AgentBlackboard blackboard, Transform agentTransform, float speed, float stopDist) : base(blackboard, agentTransform)
     {

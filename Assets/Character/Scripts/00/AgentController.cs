@@ -10,7 +10,7 @@ public abstract class AgentController : MonoBehaviour
     public float closeRangeThreshold = 5f;
     public float lowHealthThreshold = 30f;
     public float evadeDistance = 2.5f;
-    public float rotationSpeed = 10f;
+    public float rotationSpeed = 2f;
     public float evadeDuration = 0.3f;
     public float attackDamage = 10f;
     public float defenseGracePeriod = 0.2f;
@@ -19,7 +19,7 @@ public abstract class AgentController : MonoBehaviour
     protected BTNode rootNode;
 
     private Animator animator;
-    private CharacterController characterController;
+    private Rigidbody rb;
     private Vector3 playerVelocity;
     private readonly float gravityValue = -9.81f;
     private Coroutine activeEvadeCoroutine = null;
@@ -33,7 +33,7 @@ public abstract class AgentController : MonoBehaviour
         blackboard.defendCooldownDuration = 2.5f;
         blackboard.evadeCooldownDuration = 5f;
         animator = GetComponent<Animator>();
-        characterController = GetComponent<CharacterController>();
+        rb = GetComponent<Rigidbody>();
     }
 
     protected virtual void Start()
@@ -67,9 +67,7 @@ public abstract class AgentController : MonoBehaviour
         }
         if (!isPerformingAction)
         {
-            if (characterController.isGrounded && playerVelocity.y < 0) playerVelocity.y = 0f;
-            playerVelocity.y += gravityValue * Time.deltaTime;
-            characterController.Move(playerVelocity * Time.deltaTime);
+            rb.MovePosition(playerVelocity * Time.deltaTime);
         }
         if (rootNode != null) rootNode.Tick();
     }
@@ -87,7 +85,15 @@ public abstract class AgentController : MonoBehaviour
 
     void FindEnemy()
     {
-        GameObject enemyObject = GameObject.FindGameObjectWithTag("Enemy");
+        GameObject enemyObject;
+        if (gameObject.CompareTag("Offensiver"))
+        {
+            enemyObject = GameObject.FindGameObjectWithTag("Defensiver");
+        }
+        else
+        {
+            enemyObject = GameObject.FindGameObjectWithTag("Offensiver");
+        }
         if (enemyObject != null)
         {
             enemy = enemyObject.transform;
@@ -101,7 +107,8 @@ public abstract class AgentController : MonoBehaviour
             Vector3 direction = (targetPosition - transform.position);
             direction.y = 0;
             direction.Normalize();
-            characterController.Move(direction * speed * Time.deltaTime);
+            Vector3 moveVector = speed * Time.deltaTime * direction;
+            rb.MovePosition(transform.position + moveVector);
             if (animator != null) animator.SetFloat("Speed", speed);
             return NodeStatus.RUNNING;
         }
@@ -117,11 +124,12 @@ public abstract class AgentController : MonoBehaviour
         Vector3 direction = (transform.position - targetPosition);
         direction.y = 0;
         direction.Normalize();
-        characterController.Move(direction * speed * Time.deltaTime);
+        Vector3 moveVector = speed * Time.deltaTime * direction;
+        rb.MovePosition(transform.position + moveVector);
         if (direction.sqrMagnitude > 0.001f)
         {
             Quaternion targetRotation = Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
+            rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime));
         }
         if (animator != null) animator.SetFloat("Speed", speed);
         return NodeStatus.SUCCESS;
@@ -204,7 +212,7 @@ public abstract class AgentController : MonoBehaviour
         while (elapsedTime < evadeDuration)
         {
             Vector3 movement = evadeStartDirection * (evadeDistance / evadeDuration) * Time.deltaTime;
-            characterController.Move(movement);
+            rb.MovePosition(movement);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
