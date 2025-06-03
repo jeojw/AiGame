@@ -212,7 +212,7 @@ public abstract class AgentController : MonoBehaviour
         while (elapsedTime < evadeDuration)
         {
             Vector3 movement = evadeStartDirection * (evadeDistance / evadeDuration) * Time.deltaTime;
-            rb.MovePosition(movement);
+            rb.MovePosition(transform.position + movement);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
