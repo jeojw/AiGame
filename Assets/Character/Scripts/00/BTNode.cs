@@ -27,3 +27,4 @@ public abstract class BTNode
     // 노드의 로직을 실행하는 추상 메소드
     public abstract NodeStatus Tick();
 }
+

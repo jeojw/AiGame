@@ -1261,9 +1261,12 @@ MonoBehaviour:
   attackRange: 2
   closeRangeThreshold: 5
   lowHealthThreshold: 30
-  evadeDistance: 2
+  evadeDistance: 2.5
+  rotationSpeed: 10
+  evadeDuration: 0.3
+  attackDamage: 10
+  defenseGracePeriod: 0.2
   offensiveAttackRange: 2
-  repositionDistance: 4
   fleeHealthThreshold: 20
 --- !u!114 &1227314817
 MonoBehaviour:

@@ -1,11 +1,11 @@
-// File: Actions.cs (Actions.cs ÆÄÀÏ)
+// File: Actions.cs (Actions.cs ï¿½ï¿½ï¿½ï¿½)
 using UnityEngine;
 
-// Àû¿¡°Ô ´Ù°¡°¡´Â Çàµ¿ ³ëµå
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù°ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½àµ¿ ï¿½ï¿½ï¿½
 public class MoveTowardsEnemyAction : BTActionNode
 {
-    private float moveSpeed = 10f;        // ÀÌµ¿ ¼Óµµ
-    private float stoppingDistance = 1.5f; // ¸ØÃß´Â °Å¸® (Ãæµ¹ Àü ¸ØÃã)'
+    private float moveSpeed;        // ï¿½Ìµï¿½ ï¿½Óµï¿½
+    private float stoppingDistance; // ï¿½ï¿½ï¿½ß´ï¿½ ï¿½Å¸ï¿½ (ï¿½æµ¹ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)'
 
     public MoveTowardsEnemyAction(AgentBlackboard blackboard, Transform agentTransform, float speed, float stopDist) : base(blackboard, agentTransform)
     {
@@ -15,22 +15,22 @@ public class MoveTowardsEnemyAction : BTActionNode
 
     public override NodeStatus Tick()
     {
-        if (blackboard.enemyTransform == null) return NodeStatus.FAILURE; // ÀûÀÌ ¾øÀ¸¸é ½ÇÆÐ
+        if (blackboard.enemyTransform == null) return NodeStatus.FAILURE; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         AgentController controller = agentTransform.GetComponent<AgentController>();
         if (controller != null)
         {
-            return controller.MoveTowards(blackboard.enemyTransform.position, moveSpeed, stoppingDistance); // ÄÁÆ®·Ñ·¯ÀÇ ÀÌµ¿ ¸Þ¼Òµå È£Ãâ
+            return controller.MoveTowards(blackboard.enemyTransform.position, moveSpeed, stoppingDistance); // ï¿½ï¿½Æ®ï¿½Ñ·ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ ï¿½Þ¼Òµï¿½ È£ï¿½ï¿½
         }
         return NodeStatus.FAILURE;
     }
 }
 
-// [Ãß°¡] Àû¿¡°Ô¼­ ¹°·¯³ª´Â Çàµ¿ ³ëµå(µµ¸ÁX, Àü¼úÀû Àç¹èÄ¡)
+// [ï¿½ß°ï¿½] ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½àµ¿ ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½X, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ä¡)
 public class MoveAwayFromEnemyAction : BTActionNode
 {
-    private float moveSpeed = 10f;             // ÀÌµ¿ ¼Óµµ
-    private float desiredDistance = 1.8f;       // Àû°ú ÀÌ Á¤µµ ÀÌ»ó °Å¸®¸¦ ¹ú¸®°í ½ÍÀ½
-    private float stopBuffer = 0.1f;     // ¹Ì¼¼ °Å¸® ¿©À¯
+    private float moveSpeed = 10f;             // ï¿½Ìµï¿½ ï¿½Óµï¿½
+    private float desiredDistance = 1.8f;       // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ì»ï¿½ ï¿½Å¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    private float stopBuffer = 0.1f;     // ï¿½Ì¼ï¿½ ï¿½Å¸ï¿½ ï¿½ï¿½ï¿½ï¿½
 
     public MoveAwayFromEnemyAction(AgentBlackboard blackboard, Transform agentTransform, float speed, float desiredDist) : base(blackboard, agentTransform)
     {
@@ -58,7 +58,7 @@ public class MoveAwayFromEnemyAction : BTActionNode
 }
 
 
-// ÀûÀ» °ø°ÝÇÏ´Â Çàµ¿ ³ëµå
+// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½àµ¿ ï¿½ï¿½ï¿½
 public class AttackEnemyAction : BTActionNode
 {
     public AttackEnemyAction(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
@@ -67,13 +67,13 @@ public class AttackEnemyAction : BTActionNode
         AgentController controller = agentTransform.GetComponent<AgentController>();
         if (controller != null)
         {
-            return controller.PerformAttack(); // ÄÁÆ®·Ñ·¯ÀÇ °ø°Ý ¸Þ¼Òµå È£Ãâ
+            return controller.PerformAttack(); // ï¿½ï¿½Æ®ï¿½Ñ·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Þ¼Òµï¿½ È£ï¿½ï¿½
         }
         return NodeStatus.FAILURE;
     }
 }
 
-// ¹æ¾îÇÏ´Â Çàµ¿ ³ëµå
+// ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½àµ¿ ï¿½ï¿½ï¿½
 public class DefendAction : BTActionNode
 {
     public DefendAction(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
@@ -82,13 +82,13 @@ public class DefendAction : BTActionNode
         AgentController controller = agentTransform.GetComponent<AgentController>();
         if (controller != null)
         {
-            return controller.PerformDefend(); // ÄÁÆ®·Ñ·¯ÀÇ ¹æ¾î ¸Þ¼Òµå È£Ãâ
+            return controller.PerformDefend(); // ï¿½ï¿½Æ®ï¿½Ñ·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Þ¼Òµï¿½ È£ï¿½ï¿½
         }
         return NodeStatus.FAILURE;
     }
 }
 
-// È¸ÇÇÇÏ´Â Çàµ¿ ³ëµå
+// È¸ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½àµ¿ ï¿½ï¿½ï¿½
 public class EvadeAction : BTActionNode
 {
     public EvadeAction(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
@@ -97,34 +97,34 @@ public class EvadeAction : BTActionNode
         AgentController controller = agentTransform.GetComponent<AgentController>();
         if (controller != null)
         {
-            return controller.PerformEvade(); // ÄÁÆ®·Ñ·¯ÀÇ È¸ÇÇ ¸Þ¼Òµå È£Ãâ
+            return controller.PerformEvade(); // ï¿½ï¿½Æ®ï¿½Ñ·ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ ï¿½Þ¼Òµï¿½ È£ï¿½ï¿½
         }
         return NodeStatus.FAILURE;
     }
 }
 
-// µµ¸Á°¡´Â Çàµ¿ ³ëµå
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½àµ¿ ï¿½ï¿½ï¿½
 public class FleeAction : BTActionNode
 {
-    private float moveSpeed; // ÀÌµ¿ ¼Óµµ
+    private float moveSpeed; // ï¿½Ìµï¿½ ï¿½Óµï¿½
     public FleeAction(AgentBlackboard blackboard, Transform agentTransform, float speed) : base(blackboard, agentTransform)
     {
         this.moveSpeed = speed;
     }
     public override NodeStatus Tick()
     {
-        if (blackboard.enemyTransform == null) return NodeStatus.FAILURE; // ÀûÀÌ ¾øÀ¸¸é ½ÇÆÐ
+        if (blackboard.enemyTransform == null) return NodeStatus.FAILURE; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         AgentController controller = agentTransform.GetComponent<AgentController>();
         if (controller != null)
         {
-            // 0f Á¤Áö °Å¸®´Â °è¼Ó ÀÌµ¿ÇÔÀ» ÀÇ¹Ì
+            // 0f ï¿½ï¿½ï¿½ï¿½ ï¿½Å¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ç¹ï¿½
             return controller.MoveAwayFrom(blackboard.enemyTransform.position, moveSpeed, 0f);
         }
         return NodeStatus.FAILURE;
     }
 }
 
-// ´ë±âÇÏ´Â Çàµ¿ ³ëµå
+// ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½àµ¿ ï¿½ï¿½ï¿½
 public class IdleAction : BTActionNode
 {
     public IdleAction(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
@@ -133,7 +133,7 @@ public class IdleAction : BTActionNode
         AgentController controller = agentTransform.GetComponent<AgentController>();
         if (controller != null)
         {
-            return controller.Idle(); // ÄÁÆ®·Ñ·¯ÀÇ ´ë±â ¸Þ¼Òµå È£Ãâ
+            return controller.Idle(); // ï¿½ï¿½Æ®ï¿½Ñ·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Þ¼Òµï¿½ È£ï¿½ï¿½
         }
         return NodeStatus.FAILURE;
     }
