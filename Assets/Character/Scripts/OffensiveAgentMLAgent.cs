@@ -43,7 +43,7 @@ public class OffensiveAgentMLAgent : Agent
             // Offensive는 Defensive를 찾고, Defensive는 Offensive를 찾도록 설정
             if (gameObject.CompareTag("Offensiver") && enemyTarget.CompareTag("Defensiver"))
             {
-                enemyTarget.GetComponent<DefensiveAgentMLAgent>().OnEpisodeBegin(); // 적 에이전트도 초기화
+                //enemyTarget.GetComponent<DefensiveAgentMLAgent>().OnEpisodeBegin(); // 적 에이전트도 초기화
             }
             else if (gameObject.CompareTag("Defensiver") && enemyTarget.CompareTag("Offensiver"))
             {
