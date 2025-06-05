@@ -1,39 +1,108 @@
-// File: AgentBlackboard.cs
+// File: AgentBlackboard.cs (AgentBlackboard.cs ÆÄÀÏ)
 using UnityEngine;
 using System.Collections.Generic;
 
 public class AgentBlackboard
 {
-    // ì—ì´ì „íŠ¸ ëŠ¥ë ¥ì¹˜ ë° ìƒíƒœ
-    public float maxHealth = 100f;
-    public float currentHealth;
-    public bool isInvincible = false;
+    // ¿¡ÀÌÀüÆ® ´É·ÂÄ¡
+    private float _maxHealth = 100f; // ÃÖ´ë Ã¼·Â
+    private float _currentHealth;    // ÇöÀç Ã¼·Â
+    private bool _isInvincible = false; // ¹«Àû »óÅÂ ¿©ºÎ
+    private bool _isAttacking = false; // [Ãß°¡] °ø°İ »óÅÂ ¿©ºÎ
+    private bool _canCounterAttack = false;
 
-    public bool canCounterAttack = false;        // ë°˜ê²© ê°€ëŠ¥ ìƒíƒœ í”Œë˜ê·¸
-    public float defenseInitiationTime = -1f;    // ë°©ì–´ ì‹œì‘ ì‹œê°„ (ìœ ì˜ˆ ì‹œê°„ íŒì •ìš©, -1fëŠ” ë¹„í™œì„±)
-    public float currentAttackDamageMultiplier = 1.0f; // í˜„ì¬ ê³µê²©ì— ì ìš©ë  ë°ë¯¸ì§€ ë°°ìœ¨
+    public bool canCounterAttack
+    {
+        get {  return _canCounterAttack; }
+        set { _canCounterAttack = value; }
+    }
+    public float maxHealth
+    {
+        get { return _maxHealth; }
+        set { _maxHealth = value; }
+    }
+    public float currentHealth
+    {
+        get { return _currentHealth; }
+        set { _currentHealth = value; }
+    }
+    public bool isInvincible
+    {
+        get { return _isInvincible; }
+        set { _isInvincible = value; }
+    }
 
-    // ì  ì •ë³´
-    public Transform enemyTransform;
-    public float enemyDistance;
-    public float enemyHealth;                     // ì ì˜ ì²´ë ¥ (AgentControllerì—ì„œ ì—…ë°ì´íŠ¸)
+    // Ãß°¡
+    public bool isAttacking
+    {
+        get { return _isAttacking; }
+        set { _isAttacking = value; }
+    }
 
-    // í–‰ë™ ì¿¨íƒ€ì„ ê´€ë ¨
-    public Dictionary<string, float> actionCooldowns = new Dictionary<string, float>();
-    public const string ATTACK_COOLDOWN_KEY = "Attack"; // ê³µê²© ì¿¨íƒ€ì„ í‚¤
-    public const string DEFEND_COOLDOWN_KEY = "Defend"; // ë°©ì–´ ì¿¨íƒ€ì„ í‚¤
-    public const string EVADE_COOLDOWN_KEY = "Evade";   // íšŒí”¼ ì¿¨íƒ€ì„ í‚¤
+    // Àû Á¤º¸
+    private Transform _enemyTransform; // ÀûÀÇ Transform
+    private float _enemyDistance;      // Àû°úÀÇ °Å¸®
+    private float _enemyHealth;        // ÀûÀÇ Ã¼·Â (¾Ë ¼ö ÀÖ´Ù°í °¡Á¤)
 
-    public float attackCooldownDuration = 2.5f;  // ê³µê²© ì¿¨íƒ€ì„ ì§€ì† ì‹œê°„
-    public float defendCooldownDuration = 2.5f;  // ë°©ì–´ ì¿¨íƒ€ì„ ì§€ì† ì‹œê°„
-    public float evadeCooldownDuration = 5.0f;   // íšŒí”¼ ì¿¨íƒ€ì„ ì§€ì† ì‹œê°„
+    public Transform enemyTransform
+    {
+        get { return _enemyTransform; }
+        set { _enemyTransform = value; }
+    }
+    public float enemyDistance
+    {
+        get { return _enemyDistance; }
+        set { _enemyDistance = value; }
+    }
+    public float enemyHealth
+    {
+        get { return _enemyHealth; }
+        set { _enemyHealth = value; }
+    }
+
+    // ÄğÅ¸ÀÓ (Çàµ¿ ÀÌ¸§, Á¾·á ½Ã°£)
+    private Dictionary<string, float> actionCooldowns = new Dictionary<string, float>();
+    private const string _ATTACK_COOLDOWN_KEY = "Attack"; // °ø°İ ÄğÅ¸ÀÓ Å°
+    private const string _DEFEND_COOLDOWN_KEY = "Defend"; // ¹æ¾î ÄğÅ¸ÀÓ Å°
+    private const string _EVADE_COOLDOWN_KEY = "Evade";   // È¸ÇÇ ÄğÅ¸ÀÓ Å°
+
+    public static string ATTACK_COOLDOWN_KEY 
+    {
+        get {  return _ATTACK_COOLDOWN_KEY; }
+    }// °ø°İ ÄğÅ¸ÀÓ Å°
+    public static string DEFEND_COOLDOWN_KEY
+    {
+        get { return _DEFEND_COOLDOWN_KEY; }
+    }// °ø°İ ÄğÅ¸ÀÓ Å°
+    public static string EVADE_COOLDOWN_KEY
+    {
+        get { return _EVADE_COOLDOWN_KEY; }
+    }// °ø°İ ÄğÅ¸ÀÓ Å°
+
+    private float _attackCooldownDuration = 2.5f; // °ø°İ ÄğÅ¸ÀÓ Áö¼Ó ½Ã°£
+    private float _defendCooldownDuration = 2.5f; // ¹æ¾î ÄğÅ¸ÀÓ Áö¼Ó ½Ã°£
+    private float _evadeCooldownDuration = 5.0f;  // È¸ÇÇ ÄğÅ¸ÀÓ Áö¼Ó ½Ã°£
+
+    public float attackCooldownDuration
+    {
+        get { return _attackCooldownDuration; }
+    }
+    public float defendCooldownDuration
+    {
+        get { return _defendCooldownDuration; }
+    }
+    public float evadeCooldownDuration
+    {
+        get { return _evadeCooldownDuration; }
+    }
+
 
     public AgentBlackboard()
     {
-        currentHealth = maxHealth; // í˜„ì¬ ì²´ë ¥ì„ ìµœëŒ€ ì²´ë ¥ìœ¼ë¡œ ì´ˆê¸°í™”
+        currentHealth = maxHealth; // ÇöÀç Ã¼·ÂÀ» ÃÖ´ë Ã¼·ÂÀ¸·Î ÃÊ±âÈ­
     }
 
-    // ì  ì •ë³´ ì—…ë°ì´íŠ¸ ë©”ì†Œë“œ
+    // Àû Á¤º¸ ¾÷µ¥ÀÌÆ® ¸Ş¼Òµå
     public void UpdateEnemyInfo(Transform enemy, float distance, float health)
     {
         this.enemyTransform = enemy;
@@ -41,60 +110,47 @@ public class AgentBlackboard
         this.enemyHealth = health;
     }
 
-    // íŠ¹ì • í–‰ë™ì´ ì‚¬ìš© ê°€ëŠ¥í•œì§€ (ì¿¨íƒ€ì„ì´ ì§€ë‚¬ëŠ”ì§€) í™•ì¸í•˜ëŠ” ë©”ì†Œë“œ
+    // Æ¯Á¤ Çàµ¿ÀÌ »ç¿ë °¡´ÉÇÑÁö (ÄğÅ¸ÀÓÀÌ Áö³µ´ÂÁö) È®ÀÎÇÏ´Â ¸Ş¼Òµå
     public bool IsActionReady(string actionKey)
     {
-        // ë”•ì…”ë„ˆë¦¬ì— í‚¤ê°€ ì—†ê±°ë‚˜ (ì•„ì§ í•œ ë²ˆë„ ì‚¬ìš© ì•ˆ í•¨), í˜„ì¬ ì‹œê°„ì´ ê¸°ë¡ëœ ì¿¨íƒ€ì„ ì¢…ë£Œ ì‹œê°„ë³´ë‹¤ í¬ê±°ë‚˜ ê°™ìœ¼ë©´ ì‚¬ìš© ê°€ëŠ¥
         return !actionCooldowns.ContainsKey(actionKey) || Time.time >= actionCooldowns[actionKey];
     }
 
-    // [ìˆ˜ì •] íŠ¹ì • í–‰ë™ì˜ ì¿¨íƒ€ì„ì„ ì„¤ì •í•˜ëŠ” ë©”ì†Œë“œ (if-else if êµ¬ë¬¸ìœ¼ë¡œ ëª…í™•í™”)
+    // Æ¯Á¤ Çàµ¿ÀÇ ÄğÅ¸ÀÓÀ» ¼³Á¤ÇÏ´Â ¸Ş¼Òµå
     public void SetActionCooldown(string actionKey)
     {
-        float duration = 0f;
-
-        if (actionKey == ATTACK_COOLDOWN_KEY)
+        float duration = actionKey switch
         {
-            duration = attackCooldownDuration;
-        }
-        else if (actionKey == DEFEND_COOLDOWN_KEY)
-        {
-            duration = defendCooldownDuration;
-        }
-        else if (actionKey == EVADE_COOLDOWN_KEY)
-        {
-            duration = evadeCooldownDuration;
-        }
-        // ë‹¤ë¥¸ ì¿¨íƒ€ì„ í‚¤ê°€ ì¶”ê°€ë  ê²½ìš° ì—¬ê¸°ì— else ifë¥¼ ì¶”ê°€í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
-
-        // ìœ íš¨í•œ ì¿¨íƒ€ì„ ì§€ì† ì‹œê°„ì´ ì„¤ì •ëœ ê²½ìš°ì—ë§Œ ì¿¨íƒ€ì„ ê¸°ë¡
-        if (duration > 0)
-        {
-            actionCooldowns[actionKey] = Time.time + duration;
-        }
-        else if (!string.IsNullOrEmpty(actionKey) && duration == 0)
-        {
-            // ì¿¨íƒ€ì„ì´ 0ì¸ í–‰ë™ì€ ì¦‰ì‹œ ì‚¬ìš© ê°€ëŠ¥í•˜ë„ë¡ ê¸°ì¡´ í‚¤ë¥¼ ì œê±°í•˜ê±°ë‚˜ ì‹œê°„ì„ ê³¼ê±°ë¡œ ì„¤ì •í•  ìˆ˜ ìˆìœ¼ë‚˜,
-            // í˜„ì¬ëŠ” duration > 0 ì¡°ê±´ë§Œ ìˆìœ¼ë¯€ë¡œ ì¿¨íƒ€ì„ 0ì¸ í–‰ë™ì€ ì—¬ê¸°ì— í•´ë‹¹í•˜ì§€ ì•ŠìŒ.
-            // í•„ìš”ì‹œ actionCooldowns.Remove(actionKey); ë“±ì„ ê³ ë ¤.
-        }
+            _ATTACK_COOLDOWN_KEY => attackCooldownDuration,
+            _DEFEND_COOLDOWN_KEY => defendCooldownDuration,
+            _EVADE_COOLDOWN_KEY => evadeCooldownDuration,
+            _ => 0f
+        };
+        actionCooldowns[actionKey] = Time.time + duration;
     }
 
-    // ë°ë¯¸ì§€ë¥¼ ë°›ëŠ” ë©”ì†Œë“œ (ì²´ë ¥ ê°ì†Œë§Œ ë‹´ë‹¹)
+    // µ¥¹ÌÁö¸¦ ¹Ş´Â ¸Ş¼Òµå
     public void TakeDamage(float amount)
     {
-        currentHealth -= amount;
-        if (currentHealth < 0) currentHealth = 0;
-        // ìƒì„¸ ë¡œê·¸ ìƒì„± ê¸°ëŠ¥ì€ AgentControllerë¡œ ì´ë™ë˜ì—ˆìŠµë‹ˆë‹¤.
+        if (!isInvincible) // ¹«Àû »óÅÂ°¡ ¾Æ´Ï¶ó¸é
+        {
+            currentHealth -= amount;
+            if (currentHealth < 0) currentHealth = 0;
+            Debug.Log($"¿¡ÀÌÀüÆ®°¡ {amount} µ¥¹ÌÁö¸¦ ¹ŞÀ½, ÇöÀç Ã¼·Â: {currentHealth}");
+        }
+        else
+        {
+            Debug.Log("¿¡ÀÌÀüÆ®°¡ ¹«Àû »óÅÂÀÌ¹Ç·Î µ¥¹ÌÁö¸¦ ¹ŞÁö ¾ÊÀ½.");
+        }
     }
 
-    // ë¬´ì  ìƒíƒœ ì‹œì‘ ë©”ì†Œë“œ
-    public void StartInvincibility(float duration) // duration ë§¤ê°œë³€ìˆ˜ëŠ” í˜„ì¬ ì‚¬ìš©ë˜ì§€ ì•Šìœ¼ë‚˜, í–¥í›„ í™•ì¥ì„±ì„ ìœ„í•´ ìœ ì§€
+    // ¹«Àû »óÅÂ ½ÃÀÛ ¸Ş¼Òµå
+    public void StartInvincibility(float duration)
     {
         isInvincible = true;
+        // ½ÇÁ¦·Î´Â ¿¡ÀÌÀüÆ® ÄÁÆ®·Ñ·¯¿¡¼­ ÄÚ·çÆ¾À» »ç¿ëÇÏ¿© ¹«Àû »óÅÂ¸¦ ÇØÁ¦ÇÒ ¼ö ÀÖ½À´Ï´Ù.
     }
-
-    // ë¬´ì  ìƒíƒœ ì¢…ë£Œ ë©”ì†Œë“œ
+    // ¹«Àû »óÅÂ Á¾·á ¸Ş¼Òµå
     public void EndInvincibility()
     {
         isInvincible = false;

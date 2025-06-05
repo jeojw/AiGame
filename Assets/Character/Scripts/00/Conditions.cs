@@ -134,7 +134,7 @@ public class CanCounterAttackCondition : BTConditionNode
             enemyAnimator = blackboard.enemyTransform.GetComponent<Animator>();
     }
 
-    protected override bool CheckCondition()
+    public override bool CheckCondition()
     {
         if (enemyAnimator == null)
         {

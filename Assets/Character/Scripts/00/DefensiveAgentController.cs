@@ -70,7 +70,7 @@ public class DefensiveAgentController : AgentController
     public class IsCounterAttackReadyCondition : BTConditionNode
     {
         public IsCounterAttackReadyCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
-        protected override bool CheckCondition()
+        public override bool CheckCondition()
         {
             return blackboard.canCounterAttack;
         }
@@ -85,7 +85,7 @@ public class DefensiveAgentController : AgentController
         }
         public override NodeStatus Tick()
         {
-            return controller.PerformAttack(controller.counterDamageMultiplier);
+            return controller.PerformAttack();
         }
     }
 
@@ -93,6 +93,6 @@ public class DefensiveAgentController : AgentController
     {
         private BTConditionNode conditionToNegate;
         public NotNode(BTConditionNode condition) : base(condition.Blackboard, condition.AgentTransform) { this.conditionToNegate = condition; }
-        protected override bool CheckCondition() { return conditionToNegate.Tick() == NodeStatus.FAILURE; }
+        public override bool CheckCondition() { return conditionToNegate.Tick() == NodeStatus.FAILURE; }
     }
 }

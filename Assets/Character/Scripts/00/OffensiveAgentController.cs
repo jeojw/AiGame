@@ -1,61 +1,73 @@
-// File: OffensiveAgentController.cs (OffensiveAgentController.cs ï¿½ï¿½ï¿½ï¿½)
+// File: OffensiveAgentController.cs (OffensiveAgentController.cs ÆÄÀÏ)
 using UnityEngine;
 using System.Collections.Generic;
 
 public class OffensiveAgentController : AgentController
 {
-    public float offensiveAttackRange = 2.0f;
-    public float fleeHealthThreshold = 20f;
+    public float offensiveAttackRange = 4.0f; // °ø°ÝÇü ¿¡ÀÌÀüÆ®ÀÇ °ø°Ý ¹üÀ§ (±âº»°ª°ú ´Ù¸¦ ¼ö ÀÖÀ½)
+    public float repositionDistance = 10.0f;   // ¼±È£ÇÏ´Â ÀüÅõ °Å¸® (Àç¹èÄ¡ ±âÁØ)
+    public float fleeHealthThreshold = 20f;   // µµ¸ÁÀ» °í·ÁÇÒ Ã¼·Â ±âÁØÄ¡
 
     protected override void InitializeBehaviorTree()
     {
+        // °ø°ÝÇü ¿¡ÀÌÀüÆ®ÀÇ Çàµ¿ Æ®¸® Á¤ÀÇ
+        // Àü·«: °ø°Ý ¿ì¼±, Ã¼·ÂÀÌ ³·°Å³ª ÀûÀÌ °ø°Ý ÁßÀÌ¸é È¸ÇÇ, ÇÊ¿ä½Ã Àç¹èÄ¡.
+
         rootNode = new BTSelector(blackboard, transform, new List<BTNode>
-
-
         {
-
-            // 1. ï¿½ï¿½ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ö°ï¿½, ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½. ï¿½Ì°ï¿½ï¿½ï¿½ ï¿½Ö¿ì¼± ï¿½ï¿½Ç¥ï¿½Ô´Ï´ï¿½.
-            new BTSequence(blackboard, transform, new List<BTNode>
-            {
-                new IsEnemyInAttackRangeCondition(blackboard, transform, offensiveAttackRange),
-                new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.ATTACK_COOLDOWN_KEY),
-                new AttackEnemyAction(blackboard, transform)
+            // [¼öÁ¤] 0. ÇÇ°Ý ½ÃÀÇ ´ëÀÀÀ» ÃÖ¿ì¼± ¼øÀ§·Î
+            new BTSequence(blackboard, transform, new List<BTNode> {
+                new IsGetAttackCondition(blackboard, transform),
+                new GetAttackAction(blackboard, transform),
             }),
 
-            // 2. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½: Ã¼ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ó¸ï¿½ ï¿½Æ´Ï¶ï¿½, ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ ï¿½Ï´ï¿½ È¸ï¿½ï¿½ï¿½Ï¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½å¸§ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.
+            // 1. Ã¼·ÂÀÌ ¸Å¿ì ³·°í È¸ÇÇ°¡ ÁØºñµÇ¾úÀ¸¸é È¸ÇÇ
             new BTSequence(blackboard, transform, new List<BTNode>
             {
-                new IsEnemyAttackingCondition(blackboard, transform),
-                new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.EVADE_COOLDOWN_KEY),
-                new EvadeAction(blackboard, transform)
+                new IsHealthLowCondition(blackboard, transform, fleeHealthThreshold), // Ã¼·ÂÀÌ µµ¸Á ±âÁØÄ¡ ÀÌÇÏÀÎ°¡?
+                new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.EVADE_COOLDOWN_KEY), // È¸ÇÇ ÄðÅ¸ÀÓÀÌ ÁØºñµÇ¾ú´Â°¡?
+                new EvadeAction(blackboard, transform) // È¸ÇÇ Çàµ¿ (¶Ç´Â FleeAction)
             }),
 
-            
-
-            // 3. ï¿½Å¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Û¿ï¿½ ï¿½Ö´Ù¸ï¿½, ï¿½Ü¼ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
+            // 2. ÀûÀÌ º¸ÀÌ°í, ¹üÀ§ ³»¿¡ ÀÖÀ¸¸ç, °ø°ÝÀÌ ÁØºñµÇ¾úÀ¸¸é °ø°Ý
             new BTSequence(blackboard, transform, new List<BTNode>
             {
-                // NotNodeï¿½ï¿½ ï¿½Ì¿ï¿½ï¿½ï¿½ 'ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½È¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ê´Ù¸ï¿½' ï¿½Ì¶ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.
-                new NotNode(new IsEnemyInAttackRangeCondition(blackboard, transform, offensiveAttackRange)),
-                new MoveTowardsEnemyAction(blackboard, transform, 3f, offensiveAttackRange * 1.0f)
+                new IsEnemyVisibleCondition(blackboard, transform), // ÀûÀÌ º¸ÀÌ´Â°¡?
+                new IsEnemyInAttackRangeCondition(blackboard, transform, offensiveAttackRange), // ÀûÀÌ °ø°Ý ¹üÀ§ ³»¿¡ ÀÖ´Â°¡?
+                new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.ATTACK_COOLDOWN_KEY), // °ø°Ý ÄðÅ¸ÀÓÀÌ ÁØºñµÇ¾ú´Â°¡?
+                new AttackEnemyAction(blackboard, transform), // °ø°Ý Çàµ¿
             }),
 
-            // 4. ï¿½âº» ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ç¿ï¿½ ï¿½Ø´ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
+            // 3. ÀûÀÌ º¸ÀÏ °æ¿ì °Å¸® Á¶Á¤ (Àç¹èÄ¡ Æ÷ÇÔ)
+            new BTSequence(blackboard, transform, new List<BTNode>
+            {
+                new IsEnemyVisibleCondition(blackboard, transform),
+                new BTSelector(blackboard, transform, new List<BTNode>
+                {
+                    // ¾ÆÁ÷ °ø°Ý ¹üÀ§ ¹ÛÀÌ¸é Á¢±Ù
+                    new BTSequence(blackboard, transform, new List<BTNode>
+                    {
+                        new NotNode(new IsEnemyInAttackRangeCondition(blackboard, transform, offensiveAttackRange)),
+                        new MoveTowardsEnemyAction(blackboard, transform, 5f, offensiveAttackRange * 0.9f)
+                    }),
+
+                    // °ø°Ý ¹üÀ§ ¾ÈÀÌ³ª ³Ê¹« °¡±î¿ì¸é µÚ·Î »ìÂ¦ ÀÌµ¿
+                    new BTSequence(blackboard, transform, new List<BTNode>
+                    {
+                        new IsEnemyTooCloseCondition(blackboard, transform, 1.0f),
+                        new MoveAwayFromEnemyAction(blackboard, transform, 3f, 1.5f)
+                    }),
+                })
+            }),
+
+            // 4. ±âº» Çàµ¿: ÀûÀÌ º¸ÀÌÁö¸¸ ´Ù¸¥ Çàµ¿ Á¶°ÇÀÌ ÃæÁ·µÇÁö ¾ÊÀ¸¸é Á¢±Ù (ÈÄ¼øÀ§)
+            new BTSequence(blackboard, transform, new List<BTNode> {
+                new IsEnemyVisibleCondition(blackboard, transform),
+                new MoveTowardsEnemyAction(blackboard, transform, 5f, offensiveAttackRange * 0.9f)
+            }),
+
+            // 5. ÀûÀÌ ¾ø°Å³ª ´Ù¸¥ Á¶°ÇÀÌ ÃæÁ·µÇÁö ¾ÊÀ¸¸é ´ë±â
             new IdleAction(blackboard, transform)
         });
-    }
-
-    // NotNode Å¬ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
-    public class NotNode : BTConditionNode
-    {
-        private BTConditionNode conditionToNegate;
-        public NotNode(BTConditionNode condition) : base(condition.Blackboard, condition.AgentTransform)
-        {
-            this.conditionToNegate = condition;
-        }
-        protected override bool CheckCondition()
-        {
-            return conditionToNegate.Tick() == NodeStatus.FAILURE;
-        }
     }
 }
