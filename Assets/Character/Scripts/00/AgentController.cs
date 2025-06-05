@@ -20,7 +20,6 @@ public abstract class AgentController : MonoBehaviour
     protected BTNode rootNode;            // 행동 트리의 루트 노드
 
     private Animator animator; // Animator 참조 변수
-    private CharacterController characterController;
 
     protected virtual void Awake()
     {
@@ -29,7 +28,6 @@ public abstract class AgentController : MonoBehaviour
         blackboard.currentHealth = blackboard.maxHealth;
 
         animator = GetComponent<Animator>(); // Animator 컴포넌트 가져오기
-        characterController = GetComponent<CharacterController>(); // CharacterController 컴포넌트 가져오기
         rb = GetComponent<Rigidbody>();
         animationController = GetComponent<AnimationController>();
     }
@@ -105,7 +103,6 @@ public abstract class AgentController : MonoBehaviour
         if (currentDistance > stopDistance)
         {
             Vector3 direction = (targetPosition - transform.position).normalized;
-            characterController.Move(direction * speed * Time.deltaTime); // CharacterController로 이동
             transform.LookAt(new Vector3(targetPosition.x, transform.position.y, targetPosition.z)); // Y축 고정하여 바라보기
 
             if (animator != null) animator.SetFloat("Speed", speed);
@@ -148,7 +145,6 @@ public abstract class AgentController : MonoBehaviour
 
         // 아직 거리 부족하면 이동
         Vector3 moveVector = direction * speed * Time.deltaTime;
-        characterController.Move(moveVector);
         transform.LookAt(transform.position + direction);
 
         if (animator != null) animator.SetFloat("Speed", speed);
