@@ -135,33 +135,11 @@ public class IsEnemyAttackingCondition : BTConditionNode
 
 public class CanCounterAttackCondition : BTConditionNode
 {
-    private Animator enemyAnimator;
-    private bool wasLastFrameAttack; // ���� �������� ���� ���¸� ���
-
-    public CanCounterAttackCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform)
-    {
-        if (blackboard.enemyTransform != null)
-            enemyAnimator = blackboard.enemyTransform.GetComponent<Animator>();
-    }
+    public CanCounterAttackCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
 
     public override bool CheckCondition()
     {
-        if (enemyAnimator == null)
-        {
-            if (blackboard.enemyTransform != null)
-                enemyAnimator = blackboard.enemyTransform.GetComponent<Animator>();
-            if (enemyAnimator == null) return false;
-        }
-
-        bool isCurrentlyAttack = enemyAnimator.GetCurrentAnimatorStateInfo(0).IsTag("Attack");
-
-        // �ٽ� ����: ���� �����ӿ��� ���� ���̾�����, ���� �����ӿ��� ���� ���� �ƴ� �� = ������ ���� ����
-        bool canCounter = wasLastFrameAttack && !isCurrentlyAttack;
-
-        // ���� �������� ���� ���� ���¸� ����
-        wasLastFrameAttack = isCurrentlyAttack;
-
-        return canCounter;
+        return blackboard.canCounterAttack;
     }
 }
 
@@ -170,7 +148,7 @@ public class DefendSuccessCondition : BTConditionNode
     public DefendSuccessCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
     public override bool CheckCondition()
     {
-        return false;
+        return blackboard.canCounterAttack;
     }
 }
 

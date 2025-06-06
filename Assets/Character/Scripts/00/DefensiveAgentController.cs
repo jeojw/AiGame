@@ -28,15 +28,15 @@ public class DefensiveAgentController : AgentController
                         //new IsNotCooldwonReadyCondition(blackboard, transform, AgentBlackboard.EVADE_COOLDOWN_KEY),
                         new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.DEFEND_COOLDOWN_KEY),
                         new DefendAction(blackboard, transform),
+                        new DefendSuccessCondition(blackboard, transform),
+
+                        new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.ATTACK_COOLDOWN_KEY),
+
+                        new ChangeDefendToAttack(blackboard, transform),
                         new CanCounterAttackCondition(blackboard, transform),
-                        new BTSequence(blackboard, transform, new List<BTNode>
-                        {
-                            new IsCounterAttackReadyCondition(blackboard, transform),
-                            new IsEnemyInAttackRangeCondition(blackboard, transform, attackRange),
-                            new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.ATTACK_COOLDOWN_KEY),
-                            new NotNode(new IsHealthLowCondition(blackboard, transform, counterAttackHealthThreshold)),
-                            new CounterAttackAction(blackboard, transform, this)
-                        })
+                        new IsEnemyInAttackRangeCondition(blackboard, transform, attackRange),
+                        new NotNode(new IsHealthLowCondition(blackboard, transform, counterAttackHealthThreshold)),
+                        new CounterAttackAction(blackboard, transform, this)
                     }),
                     // 2순위: 방어가 불가능하면 회피 시도
                     

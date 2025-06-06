@@ -63,7 +63,7 @@ public class HitboxController : MonoBehaviour
     void Update()
     {
         agentBlackboard.isGetAttacked = _isGetAttack;
-        agentBlackboard.isDefending = _isBlocked;
+        agentBlackboard.canCounterAttack = _isBlocked;
 
         if (_isGetAttack)
         {
@@ -81,7 +81,7 @@ public class HitboxController : MonoBehaviour
             invincibilityStartTime = 0;
         }
             
-        if (Time.time - blockCoolStartTime > invincibilityDuration && blockCoolStartTime != 0)
+        if (Time.time - blockCoolStartTime > blockCoolTime && blockCoolStartTime != 0)
         {
             _isBlocked = false;
             blockCoolStartTime = 0;

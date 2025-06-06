@@ -248,6 +248,16 @@ public abstract class AgentController : MonoBehaviour
         return NodeStatus.SUCCESS;
     }
 
+    public virtual NodeStatus PerformChangeDefendToAttack()
+    {
+        if (animator != null)
+        {
+            animator.SetTrigger("IsDefendSuccess");
+            animator.SetTrigger("ChangeDefendToAttack");
+        }
+        return NodeStatus.SUCCESS;
+    }
+
     public virtual NodeStatus PerformEvade()
     {
         Debug.Log("행동: 회피 수행!");

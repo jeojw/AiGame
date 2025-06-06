@@ -88,6 +88,21 @@ public class DefendAction : BTActionNode
     }
 }
 
+public class ChangeDefendToAttack : BTActionNode
+{
+    public ChangeDefendToAttack(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
+
+    public override NodeStatus Tick()
+    {
+        AgentController controller = agentTransform.GetComponent<AgentController>();
+        if (controller != null)
+        {
+            return controller.PerformChangeDefendToAttack();
+        }
+        return NodeStatus.FAILURE;
+    }
+}
+
 // ȸ���ϴ� �ൿ ���
 public class EvadeAction : BTActionNode
 {
@@ -151,7 +166,6 @@ public class GetAttackAction : BTActionNode
         {
             return controller.GetAttack();
         }
-
         return NodeStatus.FAILURE;
     }
 }
