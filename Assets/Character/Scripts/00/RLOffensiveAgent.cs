@@ -157,9 +157,9 @@ public class RLOffensiveAgent : Agent
         // [디버그 추가] 이 메소드가 호출되는지 확인
         Debug.Log($"[RL Agent] 1. OnActionReceived 호출됨. 받은 액션: {actions.DiscreteActions[0]}");
 
-        int action = actions.DiscreteActions[0];
+        int mainAction = actions.DiscreteActions[0];
 
-        switch (action)
+        switch (mainAction)
         {
             case 0:
                 myController.Idle();
@@ -178,9 +178,10 @@ public class RLOffensiveAgent : Agent
                 }
 
                     break;
-            case 4:
-                if (myBlackboard.IsActionReady(AgentBlackboard.EVADE_COOLDOWN_KEY))
-                    myController.PerformEvade();
+            case 4: // 회피
+                    // 주요 행동이 '회피'일 경우, Branch 1에서 '회피 방향'을 가져옵니다.
+                int evadeDirection = actions.DiscreteActions[1];
+                myController.PerformDirectionalEvade(evadeDirection);
                 break;
         }
 

@@ -6,7 +6,7 @@ public class DefensiveAgentController : AgentController
 {
     private float defensiveStanceRange = 7f;
     private float counterAttackHealthThreshold = 50f;
-    private float counterDamageMultiplier = 4.0f;
+    private float counterDamageMultiplier = 3.0f;
 
     protected override void InitializeBehaviorTree()
     {

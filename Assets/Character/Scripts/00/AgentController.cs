@@ -9,7 +9,8 @@ public abstract class AgentController : MonoBehaviour
     protected float attackRange = 2f;      // 공격 범위
     private float closeRangeThreshold = 1f; // "너무 가까움" 판단 기준 거리
     private float lowHealthThreshold = 30f; // 체력 낮음 판단 기준 (비율 또는 절대값)
-    private float evadeDistance = 2.0f; // 회피 시 이동할 거리
+    private float evadeDistance = 2.0f; // 이 변수는 이제 사용하지 않거나 대시 거리로 활용할 수 있습니다.
+    private float dashSpeed = 15f; // [추가] 대시 속도를 위한 변수
 
     private Rigidbody rb;
     private AnimationController animationController;
@@ -210,7 +211,23 @@ public abstract class AgentController : MonoBehaviour
             if (animator != null)
                 animator.SetTrigger("IsAttacking");
 
-            // [수정] 데미지 계산 시 배율을 곱해줍니다.
+            // --- [추가 시작] 돌진 공격 보너스 로직 ---
+            const float chargeSpeedThreshold = 1.0f; // '돌진'으로 인정할 최소 전진 속도
+            const float chargeDamageBonus = 1.5f;    // 돌진 시 추가 데미지 배율 (기존 배율에 곱해짐)
+
+            // 현재 캐릭터가 바라보는 정면 방향으로의 속도를 계산합니다.
+            float forwardSpeed = Vector3.Dot(rb.linearVelocity, transform.forward);
+
+            // 만약 전진 속도가 기준치 이상이면, 돌진 보너스를 적용합니다.
+            if (forwardSpeed > chargeSpeedThreshold)
+            {
+                Debug.Log("돌진 공격! 데미지 보너스 적용!");
+                damageMultiplier *= chargeDamageBonus; // 기존 배율에 추가 배율을 곱합니다.
+            }
+            // --- [추가 끝] ---
+
+
+            // 데미지 계산 시 최종 배율을 곱해줍니다.
             float attackDamage = 10f * damageMultiplier;
 
             if (Physics.SphereCast(transform.position + Vector3.up, 0.8f, transform.forward, out RaycastHit hit, attackRange))
@@ -218,7 +235,6 @@ public abstract class AgentController : MonoBehaviour
                 AgentController enemyController = hit.collider.GetComponentInParent<AgentController>();
                 if (enemyController != null && enemyController != this)
                 {
-                    // [수정] 로그에도 배율을 표시하여 확인하기 쉽게 만듭니다.
                     Debug.Log($"{gameObject.name}이(가) {enemy.name}을(를) 공격하여 {attackDamage}(x{damageMultiplier}) 데미지를 입혔습니다.");
                     enemyController.HandleDamage(attackDamage);
                 }
@@ -267,23 +283,60 @@ public abstract class AgentController : MonoBehaviour
 
     public virtual NodeStatus PerformEvade()
     {
-        Debug.Log("행동: 회피 수행!");
-        blackboard.SetActionCooldown(AgentBlackboard.EVADE_COOLDOWN_KEY); // 회피 쿨타임 설정 [cite: 10]
-        blackboard.StartInvincibility(1.0f); // 회피 중 짧은 시간 무적 [cite: 10]
-        
+        Debug.Log("행동: 무작위 방향으로 회피 수행!");
+        blackboard.SetActionCooldown(AgentBlackboard.EVADE_COOLDOWN_KEY);
+
+        // 0:앞, 1:뒤, 2:왼쪽, 3:오른쪽 중 하나를 무작위로 선택
+        int randomDirection = Random.Range(0, 4);
+        PerformDirectionalDash(randomDirection); // 아래에서 만들 새로운 메소드 호출
+
+        return NodeStatus.SUCCESS;
+    }
+
+    // [추가] RL 에이전트가 방향을 지정하여 호출할 메소드
+    public virtual NodeStatus PerformDirectionalEvade(int direction)
+    {
+        if (!blackboard.IsActionReady(AgentBlackboard.EVADE_COOLDOWN_KEY))
+            return NodeStatus.FAILURE;
+
+        Debug.Log($"행동: {direction} 방향으로 회피 수행!");
+        blackboard.SetActionCooldown(AgentBlackboard.EVADE_COOLDOWN_KEY);
+        PerformDirectionalDash(direction);
+        return NodeStatus.SUCCESS;
+    }
+
+    // [추가] 실제 물리적인 대시를 처리하는 메소드
+    private void PerformDirectionalDash(int direction)
+    {
+        Vector3 dashVector = Vector3.zero;
+
+        switch (direction)
+        {
+            case 0: // Forward
+                dashVector = transform.forward;
+                break;
+            case 1: // Backward
+                dashVector = -transform.forward;
+                break;
+            case 2: // Left
+                dashVector = -transform.right;
+                break;
+            case 3: // Right
+                dashVector = transform.right;
+                break;
+        }
+
         if (animator != null)
         {
+            // 모든 방향 대시에 동일한 회피 애니메이션 Trigger를 사용할 수 있습니다.
             animator.SetTrigger("IsEvading");
         }
 
-        if (!evadeFinished)
-            return NodeStatus.RUNNING;
-
-        Invoke(nameof(StopEvadeInvincibility), 1.0f);
-
-        animator.SetTrigger("IsEvadeFinish");
-
-        return NodeStatus.SUCCESS;
+        // 순간적인 힘을 가해 캐릭터를 밀어냅니다.
+        if (rb != null)
+        {
+            rb.AddForce(dashVector * dashSpeed, ForceMode.Impulse);
+        }
     }
 
     public virtual NodeStatus Idle()
@@ -318,11 +371,7 @@ public abstract class AgentController : MonoBehaviour
         return NodeStatus.SUCCESS;
     }
 
-    private void StopEvadeInvincibility()
-    {
-        blackboard.EndInvincibility();
-        Debug.Log("회피 무적 상태 종료.");
-    }
+
 
     public void HandleDamage(float damage)
     {
