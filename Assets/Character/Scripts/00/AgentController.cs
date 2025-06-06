@@ -14,6 +14,7 @@ public abstract class AgentController : MonoBehaviour
     private Rigidbody rb;
     private AnimationController animationController;
     private bool attackFinished = false;
+    private bool evadeFinished = false;
     private bool getAttackFinished = false;
 
     protected AgentBlackboard _blackboard; // 블랙보드 참조
@@ -50,6 +51,11 @@ public abstract class AgentController : MonoBehaviour
                 attackFinished = true;
             };
 
+            animationController.onEvadeFinished += () =>
+            {
+                evadeFinished = true;
+            };
+
             animationController.onGetAttackFinished += () =>
             {
                 getAttackFinished = true;
@@ -60,7 +66,7 @@ public abstract class AgentController : MonoBehaviour
     // 행동 트리를 초기화하는 추상 메소드 (파생 클래스에서 구현)
     protected abstract void InitializeBehaviorTree();
 
-    protected virtual void Update()
+    protected virtual void FixedUpdate()
     {
         if (enemy == null)
         {
@@ -110,6 +116,8 @@ public abstract class AgentController : MonoBehaviour
             Vector3 direction = (targetPosition - transform.position).normalized;
             transform.LookAt(new Vector3(targetPosition.x, transform.position.y, targetPosition.z)); // Y축 고정하여 바라보기
 
+            rb.MovePosition(rb.position + direction * speed * Time.fixedDeltaTime);
+
             if (animator != null) animator.SetFloat("Speed", speed);
             Debug.Log("행동: 목표 지점으로 이동 중 (CharacterController)");
 
@@ -141,6 +149,8 @@ public abstract class AgentController : MonoBehaviour
         // 목표 거리보다 충분히 멀면 멈추기
         if (currentDistance >= desiredDistance)
         {
+            rb.MovePosition(rb.position + direction * speed * Time.fixedDeltaTime);
+
             if (animator != null) animator.SetFloat("Speed", 0f);
 
             Debug.Log("행동: 목표 지점으로부터 멀어지는 중 - 완료");
@@ -243,14 +253,18 @@ public abstract class AgentController : MonoBehaviour
         Debug.Log("행동: 회피 수행!");
         blackboard.SetActionCooldown(AgentBlackboard.EVADE_COOLDOWN_KEY); // 회피 쿨타임 설정 [cite: 10]
         blackboard.StartInvincibility(1.0f); // 회피 중 짧은 시간 무적 [cite: 10]
-        Invoke(nameof(StopEvadeInvincibility), 1.0f);
-
+        
         if (animator != null)
         {
             animator.SetTrigger("IsEvading");
         }
 
+        if (!evadeFinished)
+            return NodeStatus.RUNNING;
 
+        Invoke(nameof(StopEvadeInvincibility), 1.0f);
+
+        animator.SetTrigger("IsEvadeFinish");
 
         return NodeStatus.SUCCESS;
     }

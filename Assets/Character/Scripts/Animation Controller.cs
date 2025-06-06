@@ -11,6 +11,14 @@ public class AnimationController : MonoBehaviour
         get { return _onAttackFinished; }
         set { _onAttackFinished = value; }
     }
+
+    private Action _onEvadeFinished;
+    public Action onEvadeFinished
+    {
+        get { return _onEvadeFinished; }
+        set { _onEvadeFinished = value; }
+    }
+
     private Action _onGetAttackFinished;
     public Action onGetAttackFinished
     {
@@ -82,6 +90,11 @@ public class AnimationController : MonoBehaviour
     public void OnAttackAnimationFinished()
     {
         _onAttackFinished?.Invoke();
+    }
+
+    public void OnEvadeAnimationFinished()
+    {
+        _onEvadeFinished?.Invoke();
     }
 
     public void OnGetAttackAnimationFinished()

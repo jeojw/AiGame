@@ -19,8 +19,13 @@ public class DefensiveAgentController : AgentController
                 new IsEnemyAttackingCondition(blackboard, transform), // 적이 공격 중인가?
                 new BTSelector(blackboard, transform, new List<BTNode> // 방어 또는 회피 중 하나를 선택
                 {
-                    // 1순위: 방어 시도
+                    //new BTSequence(blackboard, transform, new List<BTNode> {
+                    //    new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.EVADE_COOLDOWN_KEY),
+                    //    new EvadeAction(blackboard, transform)
+                    //}),
+
                     new BTSequence(blackboard, transform, new List<BTNode> {
+                        //new IsNotCooldwonReadyCondition(blackboard, transform, AgentBlackboard.EVADE_COOLDOWN_KEY),
                         new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.DEFEND_COOLDOWN_KEY),
                         new DefendAction(blackboard, transform),
                         new CanCounterAttackCondition(blackboard, transform),
@@ -34,10 +39,7 @@ public class DefensiveAgentController : AgentController
                         })
                     }),
                     // 2순위: 방어가 불가능하면 회피 시도
-                    new BTSequence(blackboard, transform, new List<BTNode> {
-                        new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.EVADE_COOLDOWN_KEY),
-                        new EvadeAction(blackboard, transform)
-                    })
+                    
                     // 만약 방어와 회피 모두 쿨타임이라면, 이 Selector는 실패하고 에이전트는 공격을 맞게 됩니다.
                 })
             }),

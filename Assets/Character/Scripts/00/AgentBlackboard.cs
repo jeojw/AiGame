@@ -9,6 +9,9 @@ public class AgentBlackboard
     private float _currentHealth;    // 현재 체력
     private bool _isInvincible = false; // 무적 상태 여부
     private bool _isAttacking = false; // [추가] 공격 상태 여부
+    private bool _isDefending = false;
+    private bool _isEvading = false;
+    private bool _isGetAttacked = false;
     private bool _canCounterAttack = false;
 
     public bool canCounterAttack
@@ -37,6 +40,24 @@ public class AgentBlackboard
     {
         get { return _isAttacking; }
         set { _isAttacking = value; }
+    }
+
+    public bool isDefending
+    {
+        get { return _isDefending; }
+        set { _isDefending = value; }
+    }
+
+    public bool isEvading
+    {
+        get { return _isEvading; }
+        set { _isEvading = value; }
+    }
+    
+    public bool isGetAttacked
+    {
+        get { return _isGetAttacked; }
+        set { _isGetAttacked = value; }
     }
 
     // 적 정보
@@ -154,5 +175,14 @@ public class AgentBlackboard
     public void EndInvincibility()
     {
         isInvincible = false;
+    }
+
+    public void StartEvading(float duration)
+    {
+        isEvading = true;
+    }
+    public void EndEnvaing()
+    {
+        isEvading = false;
     }
 }

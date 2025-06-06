@@ -6,6 +6,7 @@ public class HitboxController : MonoBehaviour
     private Collider m_collider;
     private bool _isGetAttack = false;
     private bool _isBlocked = false;
+    private AgentBlackboard agentBlackboard;
     public bool isGetAttack
     {
         get { return _isGetAttack; }
@@ -17,10 +18,24 @@ public class HitboxController : MonoBehaviour
 
     private float invincibilityDuration = 1.0f;
     private float invincibilityStartTime;
+
+    private float blockCoolTime = 1.0f;
+    private float blockCoolStartTime;
    //private CapsuleCollider capsuleCollider;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        int thisLayer = gameObject.layer;
+        if (thisLayer == LayerMask.NameToLayer("OffensiverSword") ||
+            thisLayer == LayerMask.NameToLayer("DefensiverShield") ||
+            thisLayer == LayerMask.NameToLayer("DefensiverSword"))
+        {
+            agentBlackboard = transform.root.GetComponent<AgentController>().blackboard;
+        }
+        else
+        {
+            agentBlackboard = GetComponent<AgentController>().blackboard;
+        }
         m_collider = GetComponent<Collider>();
     }
 
@@ -36,10 +51,8 @@ public class HitboxController : MonoBehaviour
             Debug.Log($"[피격] {gameObject.name} 이(가) {other.gameObject.name} 에게 맞았습니다.");
         }
 
-
-
-        if (thisLayer == LayerMask.NameToLayer("OffensiverSword") &&
-            otherLayer == LayerMask.NameToLayer("DefensiverShield"))
+        if (thisLayer == LayerMask.NameToLayer("DefensiverShield") &&
+            otherLayer == LayerMask.NameToLayer("OffensiverSword"))
         {
             _isBlocked = true;
             Debug.Log($"[막힘] {gameObject.name} 의 공격이 {other.gameObject.name} 에 막혔습니다.");
@@ -49,12 +62,29 @@ public class HitboxController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        agentBlackboard.isGetAttacked = _isGetAttack;
+        agentBlackboard.isDefending = _isBlocked;
+
         if (_isGetAttack)
         {
             invincibilityStartTime = Time.time;
         }
 
-        if (Time.time - invincibilityStartTime > invincibilityDuration)
+        if (_isBlocked)
+        {
+            blockCoolStartTime = Time.time; 
+        }
+
+        if (Time.time - invincibilityStartTime > invincibilityDuration && invincibilityStartTime != 0)
+        {
             _isGetAttack = false;
+            invincibilityStartTime = 0;
+        }
+            
+        if (Time.time - blockCoolStartTime > invincibilityDuration && blockCoolStartTime != 0)
+        {
+            _isBlocked = false;
+            blockCoolStartTime = 0;
+        }
     }
 }

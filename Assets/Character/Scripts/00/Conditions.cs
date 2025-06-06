@@ -57,6 +57,16 @@ public class IsCooldownReadyCondition : BTConditionNode
     }
 }
 
+public class IsNotCooldwonReadyCondition : BTConditionNode
+{
+    private string actionKey;
+    public IsNotCooldwonReadyCondition(AgentBlackboard whiteboard, Transform agentTransform, string key) : base(whiteboard, agentTransform) { }
+
+    public override bool CheckCondition()
+    {
+        return !blackboard.IsActionReady(actionKey);
+    }
+}
 // ���� �ʹ� ������ �ִ��� Ȯ���ϴ� ���� ���
 public class IsEnemyTooCloseCondition : BTConditionNode
 {
@@ -151,9 +161,6 @@ public class CanCounterAttackCondition : BTConditionNode
         // ���� �������� ���� ���� ���¸� ����
         wasLastFrameAttack = isCurrentlyAttack;
 
-        if (canCounter)
-            Debug.Log("ī���� ��ȸ ����!");
-
         return canCounter;
     }
 }
@@ -165,58 +172,58 @@ public class DefendSuccessCondition : BTConditionNode
     {
         return false;
     }
+}
 
-    public class IsGetAttackCondition : BTConditionNode
+public class IsGetAttackCondition : BTConditionNode
+{
+    public IsGetAttackCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
+    public override bool CheckCondition()
     {
-        public IsGetAttackCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
-        public override bool CheckCondition()
+        return false;
+    }
+}
+
+// [�߰�] �ݰ� �� ���� ���� ������ Ȯ���ϴ� ���� ���
+public class IsEnemyAttackingDuringCounterAttackCondition : BTConditionNode
+{
+    private Animator enemyAnimator; // �� �ִϸ����� ����
+
+    public IsEnemyAttackingDuringCounterAttackCondition(AgentBlackboard blackboard, Transform agentTransform)
+        : base(blackboard, agentTransform) { }
+
+    public override bool CheckCondition()
+    {
+        // ���� �ݰ� ���� �ƴ϶�� �� ������ ����
+        if (!blackboard.isAttacking)
         {
             return false;
         }
-    }
 
-    // [�߰�] �ݰ� �� ���� ���� ������ Ȯ���ϴ� ���� ���
-    public class IsEnemyAttackingDuringCounterAttackCondition : BTConditionNode
-    {
-        private Animator enemyAnimator; // �� �ִϸ����� ����
-
-        public IsEnemyAttackingDuringCounterAttackCondition(AgentBlackboard blackboard, Transform agentTransform)
-            : base(blackboard, agentTransform) { }
-
-        public override bool CheckCondition()
+        // ���� �������� ������ ����
+        if (blackboard.enemyTransform == null)
         {
-            // ���� �ݰ� ���� �ƴ϶�� �� ������ ����
-            if (!blackboard.isAttacking)
-            {
-                return false;
-            }
+            return false;
+        }
 
-            // ���� �������� ������ ����
-            if (blackboard.enemyTransform == null)
-            {
-                return false;
-            }
-
-            // Animator ĳ��
+        // Animator ĳ��
+        if (enemyAnimator == null)
+        {
+            enemyAnimator = blackboard.enemyTransform.GetComponent<Animator>();
             if (enemyAnimator == null)
             {
-                enemyAnimator = blackboard.enemyTransform.GetComponent<Animator>();
-                if (enemyAnimator == null)
-                {
-                    Debug.LogWarning("�� �ִϸ����Ͱ� �����ϴ�.");
-                    return false;
-                }
+                Debug.LogWarning("�� �ִϸ����Ͱ� �����ϴ�.");
+                return false;
             }
-
-            // ���� ���� ��
-            var enemyAttackingCondition = new IsEnemyAttackingCondition(blackboard, agentTransform);
-            if (enemyAttackingCondition.CheckCondition())
-            {
-                Debug.Log("�ݰ� �� ���� ���� ���Դϴ�!");
-                return true;
-            }
-
-            return false;
         }
+
+        // ���� ���� ��
+        var enemyAttackingCondition = new IsEnemyAttackingCondition(blackboard, agentTransform);
+        if (enemyAttackingCondition.CheckCondition())
+        {
+            Debug.Log("�ݰ� �� ���� ���� ���Դϴ�!");
+            return true;
+        }
+
+        return false;
     }
 }
