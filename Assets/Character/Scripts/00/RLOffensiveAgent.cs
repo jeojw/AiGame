@@ -3,6 +3,7 @@ using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 using UnityEngine.InputSystem;
+using System.Collections; // IEnumerator 사용을 위해 필요
 
 public class RLOffensiveAgent : Agent
 {
@@ -14,20 +15,23 @@ public class RLOffensiveAgent : Agent
     private AgentController enemyController;
     private AgentBlackboard enemyBlackboard;
 
-    // --- [추가 시작] ---
     // 에이전트의 초기 위치와 회전 값을 저장할 변수
     private Vector3 initialPosition;
     private Quaternion initialRotation;
-    // --- [추가 끝] ---
 
-
-    // --- [추가 시작] ---
     // '상대방'의 초기 위치와 회전 값을 저장할 변수
     private Vector3 enemyInitialPosition;
     private Quaternion enemyInitialRotation;
-    // --- [추가 끝] ---
 
     private float previousDistanceToEnemy;
+    private float previousMyHealth; // 이전 프레임의 내 체력을 저장할 변수
+
+    // --- [추가 시작: 빠른 승리 보상을 위한 변수] ---
+    private float episodeStartTime; // 에피소드 시작 시간
+    [SerializeField] private float maxEpisodeTimeBonus = 50.0f; // 최대 시간 보상 값
+    [SerializeField] private float episodeDurationForMaxBonus = 10.0f; // 이 시간 내에 이기면 최대 보상
+    // --- [추가 끝] ---
+
 
     public override void Initialize()
     {
@@ -40,21 +44,16 @@ public class RLOffensiveAgent : Agent
             enemyBlackboard = enemyController.blackboard;
         }
 
-        // --- [추가 시작] ---
         // 이 스크립트가 처음 초기화될 때, 시작 위치와 회전 값을 저장합니다.
         this.initialPosition = transform.position;
         this.initialRotation = transform.rotation;
-        // --- [추가 끝] ---
 
-        // --- [추가 시작] ---
         // 상대방의 초기 위치와 회전 값도 함께 저장합니다.
         if (enemyTransform != null)
         {
             this.enemyInitialPosition = enemyTransform.position;
             this.enemyInitialRotation = enemyTransform.rotation;
         }
-        // --- [추가 끝] ---
-
     }
 
     /// <summary>
@@ -74,36 +73,33 @@ public class RLOffensiveAgent : Agent
             }
             else
             {
-                // 디버깅을 위해 오류 메시지를 남깁니다.
                 Debug.LogError($"'{enemyTransform.name}' 오브젝트에 AgentController 컴포넌트가 없습니다!", enemyTransform);
-                enemyBlackboard = null; // 확실하게 null로 설정
+                enemyBlackboard = null;
             }
         }
         else
         {
-             Debug.LogError("'enemyTransform'이(가) 인스펙터에 할당되지 않았습니다!", this.gameObject);
+            Debug.LogError("'enemyTransform'이(가) 인스펙터에 할당되지 않았습니다!", this.gameObject);
         }
-        // 에이전트 및 상대방 위치, 체력 등 초기화
-        // 예: 시작 위치로 리셋, 체력 100으로 리셋
+
         myBlackboard.currentHealth = myBlackboard.maxHealth;
+        previousMyHealth = myBlackboard.maxHealth; // 에피소드 시작 시 내 체력 초기화
+
         if (enemyBlackboard != null)
         {
             enemyBlackboard.currentHealth = enemyBlackboard.maxHealth;
         }
-        // ... 캐릭터 위치 리셋 로직 ...
+
         // --- [추가] 캐릭터 위치 및 물리 상태 리셋 로직 ---
-        // 저장해두었던 초기 위치와 회전 값으로 되돌립니다.
         transform.position = initialPosition;
         transform.rotation = initialRotation;
 
-        // 물리적 충돌이나 움직임으로 인한 잔류 속도를 제거합니다.
         Rigidbody rb = GetComponent<Rigidbody>();
         if (rb != null)
         {
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
         }
-        // --- [추가 끝] ---
 
         // --- [추가 시작] 상대방 위치 리셋 ---
         if (enemyTransform != null)
@@ -118,6 +114,10 @@ public class RLOffensiveAgent : Agent
                 enemyRb.angularVelocity = Vector3.zero;
             }
         }
+        // --- [추가 끝] ---
+
+        // --- [추가 시작: 빠른 승리 보상을 위한 시간 초기화] ---
+        episodeStartTime = Time.time; // 에피소드 시작 시간 기록
         // --- [추가 끝] ---
     }
 
@@ -149,12 +149,35 @@ public class RLOffensiveAgent : Agent
     }
 
     /// <summary>
+    /// 회피 성공 여부를 잠시 뒤에 체크하는 코루틴
+    /// </summary>
+    /// <param name="delay">체크 전 대기 시간</param>
+    private IEnumerator CheckDodgeSuccess(float delay)
+    {
+        bool enemyWasAttacking = (enemyBlackboard != null && enemyBlackboard.isAttacking);
+
+        if (!enemyWasAttacking)
+        {
+            yield break;
+        }
+
+        float healthBeforeDodge = myBlackboard.currentHealth;
+
+        yield return new WaitForSeconds(delay);
+
+        if (myBlackboard.currentHealth >= healthBeforeDodge)
+        {
+            Debug.Log("회피 성공! 보상 +0.5");
+            AddReward(0.5f);
+        }
+    }
+
+    /// <summary>
     /// 행동(Action) 실행
     /// 정책(Brain)으로부터 받은 행동 명령을 실제 게임 월드에서 실행합니다.
     /// </summary>
     public override void OnActionReceived(ActionBuffers actions)
     {
-        // [디버그 추가] 이 메소드가 호출되는지 확인
         Debug.Log($"[RL Agent] 1. OnActionReceived 호출됨. 받은 액션: {actions.DiscreteActions[0]}");
 
         int mainAction = actions.DiscreteActions[0];
@@ -174,14 +197,15 @@ public class RLOffensiveAgent : Agent
                 if (myBlackboard.IsActionReady(AgentBlackboard.ATTACK_COOLDOWN_KEY))
                 {
                     myController.PerformAttack();
-                    AddReward(0.005f);
+                    AddReward(0.005f); // 공격 시도 시 보상
                 }
-
-                    break;
+                break;
             case 4: // 회피
-                    // 주요 행동이 '회피'일 경우, Branch 1에서 '회피 방향'을 가져옵니다.
                 int evadeDirection = actions.DiscreteActions[1];
-                myController.PerformDirectionalEvade(evadeDirection);
+                if (myController.PerformDirectionalEvade(evadeDirection) == NodeStatus.SUCCESS)
+                {
+                    StartCoroutine(CheckDodgeSuccess(0.5f));
+                }
                 break;
         }
 
@@ -193,44 +217,49 @@ public class RLOffensiveAgent : Agent
     /// </summary>
     private void HandleRewards()
     {
-       
+        // 1. 기본 시간 페널티 (너무 늘어지는 것을 방지)
+        AddReward(-0.005f);
 
         // 2. 적에게 다가가면 보상 (적극적인 움직임 유도)
         if (enemyTransform != null)
         {
             float currentDistance = Vector3.Distance(transform.position, enemyTransform.position);
-            // 거리가 가까워졌다면
             if (currentDistance < previousDistanceToEnemy)
             {
-                AddReward(0.01f); // 작은 보상
+                AddReward(0.01f);
             }
-            previousDistanceToEnemy = currentDistance; // 현재 거리 업데이트
+            else if (currentDistance > previousDistanceToEnemy)
+            {
+                AddReward(-0.01f);
+            }
+            previousDistanceToEnemy = currentDistance;
         }
 
-
-
-        // 2. 체력 우위 보상 (가장 강력한 공격 유도 신호)
-        // 내 체력이 상대보다 높을수록 계속 보상을 받으므로, 상대를 때릴 동기가 매우 강력해집니다.
+        // 3. 체력 우위 보상
         if (myBlackboard != null && enemyBlackboard != null)
         {
             float healthAdvantage = (myBlackboard.currentHealth - enemyBlackboard.currentHealth) / myBlackboard.maxHealth;
-            AddReward(healthAdvantage * 0.03f); // 체력 차이에 비례하는 보상
+            AddReward(healthAdvantage * 0.03f);
         }
 
-        // 3. 공격 성공 보상 (가치는 그대로 유지)
+        // 4. 잃은 체력에 대한 페널티
+        if (myBlackboard != null)
+        {
+            float healthLost = previousMyHealth - myBlackboard.currentHealth;
+            if (healthLost > 0)
+            {
+                AddReward(-healthLost / myBlackboard.maxHealth * 1.0f); // 페널티 강도 조절 (1.0f는 임의 값)
+            }
+            previousMyHealth = myBlackboard.currentHealth;
+        }
+
+        // 5. 공격 성공 보상
         if (enemyBlackboard != null && enemyBlackboard.isGetAttacked)
         {
             AddReward(2.0f);
         }
 
-        // 4. 피격 페널티 대폭 감소
-        // "맞는 건 좀 아프지만, 때리는 것에 비하면 아무것도 아니야!" 라는 생각을 갖게 합니다.
-        if (myBlackboard != null && myBlackboard.isGetAttacked)
-        {
-            AddReward(-0.4f); // -1.0에서 -0.4로 페널티를 크게 줄입니다.
-        }
-
-        // 5. 게임 종료 조건 (승리의 가치를 매우 높게 설정)
+        // 6. 게임 종료 조건 (승리의 가치를 매우 높게 설정)
         if (myBlackboard != null && myBlackboard.currentHealth <= 0)
         {
             SetReward(-10.0f); // 패배의 고통
@@ -238,7 +267,28 @@ public class RLOffensiveAgent : Agent
         }
         else if (enemyBlackboard != null && enemyBlackboard.currentHealth <= 0)
         {
-            SetReward(10.0f); // 승리의 환희
+            // --- [수정 시작: 빠른 승리 보상 로직 추가] ---
+            float episodeDuration = Time.time - episodeStartTime; // 에피소드 진행 시간
+            float timeBonus = 0f;
+
+            if (episodeDuration < episodeDurationForMaxBonus)
+            {
+                // 매우 빠르게 이겼다면 최대 보상
+                timeBonus = maxEpisodeTimeBonus;
+            }
+            else
+            {
+                // 시간에 따라 보상이 감소 (선형 감소 예시)
+                // 시간이 길어질수록 보상이 0에 가까워집니다.
+                // 10초에 0 보상이라면, 5초에 0.5 * maxEpisodeTimeBonus
+                timeBonus = Mathf.Max(0, maxEpisodeTimeBonus * (1.0f - (episodeDuration / (episodeDurationForMaxBonus * 2.0f))));
+                // 위 수식은 예시이며, 에피소드 지속 시간이 (episodeDurationForMaxBonus * 2.0f)를 초과하면 보상이 0이 됩니다.
+                // 더 부드러운 감소 곡선이 필요하면 다른 함수(예: 지수 함수)를 사용할 수 있습니다.
+            }
+
+            // 승리 보상에 시간 보너스 추가
+            SetReward(10.0f + timeBonus); // 기본 승리 보상 + 시간 보너스
+            // --- [수정 끝] ---
             EndEpisode();
         }
     }
