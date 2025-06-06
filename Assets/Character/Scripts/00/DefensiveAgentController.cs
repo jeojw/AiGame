@@ -12,6 +12,29 @@ public class DefensiveAgentController : AgentController
     {
         rootNode = new BTSelector(blackboard, transform, new List<BTNode>
         {
+            // --- [수정] 1순위: 적이 5초 이상 공격하지 않으면 '다가가서' 공격 ---
+            new BTSequence(blackboard, transform, new List<BTNode>
+            {
+    // 조건 1: 적이 5초 이상 가만히 있었는가? (기존과 동일)
+                new IsEnemyIdleForDurationCondition(blackboard, transform, 5.0f),
+    // 조건 2: 내 공격 쿨타임이 준비되었는가? (기존과 동일)
+                new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.ATTACK_COOLDOWN_KEY),
+
+    // --- 핵심 수정: Selector를 이용한 거리별 행동 분기 ---
+                new BTSelector(blackboard, transform, new List<BTNode>
+                {
+        // 우선 순위 1: 이미 공격 범위 안이라면 즉시 공격
+                    new BTSequence(blackboard, transform, new List<BTNode>
+                    {
+                        new IsEnemyInAttackRangeCondition(blackboard, transform, attackRange),
+                        new ProactiveAttackEnemyAction(blackboard, transform)
+                    }),
+
+                // 우선 순위 2: 공격 범위 밖이라면 적에게 접근 (위 시퀀스가 실패했을 때만 실행됨)
+                // 적 공격 범위의 90% 지점까지 다가가도록 설정합니다.
+                    new MoveTowardsEnemyAction(blackboard, transform, 5f, attackRange * 0.9f)
+                })
+            }),
             // --- [수정] 적의 공격에 반응하는 로직 ---
             // 이제 방어를 회피보다 항상 먼저 시도합니다.
             new BTSequence(blackboard, transform, new List<BTNode>
@@ -88,4 +111,7 @@ public class DefensiveAgentController : AgentController
         public NotNode(BTConditionNode condition) : base(condition.Blackboard, condition.AgentTransform) { this.conditionToNegate = condition; }
         public override bool CheckCondition() { return conditionToNegate.Tick() == NodeStatus.FAILURE; }
     }
+
+
 }
+

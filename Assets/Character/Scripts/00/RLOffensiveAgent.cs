@@ -132,7 +132,7 @@ public class RLOffensiveAgent : Agent
     private void HandleRewards()
     {
         // 1. 기본 시간 페널티 (너무 늘어지는 것을 방지)
-        AddReward(-0.05f);
+        AddReward(-0.005f);
 
         // 2. 적에게 다가가면 보상 (적극적인 움직임 유도)
         if (enemyTransform != null)
@@ -168,7 +168,7 @@ public class RLOffensiveAgent : Agent
         // 3. 공격 성공 보상 (가치는 그대로 유지)
         if (enemyBlackboard != null && enemyBlackboard.isGetAttacked)
         {
-            AddReward(1.0f);
+            AddReward(2.0f);
         }
 
         // 4. 피격 페널티 대폭 감소

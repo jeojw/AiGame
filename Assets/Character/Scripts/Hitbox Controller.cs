@@ -48,7 +48,8 @@ public class HitboxController : MonoBehaviour
         (thisLayer == LayerMask.NameToLayer("DefensiverBody") && otherLayer == LayerMask.NameToLayer("OffensiverSword")))
         {
             _isGetAttack = true;
-            Debug.Log($"[피격] {gameObject.name} 이(가) {other.gameObject.name} 에게 맞았습니다.");
+            //체력도 표시하게 수정.
+            Debug.Log($"[피격] {gameObject.name} 이(가) {other.gameObject.name} 에게 맞았습니다. 남은 체력: {agentBlackboard.currentHealth}");
         }
 
         if (thisLayer == LayerMask.NameToLayer("DefensiverShield") &&

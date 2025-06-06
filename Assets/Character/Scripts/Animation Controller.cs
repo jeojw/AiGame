@@ -34,7 +34,7 @@ public class AnimationController : MonoBehaviour
 
     public void PlayWalk()
     {
-        animator.SetBool("IsAttacking", true);
+        animator.SetBool("isWalk", true);
     }
 
     public void StopWalk()

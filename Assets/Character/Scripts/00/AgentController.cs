@@ -17,6 +17,9 @@ public abstract class AgentController : MonoBehaviour
     private bool evadeFinished = false;
     private bool getAttackFinished = false;
 
+    // [추가] 적의 Animator를 캐싱하기 위한 변수
+    private Animator enemyAnimator;
+
     protected AgentBlackboard _blackboard; // 블랙보드 참조
     public AgentBlackboard blackboard
     {
@@ -82,6 +85,13 @@ public abstract class AgentController : MonoBehaviour
             if (enemyController != null)
             {
                 enemyCurrentHealth = enemyController.blackboard.currentHealth;
+
+                // "Attack" 태그를 가진 애니메이션 상태가 실행 중이면
+                if (enemyController.blackboard.isAttacking)
+                {
+                    // 마지막 공격 시간을 현재 시간으로 갱신
+                    blackboard.lastEnemyAttackTime = Time.time;
+                }
             }
             blackboard.UpdateEnemyInfo(enemy, Vector3.Distance(transform.position, enemy.position), enemyCurrentHealth);
         }
@@ -344,6 +354,55 @@ public abstract class AgentController : MonoBehaviour
         this.enabled = false;
 
         // 일정 시간 후 오브젝트 파괴
-        Destroy(gameObject, 3f);
+        //Destroy(gameObject, 3f);
+    }
+
+    // [추가] isAttacking 플래그를 리셋하기 위한 메소드
+    private void ResetIsAttacking()
+    {
+        blackboard.isAttacking = false;
+    }
+
+    public virtual NodeStatus PerformProactiveAttack()
+    {
+        Debug.Log("행동: 선제 공격 수행!");
+
+        if (!blackboard.IsActionReady(AgentBlackboard.ATTACK_COOLDOWN_KEY))
+            return NodeStatus.FAILURE;
+
+        // --- [수정 시작] ---
+
+        // 1. 자신의 상태를 '공격 중'으로 변경
+        blackboard.isAttacking = true;
+
+        if (enemy != null)
+            transform.LookAt(new Vector3(enemy.position.x, transform.position.y, enemy.position.z));
+
+        if (animator != null)
+        {
+            animator.SetTrigger("IsAttacking");
+        }
+
+        // 2. 공격 애니메이션이 끝날 시간 즈음에 isAttacking 플래그를 false로 되돌리도록 예약
+        //    (애니메이션 길이에 맞춰 1.5f 값을 조정하세요)
+        Invoke(nameof(ResetIsAttacking), 1.5f);
+
+        // 데미지 판정 로직 (기존과 동일)
+        float attackDamage = 10f;
+        if (Physics.SphereCast(transform.position + Vector3.up, 0.8f, transform.forward, out RaycastHit hit, attackRange))
+        {
+            AgentController enemyController = hit.collider.GetComponentInParent<AgentController>();
+            if (enemyController != null && enemyController != this)
+            {
+                Debug.Log($"{gameObject.name}이(가) {enemy.name}에게 선제공격으로 {attackDamage} 데미지를 입혔습니다.");
+                enemyController.HandleDamage(attackDamage);
+            }
+        }
+
+        // --- [수정 끝] ---
+
+        blackboard.SetActionCooldown(AgentBlackboard.ATTACK_COOLDOWN_KEY);
+
+        return NodeStatus.SUCCESS;
     }
 }

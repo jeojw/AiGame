@@ -73,6 +73,20 @@ public class AttackEnemyAction : BTActionNode
     }
 }
 
+public class ProactiveAttackEnemyAction : BTActionNode
+{
+    public ProactiveAttackEnemyAction(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
+    public override NodeStatus Tick()
+    {
+        AgentController controller = agentTransform.GetComponent<AgentController>();
+        if (controller != null)
+        {
+            return controller.PerformProactiveAttack(); // ��Ʈ�ѷ��� ���� �޼ҵ� ȣ��
+        }
+        return NodeStatus.FAILURE;
+    }
+}
+
 // ����ϴ� �ൿ ���
 public class DefendAction : BTActionNode
 {

@@ -205,3 +205,25 @@ public class IsEnemyAttackingDuringCounterAttackCondition : BTConditionNode
         return false;
     }
 }
+
+public class IsEnemyIdleForDurationCondition : BTConditionNode
+{
+    private float duration;
+
+    public IsEnemyIdleForDurationCondition(AgentBlackboard blackboard, Transform agentTransform, float duration)
+        : base(blackboard, agentTransform)
+    {
+        this.duration = duration;
+    }
+
+    public override bool CheckCondition()
+    {
+        // 적이 없으면 조건을 만족하지 않음
+        if (blackboard.enemyTransform == null) return false;
+
+        // 마지막 공격 시간으로부터 지정된 시간이 지났는지 확인
+        // 만약 적이 한 번도 공격한 적이 없다면 lastEnemyAttackTime은 0이므로,
+        // 게임 시작 후 5초가 지나면 이 조건은 참이 됩니다.
+        return (Time.time - blackboard.lastEnemyAttackTime) > duration;
+    }
+}

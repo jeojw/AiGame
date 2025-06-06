@@ -2629,7 +2629,7 @@ MonoBehaviour:
   agentParameters:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
-  MaxStep: 0
+  MaxStep: 1000
   enemyTransform: {fileID: 355025711}
 --- !u!114 &1858427102
 MonoBehaviour:

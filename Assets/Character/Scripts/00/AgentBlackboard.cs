@@ -14,6 +14,7 @@ public class AgentBlackboard
     private bool _isGetAttacked = false;
     private bool _canCounterAttack = false;
 
+    // [추가] 적의 마지막 공격 시간을 기록할 변수
     public float lastEnemyAttackTime = 0f;
 
     public bool canCounterAttack
