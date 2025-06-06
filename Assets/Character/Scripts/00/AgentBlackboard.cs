@@ -14,6 +14,8 @@ public class AgentBlackboard
     private bool _isGetAttacked = false;
     private bool _canCounterAttack = false;
 
+    public float lastEnemyAttackTime = 0f;
+
     public bool canCounterAttack
     {
         get {  return _canCounterAttack; }
