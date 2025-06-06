@@ -180,8 +180,8 @@ public abstract class AgentController : MonoBehaviour
     }
 
 
-    // [수정]
-    public virtual NodeStatus PerformAttack()
+    // [수정] 메소드 시그니처에 데미지 배율 인자 추가
+    public virtual NodeStatus PerformAttack(float damageMultiplier = 1.0f)
     {
         // 인터럽트
         if (blackboard.enemyHealth > 0 && blackboard.enemyTransform != null)
@@ -204,26 +204,23 @@ public abstract class AgentController : MonoBehaviour
         if (!blackboard.isAttacking)
         {
             blackboard.isAttacking = true;
-            // 공격 애니메이션 재생 및 데미지 판정
             if (enemy != null)
                 transform.LookAt(new Vector3(enemy.position.x, transform.position.y, enemy.position.z));
 
             if (animator != null)
                 animator.SetTrigger("IsAttacking");
 
-            // 데미지 판정
-            float attackDamage = 10f;
+            // [수정] 데미지 계산 시 배율을 곱해줍니다.
+            float attackDamage = 10f * damageMultiplier;
 
             if (Physics.SphereCast(transform.position + Vector3.up, 0.8f, transform.forward, out RaycastHit hit, attackRange))
             {
-                if (hit.collider.CompareTag("Enemy"))
+                AgentController enemyController = hit.collider.GetComponentInParent<AgentController>();
+                if (enemyController != null && enemyController != this)
                 {
-                    AgentController enemyController = hit.collider.GetComponent<AgentController>();
-                    if (enemyController != null)
-                    {
-                        Debug.Log(gameObject.name + "이(가) " + enemy.name + "을(를) 공격하여 " + attackDamage + " 데미지를 입혔습니다.");
-                        enemyController.HandleDamage(attackDamage);
-                    }
+                    // [수정] 로그에도 배율을 표시하여 확인하기 쉽게 만듭니다.
+                    Debug.Log($"{gameObject.name}이(가) {enemy.name}을(를) 공격하여 {attackDamage}(x{damageMultiplier}) 데미지를 입혔습니다.");
+                    enemyController.HandleDamage(attackDamage);
                 }
             }
         }
@@ -388,7 +385,7 @@ public abstract class AgentController : MonoBehaviour
         Invoke(nameof(ResetIsAttacking), 1.5f);
 
         // 데미지 판정 로직 (기존과 동일)
-        float attackDamage = 10f;
+        float attackDamage = 40f;
         if (Physics.SphereCast(transform.position + Vector3.up, 0.8f, transform.forward, out RaycastHit hit, attackRange))
         {
             AgentController enemyController = hit.collider.GetComponentInParent<AgentController>();

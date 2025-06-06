@@ -8,11 +8,24 @@ public class RLOffensiveAgent : Agent
 {
     [Header("Agent Components")]
     [SerializeField] private Transform enemyTransform;
-    private AgentController myController; // ±âÁ¸ AgentController¸¦ ÂüÁ¶ÇÏ¿© ½ÇÁ¦ Çàµ¿À» ½ÇÇà
+    private AgentController myController; // ê¸°ì¡´ AgentControllerë¥¼ ì°¸ì¡°í•˜ì—¬ ì‹¤ì œ í–‰ë™ì„ ì‹¤í–‰
     private AgentBlackboard myBlackboard;
 
     private AgentController enemyController;
     private AgentBlackboard enemyBlackboard;
+
+    // --- [ì¶”ê°€ ì‹œì‘] ---
+    // ì—ì´ì „íŠ¸ì˜ ì´ˆê¸° ìœ„ì¹˜ì™€ íšŒì „ ê°’ì„ ì €ì¥í•  ë³€ìˆ˜
+    private Vector3 initialPosition;
+    private Quaternion initialRotation;
+    // --- [ì¶”ê°€ ë] ---
+
+
+    // --- [ì¶”ê°€ ì‹œì‘] ---
+    // 'ìƒëŒ€ë°©'ì˜ ì´ˆê¸° ìœ„ì¹˜ì™€ íšŒì „ ê°’ì„ ì €ì¥í•  ë³€ìˆ˜
+    private Vector3 enemyInitialPosition;
+    private Quaternion enemyInitialRotation;
+    // --- [ì¶”ê°€ ë] ---
 
     private float previousDistanceToEnemy;
 
@@ -26,15 +39,31 @@ public class RLOffensiveAgent : Agent
             enemyController = enemyTransform.GetComponent<AgentController>();
             enemyBlackboard = enemyController.blackboard;
         }
+
+        // --- [ì¶”ê°€ ì‹œì‘] ---
+        // ì´ ìŠ¤í¬ë¦½íŠ¸ê°€ ì²˜ìŒ ì´ˆê¸°í™”ë  ë•Œ, ì‹œì‘ ìœ„ì¹˜ì™€ íšŒì „ ê°’ì„ ì €ì¥í•©ë‹ˆë‹¤.
+        this.initialPosition = transform.position;
+        this.initialRotation = transform.rotation;
+        // --- [ì¶”ê°€ ë] ---
+
+        // --- [ì¶”ê°€ ì‹œì‘] ---
+        // ìƒëŒ€ë°©ì˜ ì´ˆê¸° ìœ„ì¹˜ì™€ íšŒì „ ê°’ë„ í•¨ê»˜ ì €ì¥í•©ë‹ˆë‹¤.
+        if (enemyTransform != null)
+        {
+            this.enemyInitialPosition = enemyTransform.position;
+            this.enemyInitialRotation = enemyTransform.rotation;
+        }
+        // --- [ì¶”ê°€ ë] ---
+
     }
 
     /// <summary>
-    /// ¿¡ÇÇ¼Òµå(¶ó¿îµå) ½ÃÀÛ ½Ã È£Ãâ
+    /// ì—í”¼ì†Œë“œ(ë¼ìš´ë“œ) ì‹œì‘ ì‹œ í˜¸ì¶œ
     /// </summary>
     public override void OnEpisodeBegin()
     {
-        // --- [¼öÁ¤µÈ ºÎºĞ ½ÃÀÛ] ---
-        // ¿¡ÇÇ¼Òµå°¡ ½ÃÀÛµÉ ¶§¸¶´Ù »ó´ë¹æÀÇ ÂüÁ¶°¡ À¯È¿ÇÑÁö ´Ù½Ã È®ÀÎÇÕ´Ï´Ù.
+        // --- [ìˆ˜ì •ëœ ë¶€ë¶„ ì‹œì‘] ---
+        // ì—í”¼ì†Œë“œê°€ ì‹œì‘ë  ë•Œë§ˆë‹¤ ìƒëŒ€ë°©ì˜ ì°¸ì¡°ê°€ ìœ íš¨í•œì§€ ë‹¤ì‹œ í™•ì¸í•©ë‹ˆë‹¤.
         if (enemyTransform != null)
         {
             previousDistanceToEnemy = Vector3.Distance(transform.position, enemyTransform.position);
@@ -45,60 +74,88 @@ public class RLOffensiveAgent : Agent
             }
             else
             {
-                // µğ¹ö±ëÀ» À§ÇØ ¿À·ù ¸Ş½ÃÁö¸¦ ³²±é´Ï´Ù.
-                Debug.LogError($"'{enemyTransform.name}' ¿ÀºêÁ§Æ®¿¡ AgentController ÄÄÆ÷³ÍÆ®°¡ ¾ø½À´Ï´Ù!", enemyTransform);
-                enemyBlackboard = null; // È®½ÇÇÏ°Ô null·Î ¼³Á¤
+                // ë””ë²„ê¹…ì„ ìœ„í•´ ì˜¤ë¥˜ ë©”ì‹œì§€ë¥¼ ë‚¨ê¹ë‹ˆë‹¤.
+                Debug.LogError($"'{enemyTransform.name}' ì˜¤ë¸Œì íŠ¸ì— AgentController ì»´í¬ë„ŒíŠ¸ê°€ ì—†ìŠµë‹ˆë‹¤!", enemyTransform);
+                enemyBlackboard = null; // í™•ì‹¤í•˜ê²Œ nullë¡œ ì„¤ì •
             }
         }
         else
         {
-             Debug.LogError("'enemyTransform'ÀÌ(°¡) ÀÎ½ºÆåÅÍ¿¡ ÇÒ´çµÇÁö ¾Ê¾Ò½À´Ï´Ù!", this.gameObject);
+             Debug.LogError("'enemyTransform'ì´(ê°€) ì¸ìŠ¤í™í„°ì— í• ë‹¹ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤!", this.gameObject);
         }
-        // ¿¡ÀÌÀüÆ® ¹× »ó´ë¹æ À§Ä¡, Ã¼·Â µî ÃÊ±âÈ­
-        // ¿¹: ½ÃÀÛ À§Ä¡·Î ¸®¼Â, Ã¼·Â 100À¸·Î ¸®¼Â
+        // ì—ì´ì „íŠ¸ ë° ìƒëŒ€ë°© ìœ„ì¹˜, ì²´ë ¥ ë“± ì´ˆê¸°í™”
+        // ì˜ˆ: ì‹œì‘ ìœ„ì¹˜ë¡œ ë¦¬ì…‹, ì²´ë ¥ 100ìœ¼ë¡œ ë¦¬ì…‹
         myBlackboard.currentHealth = myBlackboard.maxHealth;
         if (enemyBlackboard != null)
         {
             enemyBlackboard.currentHealth = enemyBlackboard.maxHealth;
         }
-        // ... Ä³¸¯ÅÍ À§Ä¡ ¸®¼Â ·ÎÁ÷ ...
+        // ... ìºë¦­í„° ìœ„ì¹˜ ë¦¬ì…‹ ë¡œì§ ...
+        // --- [ì¶”ê°€] ìºë¦­í„° ìœ„ì¹˜ ë° ë¬¼ë¦¬ ìƒíƒœ ë¦¬ì…‹ ë¡œì§ ---
+        // ì €ì¥í•´ë‘ì—ˆë˜ ì´ˆê¸° ìœ„ì¹˜ì™€ íšŒì „ ê°’ìœ¼ë¡œ ë˜ëŒë¦½ë‹ˆë‹¤.
+        transform.position = initialPosition;
+        transform.rotation = initialRotation;
+
+        // ë¬¼ë¦¬ì  ì¶©ëŒì´ë‚˜ ì›€ì§ì„ìœ¼ë¡œ ì¸í•œ ì”ë¥˜ ì†ë„ë¥¼ ì œê±°í•©ë‹ˆë‹¤.
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+        // --- [ì¶”ê°€ ë] ---
+
+        // --- [ì¶”ê°€ ì‹œì‘] ìƒëŒ€ë°© ìœ„ì¹˜ ë¦¬ì…‹ ---
+        if (enemyTransform != null)
+        {
+            enemyTransform.position = enemyInitialPosition;
+            enemyTransform.rotation = enemyInitialRotation;
+
+            Rigidbody enemyRb = enemyTransform.GetComponent<Rigidbody>();
+            if (enemyRb != null)
+            {
+                enemyRb.linearVelocity = Vector3.zero;
+                enemyRb.angularVelocity = Vector3.zero;
+            }
+        }
+        // --- [ì¶”ê°€ ë] ---
     }
 
     /// <summary>
-    /// °üÂû(Observation) ¼öÁı
-    /// ¿¡ÀÌÀüÆ®°¡ »óÈ²À» ÆÇ´ÜÇÏ´Âµ¥ ÇÊ¿äÇÑ ¸ğµç Á¤º¸¸¦ ¼¾¼­¿¡ Ãß°¡ÇÕ´Ï´Ù.
+    /// ê´€ì°°(Observation) ìˆ˜ì§‘
+    /// ì—ì´ì „íŠ¸ê°€ ìƒí™©ì„ íŒë‹¨í•˜ëŠ”ë° í•„ìš”í•œ ëª¨ë“  ì •ë³´ë¥¼ ì„¼ì„œì— ì¶”ê°€í•©ë‹ˆë‹¤.
     /// </summary>
     public override void CollectObservations(VectorSensor sensor)
     {
-        // ³» Á¤º¸
-        sensor.AddObservation(myBlackboard.currentHealth / myBlackboard.maxHealth); // Á¤±ÔÈ­µÈ ³» Ã¼·Â
-        sensor.AddObservation(myBlackboard.IsActionReady(AgentBlackboard.ATTACK_COOLDOWN_KEY)); // °ø°İ °¡´É ¿©ºÎ
-        sensor.AddObservation(myBlackboard.IsActionReady(AgentBlackboard.EVADE_COOLDOWN_KEY));  // È¸ÇÇ °¡´É ¿©ºÎ
+        // ë‚´ ì •ë³´
+        sensor.AddObservation(myBlackboard.currentHealth / myBlackboard.maxHealth); // ì •ê·œí™”ëœ ë‚´ ì²´ë ¥
+        sensor.AddObservation(myBlackboard.IsActionReady(AgentBlackboard.ATTACK_COOLDOWN_KEY)); // ê³µê²© ê°€ëŠ¥ ì—¬ë¶€
+        sensor.AddObservation(myBlackboard.IsActionReady(AgentBlackboard.EVADE_COOLDOWN_KEY));  // íšŒí”¼ ê°€ëŠ¥ ì—¬ë¶€
 
         if (enemyTransform == null)
         {
-            sensor.AddObservation(new float[5]); // »ó´ë°¡ ¾øÀ¸¸é 0À¸·Î Ã¤¿ò
+            sensor.AddObservation(new float[5]); // ìƒëŒ€ê°€ ì—†ìœ¼ë©´ 0ìœ¼ë¡œ ì±„ì›€
             return;
         }
 
-        // »ó´ë¹æ Á¤º¸
+        // ìƒëŒ€ë°© ì •ë³´
         Vector3 relativePos = transform.InverseTransformPoint(enemyTransform.position);
-        sensor.AddObservation(relativePos.x); // »ó´ëÀû À§Ä¡ X
-        sensor.AddObservation(relativePos.z); // »ó´ëÀû À§Ä¡ Z
-        sensor.AddObservation(Vector3.Distance(transform.position, enemyTransform.position)); // »ó´ë¿ÍÀÇ °Å¸®
+        sensor.AddObservation(relativePos.x); // ìƒëŒ€ì  ìœ„ì¹˜ X
+        sensor.AddObservation(relativePos.z); // ìƒëŒ€ì  ìœ„ì¹˜ Z
+        sensor.AddObservation(Vector3.Distance(transform.position, enemyTransform.position)); // ìƒëŒ€ì™€ì˜ ê±°ë¦¬
 
-        sensor.AddObservation(enemyBlackboard.currentHealth / enemyBlackboard.maxHealth); // Á¤±ÔÈ­µÈ »ó´ë Ã¼·Â
-        sensor.AddObservation(enemyBlackboard.isAttacking); // »ó´ë°¡ °ø°İ ÁßÀÎÁö ¿©ºÎ
+        sensor.AddObservation(enemyBlackboard.currentHealth / enemyBlackboard.maxHealth); // ì •ê·œí™”ëœ ìƒëŒ€ ì²´ë ¥
+        sensor.AddObservation(enemyBlackboard.isAttacking); // ìƒëŒ€ê°€ ê³µê²© ì¤‘ì¸ì§€ ì—¬ë¶€
     }
 
     /// <summary>
-    /// Çàµ¿(Action) ½ÇÇà
-    /// Á¤Ã¥(Brain)À¸·ÎºÎÅÍ ¹ŞÀº Çàµ¿ ¸í·ÉÀ» ½ÇÁ¦ °ÔÀÓ ¿ùµå¿¡¼­ ½ÇÇàÇÕ´Ï´Ù.
+    /// í–‰ë™(Action) ì‹¤í–‰
+    /// ì •ì±…(Brain)ìœ¼ë¡œë¶€í„° ë°›ì€ í–‰ë™ ëª…ë ¹ì„ ì‹¤ì œ ê²Œì„ ì›”ë“œì—ì„œ ì‹¤í–‰í•©ë‹ˆë‹¤.
     /// </summary>
     public override void OnActionReceived(ActionBuffers actions)
     {
-        // [µğ¹ö±× Ãß°¡] ÀÌ ¸Ş¼Òµå°¡ È£ÃâµÇ´ÂÁö È®ÀÎ
-        Debug.Log($"[RL Agent] 1. OnActionReceived È£ÃâµÊ. ¹ŞÀº ¾×¼Ç: {actions.DiscreteActions[0]}");
+        // [ë””ë²„ê·¸ ì¶”ê°€] ì´ ë©”ì†Œë“œê°€ í˜¸ì¶œë˜ëŠ”ì§€ í™•ì¸
+        Debug.Log($"[RL Agent] 1. OnActionReceived í˜¸ì¶œë¨. ë°›ì€ ì•¡ì…˜: {actions.DiscreteActions[0]}");
 
         int action = actions.DiscreteActions[0];
 
@@ -115,8 +172,12 @@ public class RLOffensiveAgent : Agent
                 break;
             case 3:
                 if (myBlackboard.IsActionReady(AgentBlackboard.ATTACK_COOLDOWN_KEY))
+                {
                     myController.PerformAttack();
-                break;
+                    AddReward(0.005f);
+                }
+
+                    break;
             case 4:
                 if (myBlackboard.IsActionReady(AgentBlackboard.EVADE_COOLDOWN_KEY))
                     myController.PerformEvade();
@@ -127,90 +188,80 @@ public class RLOffensiveAgent : Agent
     }
 
     /// <summary>
-    /// º¸»ó(Reward) ¼³°è
+    /// ë³´ìƒ(Reward) ì„¤ê³„
     /// </summary>
     private void HandleRewards()
     {
-        // 1. ±âº» ½Ã°£ Æä³ÎÆ¼ (³Ê¹« ´Ã¾îÁö´Â °ÍÀ» ¹æÁö)
-        AddReward(-0.005f);
+       
 
-        // 2. Àû¿¡°Ô ´Ù°¡°¡¸é º¸»ó (Àû±ØÀûÀÎ ¿òÁ÷ÀÓ À¯µµ)
+        // 2. ì ì—ê²Œ ë‹¤ê°€ê°€ë©´ ë³´ìƒ (ì ê·¹ì ì¸ ì›€ì§ì„ ìœ ë„)
         if (enemyTransform != null)
         {
             float currentDistance = Vector3.Distance(transform.position, enemyTransform.position);
-            // °Å¸®°¡ °¡±î¿öÁ³´Ù¸é
+            // ê±°ë¦¬ê°€ ê°€ê¹Œì›Œì¡Œë‹¤ë©´
             if (currentDistance < previousDistanceToEnemy)
             {
-                AddReward(0.01f); // ÀÛÀº º¸»ó
+                AddReward(0.01f); // ì‘ì€ ë³´ìƒ
             }
-            previousDistanceToEnemy = currentDistance; // ÇöÀç °Å¸® ¾÷µ¥ÀÌÆ®
+            previousDistanceToEnemy = currentDistance; // í˜„ì¬ ê±°ë¦¬ ì—…ë°ì´íŠ¸
         }
 
-        // 3. Àû¿¡°Ô¼­ ¸Ö¾îÁö¸é Æä³ÎÆ¼ (¼Ò±ØÀûÀÎ ¿òÁ÷ÀÓ ¹æÁö)
-        if (enemyTransform != null)
-        {
-            float currentDistance = Vector3.Distance(transform.position, enemyTransform.position);
-            // °Å¸®°¡ ¸Ö¾îÁ³´Ù¸é
-            if (currentDistance > previousDistanceToEnemy)
-            {
-                AddReward(-0.01f); // ÀÛÀº Æä³ÎÆ¼
-            }
-        }
 
-        // 2. Ã¼·Â ¿ìÀ§ º¸»ó (°¡Àå °­·ÂÇÑ °ø°İ À¯µµ ½ÅÈ£)
-        // ³» Ã¼·ÂÀÌ »ó´ëº¸´Ù ³ôÀ»¼ö·Ï °è¼Ó º¸»óÀ» ¹ŞÀ¸¹Ç·Î, »ó´ë¸¦ ¶§¸± µ¿±â°¡ ¸Å¿ì °­·ÂÇØÁı´Ï´Ù.
+
+        // 2. ì²´ë ¥ ìš°ìœ„ ë³´ìƒ (ê°€ì¥ ê°•ë ¥í•œ ê³µê²© ìœ ë„ ì‹ í˜¸)
+        // ë‚´ ì²´ë ¥ì´ ìƒëŒ€ë³´ë‹¤ ë†’ì„ìˆ˜ë¡ ê³„ì† ë³´ìƒì„ ë°›ìœ¼ë¯€ë¡œ, ìƒëŒ€ë¥¼ ë•Œë¦´ ë™ê¸°ê°€ ë§¤ìš° ê°•ë ¥í•´ì§‘ë‹ˆë‹¤.
         if (myBlackboard != null && enemyBlackboard != null)
         {
             float healthAdvantage = (myBlackboard.currentHealth - enemyBlackboard.currentHealth) / myBlackboard.maxHealth;
-            AddReward(healthAdvantage * 0.03f); // Ã¼·Â Â÷ÀÌ¿¡ ºñ·ÊÇÏ´Â º¸»ó
+            AddReward(healthAdvantage * 0.03f); // ì²´ë ¥ ì°¨ì´ì— ë¹„ë¡€í•˜ëŠ” ë³´ìƒ
         }
 
-        // 3. °ø°İ ¼º°ø º¸»ó (°¡Ä¡´Â ±×´ë·Î À¯Áö)
+        // 3. ê³µê²© ì„±ê³µ ë³´ìƒ (ê°€ì¹˜ëŠ” ê·¸ëŒ€ë¡œ ìœ ì§€)
         if (enemyBlackboard != null && enemyBlackboard.isGetAttacked)
         {
             AddReward(2.0f);
         }
 
-        // 4. ÇÇ°İ Æä³ÎÆ¼ ´ëÆø °¨¼Ò
-        // "¸Â´Â °Ç Á» ¾ÆÇÁÁö¸¸, ¶§¸®´Â °Í¿¡ ºñÇÏ¸é ¾Æ¹«°Íµµ ¾Æ´Ï¾ß!" ¶ó´Â »ı°¢À» °®°Ô ÇÕ´Ï´Ù.
+        // 4. í”¼ê²© í˜ë„í‹° ëŒ€í­ ê°ì†Œ
+        // "ë§ëŠ” ê±´ ì¢€ ì•„í”„ì§€ë§Œ, ë•Œë¦¬ëŠ” ê²ƒì— ë¹„í•˜ë©´ ì•„ë¬´ê²ƒë„ ì•„ë‹ˆì•¼!" ë¼ëŠ” ìƒê°ì„ ê°–ê²Œ í•©ë‹ˆë‹¤.
         if (myBlackboard != null && myBlackboard.isGetAttacked)
         {
-            AddReward(-0.4f); // -1.0¿¡¼­ -0.4·Î Æä³ÎÆ¼¸¦ Å©°Ô ÁÙÀÔ´Ï´Ù.
+            AddReward(-0.4f); // -1.0ì—ì„œ -0.4ë¡œ í˜ë„í‹°ë¥¼ í¬ê²Œ ì¤„ì…ë‹ˆë‹¤.
         }
 
-        // 5. °ÔÀÓ Á¾·á Á¶°Ç (½Â¸®ÀÇ °¡Ä¡¸¦ ¸Å¿ì ³ô°Ô ¼³Á¤)
+        // 5. ê²Œì„ ì¢…ë£Œ ì¡°ê±´ (ìŠ¹ë¦¬ì˜ ê°€ì¹˜ë¥¼ ë§¤ìš° ë†’ê²Œ ì„¤ì •)
         if (myBlackboard != null && myBlackboard.currentHealth <= 0)
         {
-            SetReward(-10.0f); // ÆĞ¹èÀÇ °íÅë
+            SetReward(-10.0f); // íŒ¨ë°°ì˜ ê³ í†µ
             EndEpisode();
         }
         else if (enemyBlackboard != null && enemyBlackboard.currentHealth <= 0)
         {
-            SetReward(10.0f); // ½Â¸®ÀÇ È¯Èñ
+            SetReward(10.0f); // ìŠ¹ë¦¬ì˜ í™˜í¬
             EndEpisode();
         }
     }
 
     /// <summary>
-    /// ÈŞ¸®½ºÆ½ ¸ğµå: °³¹ßÀÚ°¡ Á÷Á¢ Å°º¸µå·Î Á¶ÀÛÇÏ¿© Å×½ºÆ®ÇÒ ¶§ »ç¿ë
+    /// íœ´ë¦¬ìŠ¤í‹± ëª¨ë“œ: ê°œë°œìê°€ ì§ì ‘ í‚¤ë³´ë“œë¡œ ì¡°ì‘í•˜ì—¬ í…ŒìŠ¤íŠ¸í•  ë•Œ ì‚¬ìš©
     /// </summary>
     public override void Heuristic(in ActionBuffers actionsOut)
     {
-        Debug.Log("[RL Agent] Heuristic() ¸Ş¼Òµå°¡ È£ÃâµÇ¾ú½À´Ï´Ù!");
+        Debug.Log("[RL Agent] Heuristic() ë©”ì†Œë“œê°€ í˜¸ì¶œë˜ì—ˆìŠµë‹ˆë‹¤!");
 
         var discreteActions = actionsOut.DiscreteActions;
-        discreteActions[0] = 0; // ±âº»°ª: ´ë±â
+        discreteActions[0] = 0; // ê¸°ë³¸ê°’: ëŒ€ê¸°
 
-        // Å°º¸µå°¡ ¿¬°áµÇ¾î ÀÖ´ÂÁö È®ÀÎ
+        // í‚¤ë³´ë“œê°€ ì—°ê²°ë˜ì–´ ìˆëŠ”ì§€ í™•ì¸
         if (Keyboard.current == null)
         {
             return;
         }
 
-        // »õ·Î¿î Input System ¹æ½ÄÀ¸·Î Å° ÀÔ·Â È®ÀÎ
-        if (Keyboard.current.wKey.isPressed) discreteActions[0] = 1; // ¾ÕÀ¸·Î
-        if (Keyboard.current.sKey.isPressed) discreteActions[0] = 2; // µÚ·Î
-        if (Keyboard.current.spaceKey.isPressed) discreteActions[0] = 3; // °ø°İ
-        if (Keyboard.current.leftShiftKey.isPressed) discreteActions[0] = 4; // È¸ÇÇ
+        // ìƒˆë¡œìš´ Input System ë°©ì‹ìœ¼ë¡œ í‚¤ ì…ë ¥ í™•ì¸
+        if (Keyboard.current.wKey.isPressed) discreteActions[0] = 1; // ì•ìœ¼ë¡œ
+        if (Keyboard.current.sKey.isPressed) discreteActions[0] = 2; // ë’¤ë¡œ
+        if (Keyboard.current.spaceKey.isPressed) discreteActions[0] = 3; // ê³µê²©
+        if (Keyboard.current.leftShiftKey.isPressed) discreteActions[0] = 4; // íšŒí”¼
     }
 }

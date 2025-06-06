@@ -6,7 +6,7 @@ public class DefensiveAgentController : AgentController
 {
     private float defensiveStanceRange = 7f;
     private float counterAttackHealthThreshold = 50f;
-    private float counterDamageMultiplier = 2.5f;
+    private float counterDamageMultiplier = 4.0f;
 
     protected override void InitializeBehaviorTree()
     {
@@ -59,7 +59,7 @@ public class DefensiveAgentController : AgentController
                         new CanCounterAttackCondition(blackboard, transform),
                         new IsEnemyInAttackRangeCondition(blackboard, transform, attackRange),
                         new NotNode(new IsHealthLowCondition(blackboard, transform, counterAttackHealthThreshold)),
-                        new CounterAttackAction(blackboard, transform, this)
+                        new CounterAttackAction(blackboard, transform, this, counterDamageMultiplier)
                     }),
                     // 2순위: 방어가 불가능하면 회피 시도
                     
@@ -95,13 +95,21 @@ public class DefensiveAgentController : AgentController
     public class CounterAttackAction : BTActionNode
     {
         private DefensiveAgentController controller;
-        public CounterAttackAction(AgentBlackboard blackboard, Transform agentTransform, DefensiveAgentController ownerController) : base(blackboard, agentTransform)
+        // [추가] 데미지 배율을 저장할 변수
+        private float multiplier;
+
+        // [수정] 생성자에서 배율 값을 받도록 변경
+        public CounterAttackAction(AgentBlackboard blackboard, Transform agentTransform, DefensiveAgentController ownerController, float damageMultiplier)
+            : base(blackboard, agentTransform)
         {
             this.controller = ownerController;
+            this.multiplier = damageMultiplier;
         }
+
         public override NodeStatus Tick()
         {
-            return controller.PerformAttack();
+            // [수정] PerformAttack 호출 시 저장된 배율 값을 전달
+            return controller.PerformAttack(this.multiplier);
         }
     }
 
