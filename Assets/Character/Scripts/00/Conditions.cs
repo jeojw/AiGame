@@ -158,56 +158,65 @@ public class CanCounterAttackCondition : BTConditionNode
     }
 }
 
-public class IsGetAttackCondition : BTConditionNode
+public class DefendSuccessCondition : BTConditionNode
 {
-    public IsGetAttackCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
+    public DefendSuccessCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
     public override bool CheckCondition()
     {
         return false;
     }
-}
 
-// [�߰�] �ݰ� �� ���� ���� ������ Ȯ���ϴ� ���� ���
-public class IsEnemyAttackingDuringCounterAttackCondition : BTConditionNode
-{
-    private Animator enemyAnimator; // �� �ִϸ����� ����
-
-    public IsEnemyAttackingDuringCounterAttackCondition(AgentBlackboard blackboard, Transform agentTransform)
-        : base(blackboard, agentTransform) { }
-
-    public override bool CheckCondition()
+    public class IsGetAttackCondition : BTConditionNode
     {
-        // ���� �ݰ� ���� �ƴ϶�� �� ������ ����
-        if (!blackboard.isAttacking)
+        public IsGetAttackCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
+        public override bool CheckCondition()
         {
             return false;
         }
+    }
 
-        // ���� �������� ������ ����
-        if (blackboard.enemyTransform == null)
-        {
-            return false;
-        }
+    // [�߰�] �ݰ� �� ���� ���� ������ Ȯ���ϴ� ���� ���
+    public class IsEnemyAttackingDuringCounterAttackCondition : BTConditionNode
+    {
+        private Animator enemyAnimator; // �� �ִϸ����� ����
 
-        // Animator ĳ��
-        if (enemyAnimator == null)
+        public IsEnemyAttackingDuringCounterAttackCondition(AgentBlackboard blackboard, Transform agentTransform)
+            : base(blackboard, agentTransform) { }
+
+        public override bool CheckCondition()
         {
-            enemyAnimator = blackboard.enemyTransform.GetComponent<Animator>();
-            if (enemyAnimator == null)
+            // ���� �ݰ� ���� �ƴ϶�� �� ������ ����
+            if (!blackboard.isAttacking)
             {
-                Debug.LogWarning("�� �ִϸ����Ͱ� �����ϴ�.");
                 return false;
             }
-        }
 
-        // ���� ���� ��
-        var enemyAttackingCondition = new IsEnemyAttackingCondition(blackboard, agentTransform);
-        if (enemyAttackingCondition.CheckCondition())
-        {
-            Debug.Log("�ݰ� �� ���� ���� ���Դϴ�!");
-            return true;
-        }
+            // ���� �������� ������ ����
+            if (blackboard.enemyTransform == null)
+            {
+                return false;
+            }
 
-        return false;
+            // Animator ĳ��
+            if (enemyAnimator == null)
+            {
+                enemyAnimator = blackboard.enemyTransform.GetComponent<Animator>();
+                if (enemyAnimator == null)
+                {
+                    Debug.LogWarning("�� �ִϸ����Ͱ� �����ϴ�.");
+                    return false;
+                }
+            }
+
+            // ���� ���� ��
+            var enemyAttackingCondition = new IsEnemyAttackingCondition(blackboard, agentTransform);
+            if (enemyAttackingCondition.CheckCondition())
+            {
+                Debug.Log("�ݰ� �� ���� ���� ���Դϴ�!");
+                return true;
+            }
+
+            return false;
+        }
     }
-} 
+}

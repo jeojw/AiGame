@@ -4,19 +4,24 @@ using UnityEngine;
 
 public abstract class AgentController : MonoBehaviour
 {
-    public Transform enemy; // 인스펙터에서 할당
-    public float detectionRadius = 20f; // 적 감지 반경
-    public float attackRange = 2f;      // 공격 범위
-    public float closeRangeThreshold = 1f; // "너무 가까움" 판단 기준 거리
-    public float lowHealthThreshold = 30f; // 체력 낮음 판단 기준 (비율 또는 절대값)
-    public float evadeDistance = 2.0f; // 회피 시 이동할 거리
+    [SerializeField] private Transform enemy; // 인스펙터에서 할당
+    private float detectionRadius = 20f; // 적 감지 반경
+    protected float attackRange = 2f;      // 공격 범위
+    private float closeRangeThreshold = 1f; // "너무 가까움" 판단 기준 거리
+    private float lowHealthThreshold = 30f; // 체력 낮음 판단 기준 (비율 또는 절대값)
+    private float evadeDistance = 2.0f; // 회피 시 이동할 거리
 
     private Rigidbody rb;
     private AnimationController animationController;
     private bool attackFinished = false;
     private bool getAttackFinished = false;
 
-    protected AgentBlackboard blackboard; // 블랙보드 참조
+    protected AgentBlackboard _blackboard; // 블랙보드 참조
+    public AgentBlackboard blackboard
+    {
+        get { return _blackboard; }
+        set { _blackboard = value; }
+    }
     protected BTNode rootNode;            // 행동 트리의 루트 노드
 
     private Animator animator; // Animator 참조 변수
@@ -201,10 +206,6 @@ public abstract class AgentController : MonoBehaviour
                     }
                 }
             }
-
-            // 애니메이션 제어
-            animationController.StopWalk();
-            animationController.PlayAttack();
         }
 
         // 공격이 아직 끝나지 않았으면 RUNNING

@@ -1,12 +1,13 @@
 // File: OffensiveAgentController.cs (OffensiveAgentController.cs 파일)
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
+using static DefendSuccessCondition;
 
 public class OffensiveAgentController : AgentController
 {
-    public float offensiveAttackRange = 4.0f; // 공격형 에이전트의 공격 범위 (기본값과 다를 수 있음)
-    public float repositionDistance = 10.0f;   // 선호하는 전투 거리 (재배치 기준)
-    public float fleeHealthThreshold = 20f;   // 도망을 고려할 체력 기준치
+    private float offensiveAttackRange = 2.0f; // 공격형 에이전트의 공격 범위 (기본값과 다를 수 있음)
+    private float repositionDistance = 3.0f;   // 선호하는 전투 거리 (재배치 기준)
+    private float fleeHealthThreshold = 20f;   // 도망을 고려할 체력 기준치
 
     protected override void InitializeBehaviorTree()
     {

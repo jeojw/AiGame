@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class HitboxController : MonoBehaviour
 {
@@ -23,18 +24,26 @@ public class HitboxController : MonoBehaviour
         m_collider = GetComponent<Collider>();
     }
 
-    private void OnCollisionEnter(Collision collision)
+    private void OnTriggerEnter(Collider other) 
     {
-        int thisLayer = this.gameObject.layer;
-        int otherLayer = collision.gameObject.layer;
+        int thisLayer = gameObject.layer;
+        int otherLayer = other.gameObject.layer;
 
-        _isGetAttack =
-            (thisLayer == LayerMask.NameToLayer("OffensiverBody") && otherLayer == LayerMask.NameToLayer("DefensiverSword")) ||
-            (thisLayer == LayerMask.NameToLayer("DefensiverBody") && otherLayer == LayerMask.NameToLayer("OffensiverSword"));
+        if ((thisLayer == LayerMask.NameToLayer("OffensiverBody") && otherLayer == LayerMask.NameToLayer("DefensiverSword")) ||
+        (thisLayer == LayerMask.NameToLayer("DefensiverBody") && otherLayer == LayerMask.NameToLayer("OffensiverSword")))
+        {
+            _isGetAttack = true;
+            Debug.Log($"[피격] {gameObject.name} 이(가) {other.gameObject.name} 에게 맞았습니다.");
+        }
 
-        _isBlocked =
-            thisLayer == LayerMask.NameToLayer("OffensiverSword") && otherLayer == LayerMask.NameToLayer("DefensiverShield");
 
+
+        if (thisLayer == LayerMask.NameToLayer("OffensiverSword") &&
+            otherLayer == LayerMask.NameToLayer("DefensiverShield"))
+        {
+            _isBlocked = true;
+            Debug.Log($"[막힘] {gameObject.name} 의 공격이 {other.gameObject.name} 에 막혔습니다.");
+        }
     }
 
     // Update is called once per frame
@@ -47,9 +56,5 @@ public class HitboxController : MonoBehaviour
 
         if (Time.time - invincibilityStartTime > invincibilityDuration)
             _isGetAttack = false;
-
-        m_collider.enabled = !_isGetAttack;
-
-        Debug.Log(_isGetAttack);
     }
 }
