@@ -58,7 +58,7 @@ public class DefensiveAgentController : AgentController
                         new ChangeDefendToAttack(blackboard, transform),
                         new CanCounterAttackCondition(blackboard, transform),
                         new IsEnemyInAttackRangeCondition(blackboard, transform, attackRange),
-                        new NotNode(new IsHealthLowCondition(blackboard, transform, counterAttackHealthThreshold)),
+                        
                         new CounterAttackAction(blackboard, transform, this, counterDamageMultiplier)
                     }),
                     // 2순위: 방어가 불가능하면 회피 시도

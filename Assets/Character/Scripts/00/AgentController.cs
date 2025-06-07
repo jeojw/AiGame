@@ -18,6 +18,13 @@ public abstract class AgentController : MonoBehaviour
     private bool evadeFinished = false;
     private bool getAttackFinished = false;
 
+    private Vector3 initialPosition; // [추가] 초기 위치 저장을 위해
+    private Quaternion initialRotation; // [추가] 초기 회전 저장을 위해
+
+    [SerializeField] private float damageInvincibilityDuration = 0.1f; // 데미지 처리 후 짧은 무적 시간 (조절 필요)
+
+
+
     // [추가] 적의 Animator를 캐싱하기 위한 변수
     private Animator enemyAnimator;
 
@@ -34,12 +41,16 @@ public abstract class AgentController : MonoBehaviour
     protected virtual void Awake()
     {
         blackboard = new AgentBlackboard();
-        blackboard.maxHealth = 100f; // 문서에 따라 설정 [cite: 10]
+        blackboard.maxHealth = 100f; // 문서에 따라 설정
         blackboard.currentHealth = blackboard.maxHealth;
 
         animator = GetComponent<Animator>(); // Animator 컴포넌트 가져오기
         rb = GetComponent<Rigidbody>();
         animationController = GetComponent<AnimationController>();
+
+        // [추가] 에피소드 시작 시의 위치/회전 저장
+        initialPosition = transform.position;
+        initialRotation = transform.rotation;
     }
 
     protected virtual void Start()
@@ -80,6 +91,13 @@ public abstract class AgentController : MonoBehaviour
         // 블랙보드 업데이트
         if (enemy != null)
         {
+
+            // [수정] 죽었을 때는 아무 처리도 하지 않도록 맨 위에 추가
+            if (blackboard.isDead)
+            {
+                return;
+            }
+
             // [수정됨] 적의 실제 체력을 가져오도록 수정
             float enemyCurrentHealth = 100f; // 기본값
             AgentController enemyController = enemy.GetComponent<AgentController>();
@@ -204,42 +222,33 @@ public abstract class AgentController : MonoBehaviour
 
         if (!blackboard.isAttacking)
         {
+            // --- [수정 시작] ---
+
+            // 1. 돌진 공격 보너스를 먼저 계산합니다.
+            const float chargeSpeedThreshold = 1.0f;
+            const float chargeDamageBonus = 1.5f;
+            float forwardSpeed = Vector3.Dot(rb.linearVelocity, transform.forward);
+            if (forwardSpeed > chargeSpeedThreshold)
+            {
+                Debug.Log("돌진 공격! 데미지 보너스 적용!");
+                damageMultiplier *= chargeDamageBonus;
+            }
+
+            // 2. 최종 계산된 배율을 블랙보드에 저장합니다.
+            // (반격의 경우, damageMultiplier에 이미 3.0f가 들어온 상태에서 이 로직을 타게 됩니다)
+            blackboard.currentAttackMultiplier = damageMultiplier;
+            Debug.Log($"최종 공격 배율 {blackboard.currentAttackMultiplier}을 블랙보드에 저장.");
+
+            // --- [수정 끝] ---
+
             blackboard.isAttacking = true;
             if (enemy != null)
                 transform.LookAt(new Vector3(enemy.position.x, transform.position.y, enemy.position.z));
 
             if (animator != null)
                 animator.SetTrigger("IsAttacking");
-
-            // --- [추가 시작] 돌진 공격 보너스 로직 ---
-            const float chargeSpeedThreshold = 1.0f; // '돌진'으로 인정할 최소 전진 속도
-            const float chargeDamageBonus = 1.5f;    // 돌진 시 추가 데미지 배율 (기존 배율에 곱해짐)
-
-            // 현재 캐릭터가 바라보는 정면 방향으로의 속도를 계산합니다.
-            float forwardSpeed = Vector3.Dot(rb.linearVelocity, transform.forward);
-
-            // 만약 전진 속도가 기준치 이상이면, 돌진 보너스를 적용합니다.
-            if (forwardSpeed > chargeSpeedThreshold)
-            {
-                Debug.Log("돌진 공격! 데미지 보너스 적용!");
-                damageMultiplier *= chargeDamageBonus; // 기존 배율에 추가 배율을 곱합니다.
-            }
-            // --- [추가 끝] ---
-
-
-            // 데미지 계산 시 최종 배율을 곱해줍니다.
-            float attackDamage = 10f * damageMultiplier;
-
-            if (Physics.SphereCast(transform.position + Vector3.up, 0.8f, transform.forward, out RaycastHit hit, attackRange))
-            {
-                AgentController enemyController = hit.collider.GetComponentInParent<AgentController>();
-                if (enemyController != null && enemyController != this)
-                {
-                    Debug.Log($"{gameObject.name}이(가) {enemy.name}을(를) 공격하여 {attackDamage}(x{damageMultiplier}) 데미지를 입혔습니다.");
-                    enemyController.HandleDamage(attackDamage);
-                }
-            }
         }
+
 
         // 공격이 아직 끝나지 않았으면 RUNNING
         if (!attackFinished)
@@ -248,6 +257,8 @@ public abstract class AgentController : MonoBehaviour
         // 공격 종료 시점
         animationController.StopAttack();
         attackFinished = false;
+        // [추가] 공격이 끝났으므로, 배율을 기본값 1.0f로 초기화합니다.
+        blackboard.currentAttackMultiplier = 1.0f;
 
         // 공격 중 종료 플래그
         blackboard.isAttacking = false;
@@ -260,14 +271,22 @@ public abstract class AgentController : MonoBehaviour
     public virtual NodeStatus PerformDefend()
     {
         Debug.Log("행동: 방어 수행!");
-        blackboard.SetActionCooldown(AgentBlackboard.DEFEND_COOLDOWN_KEY); // 방어 쿨타임 설정 [cite: 10]
-        blackboard.StartInvincibility(blackboard.defendCooldownDuration); // 방어 시간 동안 무적 [cite: 10]
+        blackboard.SetActionCooldown(AgentBlackboard.DEFEND_COOLDOWN_KEY); // 방어 쿨타임 설정
+                                                                           //blackboard.StartInvincibility(blackboard.defendCooldownDuration); // 방어 시간 동안 무적
+
+        // [추가] 방어 상태 플래그를 true로 설정
+        blackboard.isDefending = true;
 
         if (animator != null)
         {
             animator.SetTrigger("IsDefending");
         }
-        Invoke(nameof(StopDefendInvincibility), blackboard.defendCooldownDuration);
+
+        // [추가] 방어 지속시간(예: 1초)이 지나면 방어 상태를 해제하는 메소드를 예약
+        // 이 시간은 실제 방어 애니메이션 길이에 맞게 조절하는 것이 가장 좋습니다.
+        Invoke(nameof(StopDefendInvincibility), 0.7f);
+
+        //Invoke(nameof(StopDefendInvincibility), blackboard.defendCooldownDuration);
         return NodeStatus.SUCCESS;
     }
 
@@ -326,23 +345,14 @@ public abstract class AgentController : MonoBehaviour
                 break;
         }
 
-        if (animator != null)
-        {
-            // 모든 방향 대시에 동일한 회피 애니메이션 Trigger를 사용할 수 있습니다.
-            animator.SetTrigger("IsEvading");
-        }
 
-        // 순간적인 힘을 가해 캐릭터를 밀어냅니다.
-        if (rb != null)
-        {
-            rb.AddForce(dashVector * dashSpeed, ForceMode.Impulse);
-        }
+
     }
 
     public virtual NodeStatus Idle()
     {
-        Debug.Log("행동: 대기 중");
-        
+        //Debug.Log("행동: 대기 중");
+
         // [추가] 대기중 서로 상대방을 보도록
         if (enemy != null)
             transform.LookAt(new Vector3(enemy.position.x, transform.position.y, enemy.position.z));
@@ -356,7 +366,12 @@ public abstract class AgentController : MonoBehaviour
 
     private void StopDefendInvincibility()
     {
+        if (animator != null)
+        {
+            animator.SetTrigger("IsDefendSuccess");
+        }
         blackboard.EndInvincibility();
+        blackboard.isDefending = false; // <--- 이 줄을 추가해야 합니다!
         Debug.Log("방어 무적 상태 종료.");
     }
 
@@ -382,25 +397,81 @@ public abstract class AgentController : MonoBehaviour
         }
 
         blackboard.TakeDamage(damage);
+
+        // --- 데미지를 받았으니 즉시 짧은 무적 상태로 진입합니다. ---
+        blackboard.StartInvincibility(damageInvincibilityDuration);
+        Invoke(nameof(StopDamageInvincibility), damageInvincibilityDuration);
+        // --------------------------------------------------------
+
+
         if (blackboard.currentHealth <= 0)
         {
             Die(); // 체력이 0 이하이면 죽음 처리
         }
     }
 
+    // [추가] HandleDamage에서 설정한 짧은 무적 시간을 해제하는 메소드
+    private void StopDamageInvincibility()
+    {
+        blackboard.EndInvincibility();
+        Debug.Log($"[{gameObject.name}] 데미지 무적 상태 종료.");
+    }
+
     protected virtual void Die()
     {
         Debug.Log(gameObject.name + "이(가) 죽었습니다.");
+
+        blackboard.isDead = true; // [수정] isDead 플래그를 true로 설정
+
         if (animator != null)
         {
             animator.SetTrigger("Die"); // 죽음 애니메이션 실행
         }
 
         // 스크립트 비활성화하여 더 이상 행동하지 않도록 함
-        this.enabled = false;
+        //this.enabled = false;
 
         // 일정 시간 후 오브젝트 파괴
         //Destroy(gameObject, 3f);
+    }
+
+    /// <summary>
+    /// [추가] 에이전트의 상태를 초기화하고 부활시키는 메소드
+    /// </summary>
+    public virtual void ResetAgent()
+    {
+        Debug.Log($"[{gameObject.name}] 에이전트 상태를 리셋합니다.");
+
+        // 상태 리셋
+        blackboard.isDead = false;
+        blackboard.currentHealth = blackboard.maxHealth;
+        blackboard.isAttacking = false;
+        // 필요에 따라 다른 블랙보드 상태들도 초기화
+
+        // 물리 상태 리셋
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+
+        // 위치 및 회전 리셋
+        transform.position = initialPosition;
+        transform.rotation = initialRotation;
+
+        // 애니메이터 리셋 (가장 중요!)
+        // 'Die' 상태에서 벗어나 기본 상태(예: Idle)로 돌아가도록 합니다.
+        if (animator != null)
+        {
+            animator.Rebind();
+            animator.Update(0f);
+        }
+
+        // 스크립트가 비활성화되었을 경우를 대비해 활성화 (안전장치)
+        if (!this.enabled)
+        {
+            this.enabled = true;
+        }
     }
 
     // [추가] isAttacking 플래그를 리셋하기 위한 메소드

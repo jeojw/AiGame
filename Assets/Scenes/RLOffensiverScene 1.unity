@@ -726,6 +726,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 100000, guid: aacaba470d7de494f9e0ed17ada553ef, type: 3}
+      propertyPath: m_TagString
+      value: Shield
+      objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: aacaba470d7de494f9e0ed17ada553ef, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.019
@@ -1262,6 +1266,10 @@ PrefabInstance:
     - target: {fileID: 100002, guid: 274849738f501054daf0e2f81919773f, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 100002, guid: 274849738f501054daf0e2f81919773f, type: 3}
+      propertyPath: m_TagString
+      value: Sword
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 274849738f501054daf0e2f81919773f, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2629,7 +2637,7 @@ MonoBehaviour:
   agentParameters:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
-  MaxStep: 15000
+  MaxStep: 10000
   enemyTransform: {fileID: 355025711}
   maxEpisodeTimeBonus: 50
   episodeDurationForMaxBonus: 5

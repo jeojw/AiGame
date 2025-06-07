@@ -45,10 +45,10 @@ behaviors:
     self_play: null
     behavioral_cloning: null
 env_settings:
-  env_path: null
+  env_path: C:\Users\Home\Documents\Github\AiGame\Build\RLO.exe
   env_args: null
   base_port: 5005
-  num_envs: 1
+  num_envs: 12
   num_areas: 1
   timeout_wait: 60
   seed: -1
@@ -66,11 +66,11 @@ engine_settings:
   no_graphics_monitor: false
 environment_parameters: null
 checkpoint_settings:
-  run_id: RL_Offensive_vs_BT_Defensive_1
+  run_id: RL_Offensive_vs_BT_Defensive_5
   initialize_from: null
   load_model: false
   resume: false
-  force: true
+  force: false
   train_model: false
   inference: false
   results_dir: results

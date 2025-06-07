@@ -13,6 +13,9 @@ public class AgentBlackboard
     private bool _isEvading = false;
     private bool _isGetAttacked = false;
     private bool _canCounterAttack = false;
+    private bool _isDead = false; // [추가]
+    // [추가] 현재 공격에 적용될 데미지 배율을 저장하는 변수
+    public float currentAttackMultiplier = 1.0f;
 
     // [추가] 적의 마지막 공격 시간을 기록할 변수
     public float lastEnemyAttackTime = 0f;
@@ -61,6 +64,12 @@ public class AgentBlackboard
     {
         get { return _isGetAttacked; }
         set { _isGetAttacked = value; }
+    }
+
+    public bool isDead // [추가]
+    {
+        get { return _isDead; }
+        set { _isDead = value; }
     }
 
     // 적 정보
