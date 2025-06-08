@@ -149,6 +149,8 @@ public class RLDefensiveAgent : Agent
         this.enabled = true;
 
         // --- [Ãß°¡ ³¡] ---
+
+
     }
 
     public override void CollectObservations(VectorSensor sensor)

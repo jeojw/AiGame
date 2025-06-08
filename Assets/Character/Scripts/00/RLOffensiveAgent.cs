@@ -178,7 +178,7 @@ public class RLOffensiveAgent : Agent
     /// </summary>
     public override void OnActionReceived(ActionBuffers actions)
     {
-        Debug.Log($"[RL Agent] 1. OnActionReceived 호출됨. 받은 액션: {actions.DiscreteActions[0]}");
+        Debug.Log($"[RL Agent] Offensiver OnActionReceived 호출됨. 받은 액션: {actions.DiscreteActions[0]}");
 
         int mainAction = actions.DiscreteActions[0];
 

@@ -14,7 +14,7 @@ public class OffensiveAgentController : AgentController
 
     protected override void InitializeBehaviorTree()
     {
-
+        /*
         // 공격형 에이전트의 행동 트리 정의
         // 전략: 공격 우선, 체력이 낮거나 적이 공격 중이면 회피, 필요시 재배치.
 
@@ -85,6 +85,6 @@ public class OffensiveAgentController : AgentController
             // 6. 적이 없거나 다른 조건이 충족되지 않으면 대기
             new IdleAction(blackboard, transform)
         });
-
+        */
     }
 }
