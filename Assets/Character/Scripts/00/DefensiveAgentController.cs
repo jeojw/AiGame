@@ -16,6 +16,7 @@ public class DefensiveAgentController : AgentController
     }
     protected override void InitializeBehaviorTree()
     {
+        
         /*
         rootNode = new BTSelector(blackboard, transform, new List<BTNode>
         {
@@ -90,8 +91,8 @@ public class DefensiveAgentController : AgentController
             // 5. 기본 대기 상태 (이전과 동일)
             new IdleAction(blackboard, transform)
         });
-
         */
+        
     }
 
     // [추가] PerformAttack 메서드를 오버라이드하여 수비자 전용 인터럽트 로직을 포함

@@ -644,6 +644,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemy: {fileID: 1442097112}
   attackRange: 2
+  attackPreDelay: 0.3
 --- !u!114 &355025715
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2730,7 +2731,7 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: a8cdc2107493ce3439f57232e688953b, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: d26c7c6eca4443b45a445145e77d0ff1, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 2
   m_BehaviorName: OffensiveRL
@@ -2753,6 +2754,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemy: {fileID: 355025711}
   attackRange: 2
+  attackPreDelay: 0.3
   attackRangeTolerance: 0.2
 --- !u!114 &1858427105
 MonoBehaviour:
