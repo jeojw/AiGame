@@ -6,10 +6,17 @@ public class DefensiveAgentController : AgentController
 {
     private float defensiveStanceRange = 7f;
     private float counterAttackHealthThreshold = 50f;
-    private float counterDamageMultiplier = 3.0f;
+    private float _counterDamageMultiplier = 2.0f; // private 필드로 변경
 
+    // [추가] public 속성으로 외부에서 값을 읽을 수 있도록 함
+    public float counterDamageMultiplier
+    {
+        get { return _counterDamageMultiplier; }
+        // 필요에 따라 set도 추가할 수 있지만, 일반적으로는 읽기 전용으로 두는 것이 좋습니다.
+    }
     protected override void InitializeBehaviorTree()
     {
+        /*
         rootNode = new BTSelector(blackboard, transform, new List<BTNode>
         {
             // --- [수정] 1순위: 적이 5초 이상 공격하지 않으면 '다가가서' 공격 ---
@@ -62,7 +69,10 @@ public class DefensiveAgentController : AgentController
                         new CounterAttackAction(blackboard, transform, this, counterDamageMultiplier)
                     }),
                     // 2순위: 방어가 불가능하면 회피 시도
-                    
+                    new BTSequence(blackboard, transform, new List<BTNode> {
+                        new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.EVADE_COOLDOWN_KEY), // 회피 쿨타임이 준비되었는가?
+                        new EvadeAction(blackboard, transform) // 회피 행동
+                    }),
                     // 만약 방어와 회피 모두 쿨타임이라면, 이 Selector는 실패하고 에이전트는 공격을 맞게 됩니다.
                 })
             }),
@@ -80,6 +90,39 @@ public class DefensiveAgentController : AgentController
             // 5. 기본 대기 상태 (이전과 동일)
             new IdleAction(blackboard, transform)
         });
+
+        */
+    }
+
+    // [추가] PerformAttack 메서드를 오버라이드하여 수비자 전용 인터럽트 로직을 포함
+    public override NodeStatus PerformAttack(float damageMultiplier = 1.0f)
+    {
+        // [수비자 전용 인터럽트 로직 시작]
+        if (blackboard.enemyTransform != null)
+        {
+            AgentController enemyController = blackboard.enemyTransform.GetComponent<AgentController>();
+            if (enemyController != null && enemyController != this)
+            {
+                // 적이 공격 중이며, 내가 무적 상태가 아니고, 적의 공격 범위 내에 있다면 공격 중단
+                if (enemyController.blackboard.isAttacking &&
+                    !blackboard.isInvincible &&
+                    Vector3.Distance(transform.position, enemyController.transform.position) <= enemyController.attackRange) // 이 attackRange는 적의 attackRange입니다.
+                {
+                    Debug.Log($"[Defensive Agent] 공격 중 적의 위협적인 반격 감지 → 공격 중단하고 방어/회피 고려");
+                    blackboard.isAttacking = false;
+                    // attackFinished = false; // 공격 애니메이션이 시작 안되었을 수 있으므로 이 플래그는 건드리지 않는게 좋음
+                    return NodeStatus.FAILURE; // 공격 행동 실패로 간주
+                }
+            }
+        }
+        // [수비자 전용 인터럽트 로직 끝]
+
+        // 부모 클래스(AgentController)의 PerformAttack 로직 호출
+        // 이 부분을 호출하면 부모 클래스의 PerformAttack 로직이 실행됩니다.
+        // 현재 AgentController의 PerformAttack에는 인터럽트가 없으므로
+        // 이 오버라이드된 메서드가 먼저 인터럽트 로직을 처리한 후,
+        // 필요하다면 부모의 나머지 공격 준비 및 실행 로직을 따르게 됩니다.
+        return base.PerformAttack(damageMultiplier);
     }
 
     // --- 이 스크립트 안에서만 사용할 새로운 노드들 ---

@@ -1,16 +1,17 @@
 // File: AgentController.cs (AgentController.cs 파일)
 using UnityEditor;
 using UnityEngine;
+//using static UnityEditor.ShaderGraph.Internal.KeywordDependentCollection;
 
 public abstract class AgentController : MonoBehaviour
 {
     [SerializeField] private Transform enemy; // 인스펙터에서 할당
     private float detectionRadius = 20f; // 적 감지 반경
-    protected float attackRange = 2f;      // 공격 범위
+    public float attackRange = 2f;      // 공격 범위
     private float closeRangeThreshold = 1f; // "너무 가까움" 판단 기준 거리
     private float lowHealthThreshold = 30f; // 체력 낮음 판단 기준 (비율 또는 절대값)
-    private float evadeDistance = 2.0f; // 이 변수는 이제 사용하지 않거나 대시 거리로 활용할 수 있습니다.
-    private float dashSpeed = 15f; // [추가] 대시 속도를 위한 변수
+    private float evadeDistance = 5.0f; // 이 변수는 이제 사용하지 않거나 대시 거리로 활용할 수 있습니다.
+    private float dashSpeed = 10f; // [추가] 대시 속도를 위한 변수
 
     private Rigidbody rb;
     private AnimationController animationController;
@@ -184,20 +185,9 @@ public abstract class AgentController : MonoBehaviour
     // [수정] 메소드 시그니처에 데미지 배율 인자 추가
     public virtual NodeStatus PerformAttack(float damageMultiplier = 1.0f)
     {
-        // 인터럽트
-        if (blackboard.enemyHealth > 0 && blackboard.enemyTransform != null)
-        {
-            AgentController enemyController = blackboard.enemyTransform.GetComponent<AgentController>();
-            if (enemyController != null && enemyController.blackboard.isAttacking)
-            {
-                Debug.Log("공격 중 적이 반격함 → 공격 중단하고 회피/방어 고려");
-                blackboard.isAttacking = false;
-                attackFinished = false;
-                return NodeStatus.FAILURE; // 공격 행동 실패로 간주하고 상위 BT가 다시 판단하게
-            }
-        }
+        
 
-        Debug.Log("행동: 공격 수행!");
+        Debug.Log($"{gameObject.name}이(가) 행동: 공격 수행!");
 
         if (!blackboard.IsActionReady(AgentBlackboard.ATTACK_COOLDOWN_KEY))
             return NodeStatus.FAILURE;
@@ -283,17 +273,24 @@ public abstract class AgentController : MonoBehaviour
 
     public virtual NodeStatus PerformEvade()
     {
+        if (!blackboard.IsActionReady(AgentBlackboard.EVADE_COOLDOWN_KEY))
+            return NodeStatus.FAILURE;
+
         Debug.Log("행동: 무작위 방향으로 회피 수행!");
         blackboard.SetActionCooldown(AgentBlackboard.EVADE_COOLDOWN_KEY);
-
-        // 0:앞, 1:뒤, 2:왼쪽, 3:오른쪽 중 하나를 무작위로 선택
         int randomDirection = Random.Range(0, 4);
-        PerformDirectionalDash(randomDirection); // 아래에서 만들 새로운 메소드 호출
 
-        return NodeStatus.SUCCESS;
+        // 회피 시작 시 플래그 설정
+        blackboard.isEvading = true; // Blackboard에도 isEvading 상태를 추가하여 관리
+        evadeFinished = false; // 애니메이션 이벤트로 리셋될 플래그 초기화
+
+        PerformDirectionalDash(randomDirection);
+        //animationController?.PlayEvade(); // 회피 애니메이션 재생 (AnimationController에 PlayEvade 추가 필요)
+
+        return NodeStatus.RUNNING; // 즉시 성공을 반환하지 않고 RUNNING 반환
     }
 
-    // [추가] RL 에이전트가 방향을 지정하여 호출할 메소드
+    // [수정] RL 에이전트가 방향을 지정하여 호출할 메소드에 속도와 거리 인자 추가
     public virtual NodeStatus PerformDirectionalEvade(int direction)
     {
         if (!blackboard.IsActionReady(AgentBlackboard.EVADE_COOLDOWN_KEY))
@@ -301,11 +298,18 @@ public abstract class AgentController : MonoBehaviour
 
         Debug.Log($"행동: {direction} 방향으로 회피 수행!");
         blackboard.SetActionCooldown(AgentBlackboard.EVADE_COOLDOWN_KEY);
+
+        // 회피 시작 시 플래그 설정
+        blackboard.isEvading = true; // Blackboard에도 isEvading 상태를 추가하여 관리
+        evadeFinished = false; // 애니메이션 이벤트로 리셋될 플래그 초기화
+
         PerformDirectionalDash(direction);
-        return NodeStatus.SUCCESS;
+        //animationController?.PlayEvade(); // 회피 애니메이션 재생
+
+        return NodeStatus.RUNNING; // 즉시 성공을 반환하지 않고 RUNNING 반환
     }
 
-    // [추가] 실제 물리적인 대시를 처리하는 메소드
+    // [수정] 실제 물리적인 대시를 처리하는 메소드에 속도와 거리 인자 추가 및 대시 로직 구현
     private void PerformDirectionalDash(int direction)
     {
         Vector3 dashVector = Vector3.zero;
@@ -326,17 +330,24 @@ public abstract class AgentController : MonoBehaviour
                 break;
         }
 
-        if (animator != null)
-        {
-            // 모든 방향 대시에 동일한 회피 애니메이션 Trigger를 사용할 수 있습니다.
-            animator.SetTrigger("IsEvading");
-        }
+        
 
-        // 순간적인 힘을 가해 캐릭터를 밀어냅니다.
-        if (rb != null)
-        {
-            rb.AddForce(dashVector * dashSpeed, ForceMode.Impulse);
-        }
+        // Rigidbody를 사용하여 대시 즉시 적용
+        // 기존 속도에 대시 벡터를 추가하여 순간적으로 큰 힘을 줍니다.
+        // ForceMode.Impulse를 사용하여 순간적인 힘을 가합니다.
+        rb.AddForce(dashVector * dashSpeed, ForceMode.Impulse);
+
+        // 일정 시간 후 대시 종료 처리 (예: 애니메이션 길이에 맞춰)
+        // 실제로는 애니메이션 이벤트나 콜백을 통해 정확한 종료 시점을 잡는 것이 좋습니다.
+        Invoke(nameof(EndEvade), 1.0f); // 0.5초 후 대시 종료 (임시 값, 애니메이션 길이에 따라 조절)
+    }
+
+    private void EndEvade()
+    {
+        // 대시 종료 후 필요한 로직 (예: 속도 초기화, 애니메이션 종료 등)
+        rb.linearVelocity = Vector3.zero; // 대시 후 속도 초기화
+        evadeFinished = true; // 회피 완료 플래그 설정
+        Debug.Log("대시 종료!");
     }
 
     public virtual NodeStatus Idle()
@@ -447,8 +458,20 @@ public abstract class AgentController : MonoBehaviour
 
         // --- [수정 끝] ---
 
+
+
         blackboard.SetActionCooldown(AgentBlackboard.ATTACK_COOLDOWN_KEY);
 
         return NodeStatus.SUCCESS;
+    }
+
+    // [추가] 모든 내부 플래그를 초기화하는 메서드
+    public void ResetAllFlags()
+    {
+        attackFinished = false;
+        evadeFinished = false;
+        getAttackFinished = false;
+        // Blackboard의 플래그는 보통 RL 에이전트의 OnEpisodeBegin에서 직접 초기화합니다.
+        // 또는 Blackboard 자체에 Reset 메서드를 추가할 수도 있습니다.
     }
 }

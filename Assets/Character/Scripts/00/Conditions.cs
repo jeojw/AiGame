@@ -88,46 +88,33 @@ public class IsEnemyTooCloseCondition : BTConditionNode
 // ���� ���� ������ Ȯ���ϴ� ���� ���
 public class IsEnemyAttackingCondition : BTConditionNode
 {
-    private Animator enemyAnimator; // ���� �ִϸ����͸� ������ ����
+    private Animator enemyAnimator; // 적 애니메이터를 저장하는 변수
 
     public IsEnemyAttackingCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
 
     public override bool CheckCondition()
     {
-        // �������忡 �� ������ ������ �翬�� ���� ���� �ƴ�
         if (blackboard.enemyTransform == null) return false;
 
-        // ������ ���� Animator�� �������� �ʾҴٸ� �ѹ��� �����ͼ� ���� (�Ź� GetComponent�ϴ� ���� ����)
         if (enemyAnimator == null)
         {
             enemyAnimator = blackboard.enemyTransform.GetComponent<Animator>();
-
-            // �÷��̽�Ȧ��: ���� ���ӿ����� ���� �ִϸ��̼� ���¸� Ȯ���ϰų�,
-            // �߻�ü�� ���ƿ�����, �Ǵ� ���� ���� �غ� ���� ������ ���� Ȯ���ؾ� �մϴ�.
-            // �� ���������� ���� ������ ���� ��� 10% Ȯ���� true�� ��ȯ�ϵ��� ����ϴ�.
-            if (blackboard.enemyTransform != null && blackboard.enemyDistance < 5f)
+            if (enemyAnimator == null)
             {
-                return Random.value < 0.1f; // ����: ���� ������ 10% Ȯ��
+                Debug.LogWarning($"[IsEnemyAttackingCondition] {blackboard.enemyTransform.name}에 Animator 컴포넌트가 없습니다.");
+                return false;
             }
-
-            // ������ Animator�� ������ �Ǵ� �Ұ�
-            if (enemyAnimator == null) return false;
-
-            // �� Animator�� ù ��° ���̾�(�⺻�� 0)�� ���� ���� ���� Ȯ��
-            // "Attack" �̶�� �±׸� ���� �ִϸ��̼� ���°� ��� ���̸� true�� ��ȯ
-            if (enemyAnimator.GetCurrentAnimatorStateInfo(0).IsTag("Attack"))
-            {
-                Debug.Log("���� ����: ���� ���� ���Դϴ�!");
-                return true;
-            }
-
-            return false;
         }
 
+        // 적의 Animator가 "Attack" 태그를 가진 상태에 있는지 확인
+        // GetCurrentAnimatorStateInfo(0)은 기본 레이어를 의미합니다.
         if (enemyAnimator.GetCurrentAnimatorStateInfo(0).IsTag("Attack"))
         {
+            // Debug.Log("적 공격: 적이 공격 애니메이션 상태입니다!"); // 디버그용
+            // blackboard.isAttacking = true; // 이 부분은 AgentController의 FixedUpdate에서 처리하는 것이 더 일관적입니다.
             return true;
         }
+        // else { blackboard.isAttacking = false; } // 마찬가지로 AgentController에서 처리
 
         return false;
     }
