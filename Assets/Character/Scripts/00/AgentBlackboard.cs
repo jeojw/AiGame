@@ -120,6 +120,13 @@ public class AgentBlackboard
         get { return _evadeCooldownDuration; }
     }
 
+    private float _evadeDuration = 0.7f; // 회피 상태 지속 시간(초)
+    public float evadeDuration
+    {
+        get { return _evadeDuration; }
+        set { _evadeDuration = value; }
+    }
+
 
     public AgentBlackboard()
     {
