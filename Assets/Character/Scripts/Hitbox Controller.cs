@@ -1,8 +1,13 @@
+using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 public class HitboxController : MonoBehaviour
 {
+    public event Action OnHitReceived;
+    public event Action OnBlockReceived;
+
     private Collider m_collider;
     private bool _isGetAttack = false;
     private bool _isBlocked = false;
@@ -10,31 +15,34 @@ public class HitboxController : MonoBehaviour
     public bool isGetAttack
     {
         get { return _isGetAttack; }
+        set { _isGetAttack = value; }
     }
     public bool isBlocked
     {
         get { return _isBlocked; }
+        set { _isBlocked = value; }
     }
 
-    private float invincibilityDuration = 1.0f;
-    private float invincibilityStartTime;
+    private float hitDuration = 0.1f;
+    private float hitStartTime;
 
-    private float blockCoolTime = 1.0f;
+    private float blockCoolTime = 2.0f;
     private float blockCoolStartTime;
+
+    private int thisLayer;
    //private CapsuleCollider capsuleCollider;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        int thisLayer = gameObject.layer;
-        if (thisLayer == LayerMask.NameToLayer("OffensiverSword") ||
-            thisLayer == LayerMask.NameToLayer("DefensiverShield") ||
-            thisLayer == LayerMask.NameToLayer("DefensiverSword"))
+        thisLayer = gameObject.layer;
+        if (thisLayer == LayerMask.NameToLayer("OffensiverBody") ||
+            thisLayer == LayerMask.NameToLayer("DefensiverBody"))
         {
-            agentBlackboard = transform.root.GetComponent<AgentController>().blackboard;
+            agentBlackboard = GetComponent<AgentController>().blackboard;
         }
         else
         {
-            agentBlackboard = GetComponent<AgentController>().blackboard;
+            agentBlackboard = transform.root.GetComponent<AgentController>().blackboard;
         }
         m_collider = GetComponent<Collider>();
     }
@@ -45,47 +53,48 @@ public class HitboxController : MonoBehaviour
         int otherLayer = other.gameObject.layer;
 
         if ((thisLayer == LayerMask.NameToLayer("OffensiverBody") && otherLayer == LayerMask.NameToLayer("DefensiverSword")) ||
-        (thisLayer == LayerMask.NameToLayer("DefensiverBody") && otherLayer == LayerMask.NameToLayer("OffensiverSword")))
+            (thisLayer == LayerMask.NameToLayer("DefensiverBody") && otherLayer == LayerMask.NameToLayer("OffensiverSword")))
         {
-            _isGetAttack = true;
-            //체력도 표시하게 수정.
-            Debug.Log($"[피격] {gameObject.name} 이(가) {other.gameObject.name} 에게 맞았습니다. 남은 체력: {agentBlackboard.currentHealth}");
+            if (!_isGetAttack)
+            {
+                _isGetAttack = true;
+                Debug.Log($"[피격] {gameObject.name}이(가) {other.gameObject.name}에게 맞음");
+
+                OnHitReceived?.Invoke();
+            }
         }
 
         if (thisLayer == LayerMask.NameToLayer("DefensiverShield") &&
             otherLayer == LayerMask.NameToLayer("OffensiverSword"))
         {
-            _isBlocked = true;
-            Debug.Log($"[막힘] {gameObject.name} 의 공격이 {other.gameObject.name} 에 막혔습니다.");
+            if (_isBlocked)
+            {
+                _isBlocked = true;
+                Debug.Log($"[막힘] {gameObject.name} 의 공격이 {other.gameObject.name} 에 막혔습니다.");
+
+                OnBlockReceived?.Invoke();
+            }
+           
         }
+    }
+
+    public void ResetHitFlag()
+    {
+        _isGetAttack = false;
+    }
+
+    public void ResetBlockFlag()
+    {
+        _isBlocked = false;
     }
 
     // Update is called once per frame
     void Update()
     {
-        agentBlackboard.isGetAttacked = _isGetAttack;
-        agentBlackboard.canCounterAttack = _isBlocked;
-
-        if (_isGetAttack)
+        if (thisLayer == LayerMask.NameToLayer("OffensiverBody") ||
+            thisLayer == LayerMask.NameToLayer("DefensiverBody"))
         {
-            invincibilityStartTime = Time.time;
-        }
-
-        if (_isBlocked)
-        {
-            blockCoolStartTime = Time.time; 
-        }
-
-        if (Time.time - invincibilityStartTime > invincibilityDuration && invincibilityStartTime != 0)
-        {
-            _isGetAttack = false;
-            invincibilityStartTime = 0;
-        }
-            
-        if (Time.time - blockCoolStartTime > blockCoolTime && blockCoolStartTime != 0)
-        {
-            _isBlocked = false;
-            blockCoolStartTime = 0;
+            agentBlackboard.isGetAttacked = _isGetAttack;
         }
     }
 }

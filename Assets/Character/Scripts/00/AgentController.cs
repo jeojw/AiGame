@@ -1,5 +1,6 @@
 // File: AgentController.cs (AgentController.cs 파일)
 using UnityEditor;
+using UnityEditor.Searcher;
 using UnityEngine;
 
 public abstract class AgentController : MonoBehaviour
@@ -18,8 +19,10 @@ public abstract class AgentController : MonoBehaviour
     private bool evadeFinished = false;
     private bool getAttackFinished = false;
 
+    private HitboxController hitbox;
+
     // [추가] 적의 Animator를 캐싱하기 위한 변수
-    private Animator enemyAnimator;
+    private AgentController _enemyController;
 
     protected AgentBlackboard _blackboard; // 블랙보드 참조
     public AgentBlackboard blackboard
@@ -34,12 +37,14 @@ public abstract class AgentController : MonoBehaviour
     protected virtual void Awake()
     {
         blackboard = new AgentBlackboard();
+        blackboard.owner = this;
         blackboard.maxHealth = 100f; // 문서에 따라 설정 [cite: 10]
         blackboard.currentHealth = blackboard.maxHealth;
 
         animator = GetComponent<Animator>(); // Animator 컴포넌트 가져오기
         rb = GetComponent<Rigidbody>();
         animationController = GetComponent<AnimationController>();
+        hitbox = GetComponent<HitboxController>();
     }
 
     protected virtual void Start()
@@ -47,6 +52,13 @@ public abstract class AgentController : MonoBehaviour
         Debug.Log($"[{gameObject.name}] animationController: {animationController}");
 
         InitializeBehaviorTree(); // 행동 트리 초기화
+
+        if (hitbox != null)
+        {
+            hitbox.OnHitReceived += OnHitDetected;
+
+            hitbox.OnBlockReceived += OnBlockDetected;
+        }
 
         if (animationController != null)
         {
@@ -82,13 +94,13 @@ public abstract class AgentController : MonoBehaviour
         {
             // [수정됨] 적의 실제 체력을 가져오도록 수정
             float enemyCurrentHealth = 100f; // 기본값
-            AgentController enemyController = enemy.GetComponent<AgentController>();
-            if (enemyController != null)
+            _enemyController = enemy.GetComponent<AgentController>();
+            if (_enemyController != null)
             {
-                enemyCurrentHealth = enemyController.blackboard.currentHealth;
+                enemyCurrentHealth = _enemyController.blackboard.currentHealth;
 
                 // "Attack" 태그를 가진 애니메이션 상태가 실행 중이면
-                if (enemyController.blackboard.isAttacking)
+                if (_enemyController.blackboard.isAttacking)
                 {
                     // 마지막 공격 시간을 현재 시간으로 갱신
                     blackboard.lastEnemyAttackTime = Time.time;
@@ -230,15 +242,7 @@ public abstract class AgentController : MonoBehaviour
             // 데미지 계산 시 최종 배율을 곱해줍니다.
             float attackDamage = 10f * damageMultiplier;
 
-            if (Physics.SphereCast(transform.position + Vector3.up, 0.8f, transform.forward, out RaycastHit hit, attackRange))
-            {
-                AgentController enemyController = hit.collider.GetComponentInParent<AgentController>();
-                if (enemyController != null && enemyController != this)
-                {
-                    Debug.Log($"{gameObject.name}이(가) {enemy.name}을(를) 공격하여 {attackDamage}(x{damageMultiplier}) 데미지를 입혔습니다.");
-                    enemyController.HandleDamage(attackDamage);
-                }
-            }
+            enemy.GetComponent<AgentController>().blackboard.totalDamage = attackDamage;
         }
 
         // 공격이 아직 끝나지 않았으면 RUNNING
@@ -360,32 +364,37 @@ public abstract class AgentController : MonoBehaviour
         Debug.Log("방어 무적 상태 종료.");
     }
 
-    public virtual NodeStatus GetAttack()
+    void OnHitDetected()
     {
-        animationController.PlayGetAttack();
-        if (!getAttackFinished)
-            return NodeStatus.RUNNING;
+        blackboard.isGetAttacked = true;
+        blackboard.totalDamage = 10f;
+    }
 
-        animationController.StopGetAttack();
-        getAttackFinished = false;
-        return NodeStatus.SUCCESS;
+    void OnBlockDetected()
+    {
+        blackboard.canCounterAttack = true;
     }
 
 
-
-    public void HandleDamage(float damage)
+    public virtual NodeStatus GetAttack()
     {
-        if (blackboard.isInvincible) // 방어나 회피 중에는 데미지 무효화
+        Debug.Log($"{gameObject.name}이(가) {enemy.name}을(를) 공격하여 {blackboard.totalDamage} 데미지를 입혔습니다.");
+        blackboard.currentHealth -= blackboard.totalDamage;
+
+        blackboard.isGetAttacked = false;
+        hitbox.ResetHitFlag();
+
+        return NodeStatus.SUCCESS;
+    }
+
+    public virtual NodeStatus Dead()
+    {
+        if (animator != null)
         {
-            Debug.Log(gameObject.name + "이(가) 공격을 무효화했습니다.");
-            return;
+            animator.SetTrigger("Die");
         }
 
-        blackboard.TakeDamage(damage);
-        if (blackboard.currentHealth <= 0)
-        {
-            Die(); // 체력이 0 이하이면 죽음 처리
-        }
+        return NodeStatus.SUCCESS;
     }
 
     protected virtual void Die()
@@ -429,21 +438,13 @@ public abstract class AgentController : MonoBehaviour
             animator.SetTrigger("IsAttacking");
         }
 
+        float attackDamage = 40f;
+
+        enemy.GetComponent<AgentController>().blackboard.totalDamage = attackDamage;
+
         // 2. 공격 애니메이션이 끝날 시간 즈음에 isAttacking 플래그를 false로 되돌리도록 예약
         //    (애니메이션 길이에 맞춰 1.5f 값을 조정하세요)
         Invoke(nameof(ResetIsAttacking), 1.5f);
-
-        // 데미지 판정 로직 (기존과 동일)
-        float attackDamage = 40f;
-        if (Physics.SphereCast(transform.position + Vector3.up, 0.8f, transform.forward, out RaycastHit hit, attackRange))
-        {
-            AgentController enemyController = hit.collider.GetComponentInParent<AgentController>();
-            if (enemyController != null && enemyController != this)
-            {
-                Debug.Log($"{gameObject.name}이(가) {enemy.name}에게 선제공격으로 {attackDamage} 데미지를 입혔습니다.");
-                enemyController.HandleDamage(attackDamage);
-            }
-        }
 
         // --- [수정 끝] ---
 

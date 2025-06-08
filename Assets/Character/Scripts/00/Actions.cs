@@ -1,4 +1,5 @@
 // File: Actions.cs (Actions.cs ����)
+using System.Runtime.Remoting.Messaging;
 using UnityEngine;
 
 // ������ �ٰ����� �ൿ ���
@@ -179,6 +180,22 @@ public class GetAttackAction : BTActionNode
         if (controller != null)
         {
             return controller.GetAttack();
+        }
+        return NodeStatus.FAILURE;
+    }
+}
+
+public class DeadAction : BTActionNode
+{
+    public DeadAction(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
+
+    public override NodeStatus Tick()
+    {
+        AgentController controller = agentTransform.GetComponent<AgentController>();
+
+        if (controller != null)
+        {
+            return controller.Dead();
         }
         return NodeStatus.FAILURE;
     }

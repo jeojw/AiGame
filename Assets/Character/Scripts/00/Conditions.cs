@@ -157,7 +157,11 @@ public class IsGetAttackCondition : BTConditionNode
     public IsGetAttackCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
     public override bool CheckCondition()
     {
-        return false;
+        if (blackboard.isGetAttacked)
+        {
+            Debug.Log("피격당함!!!");
+        }
+        return blackboard.isGetAttacked;
     }
 }
 
@@ -206,6 +210,15 @@ public class IsEnemyAttackingDuringCounterAttackCondition : BTConditionNode
     }
 }
 
+public class IsDeadCondition : BTConditionNode
+{
+    public IsDeadCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
+
+    public override bool CheckCondition()
+    {
+        return blackboard.isDead;
+    }
+}
 public class IsEnemyIdleForDurationCondition : BTConditionNode
 {
     private float duration;

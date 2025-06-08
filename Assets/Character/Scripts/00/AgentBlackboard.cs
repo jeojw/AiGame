@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 public class AgentBlackboard
 {
+    public AgentController owner;
     // 에이전트 능력치
     private float _maxHealth = 100f; // 최대 체력
     private float _currentHealth;    // 현재 체력
@@ -13,6 +14,8 @@ public class AgentBlackboard
     private bool _isEvading = false;
     private bool _isGetAttacked = false;
     private bool _canCounterAttack = false;
+    private bool _isDead = false;
+    private float _totalDamage = 0;
 
     // [추가] 적의 마지막 공격 시간을 기록할 변수
     public float lastEnemyAttackTime = 0f;
@@ -63,6 +66,12 @@ public class AgentBlackboard
         set { _isGetAttacked = value; }
     }
 
+    public bool isDead
+    {
+        get { return _isDead; }
+        set { _isDead = value; }
+    }
+
     // 적 정보
     private Transform _enemyTransform; // 적의 Transform
     private float _enemyDistance;      // 적과의 거리
@@ -82,6 +91,12 @@ public class AgentBlackboard
     {
         get { return _enemyHealth; }
         set { _enemyHealth = value; }
+    }
+
+    public float totalDamage
+    {
+        get { return _totalDamage; }
+        set { _totalDamage = value; }
     }
 
     // 쿨타임 (행동 이름, 종료 시간)
@@ -154,13 +169,19 @@ public class AgentBlackboard
     }
 
     // 데미지를 받는 메소드
-    public void TakeDamage(float amount)
+    public void TakeDamage()
     {
         if (!isInvincible) // 무적 상태가 아니라면
         {
-            currentHealth -= amount;
-            if (currentHealth < 0) currentHealth = 0;
-            Debug.Log($"에이전트가 {amount} 데미지를 받음, 현재 체력: {currentHealth}");
+            currentHealth -= totalDamage;
+            if (currentHealth < 0)
+            {
+                currentHealth = 0;
+                isDead = true;
+            }
+            Debug.Log($"에이전트가 {totalDamage} 데미지를 받음, 현재 체력: {currentHealth}");
+            totalDamage = 0;
+            isGetAttacked = false;
         }
         else
         {

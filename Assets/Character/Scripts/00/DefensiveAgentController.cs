@@ -12,6 +12,10 @@ public class DefensiveAgentController : AgentController
     {
         rootNode = new BTSelector(blackboard, transform, new List<BTNode>
         {
+            new BTSequence(blackboard, transform, new List<BTNode> {
+                new IsGetAttackCondition(blackboard, transform),
+                new GetAttackAction(blackboard, transform),
+            }),
             // --- [수정] 1순위: 적이 5초 이상 공격하지 않으면 '다가가서' 공격 ---
             new BTSequence(blackboard, transform, new List<BTNode>
             {
@@ -55,7 +59,6 @@ public class DefensiveAgentController : AgentController
 
                         new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.ATTACK_COOLDOWN_KEY),
 
-                        new ChangeDefendToAttack(blackboard, transform),
                         new CanCounterAttackCondition(blackboard, transform),
                         new IsEnemyInAttackRangeCondition(blackboard, transform, attackRange),
                         new NotNode(new IsHealthLowCondition(blackboard, transform, counterAttackHealthThreshold)),
@@ -78,7 +81,12 @@ public class DefensiveAgentController : AgentController
             }),
 
             // 5. 기본 대기 상태 (이전과 동일)
-            new IdleAction(blackboard, transform)
+            new IdleAction(blackboard, transform),
+
+            new BTSequence(blackboard, transform, new List<BTNode> {
+                    new IsDeadCondition(blackboard, transform),
+                    new DeadAction(blackboard, transform)
+            })
         });
     }
 
