@@ -2,7 +2,6 @@
 using UnityEditor;
 using UnityEngine;
 //using static UnityEditor.ShaderGraph.Internal.KeywordDependentCollection;
-using System.Collections; // Coroutine 사용을 위해 추가
 
 public abstract class AgentController : MonoBehaviour
 {
@@ -20,12 +19,6 @@ public abstract class AgentController : MonoBehaviour
     private bool evadeFinished = false;
     private bool getAttackFinished = false;
 
-    // --- 추가될 변수 ---
-    [SerializeField] private float attackPreDelay = 0.3f; // 공격 선딜레이 시간 (조절 가능)
-    private bool isPreDelayingAttack = false; // 현재 공격 선딜레이 중인지 여부
-
-    // ... (기존 변수들)
-
     // [추가] 적의 Animator를 캐싱하기 위한 변수
     private Animator enemyAnimator;
 
@@ -42,7 +35,7 @@ public abstract class AgentController : MonoBehaviour
     protected virtual void Awake()
     {
         blackboard = new AgentBlackboard();
-        blackboard.maxHealth = 100f; // 문서에 따라 설정 [cite: 10]
+        blackboard.maxHealth = 100f; // 문서에 따라 설정
         blackboard.currentHealth = blackboard.maxHealth;
 
         animator = GetComponent<Animator>(); // Animator 컴포넌트 가져오기
@@ -189,110 +182,76 @@ public abstract class AgentController : MonoBehaviour
     }
 
 
-    // Scripts/00/AgentController.cs 파일
+    // [수정] 메소드 시그니처에 데미지 배율 인자 추가
     public virtual NodeStatus PerformAttack(float damageMultiplier = 1.0f)
     {
-        Debug.Log($"{gameObject.name}이(가) 행동: 공격 수행 요청!");
 
-        
 
-        // 공격 시작 시점에만 선딜레이 코루틴 시작
+        Debug.Log($"{gameObject.name}이(가) 행동: 공격 수행!");
+
+        if (!blackboard.IsActionReady(AgentBlackboard.ATTACK_COOLDOWN_KEY))
+            return NodeStatus.FAILURE;
+
         if (!blackboard.isAttacking)
         {
-            blackboard.isAttacking = true; // 공격 상태로 전환
-            isPreDelayingAttack = true; // 선딜레이 시작 플래그 설정
-            StartCoroutine(AttackWithPreDelay(damageMultiplier)); // 코루틴 시작
-            Debug.Log($"공격 선딜레이 시작: {attackPreDelay}초");
-        }
+            blackboard.isAttacking = true;
+            if (enemy != null)
+                transform.LookAt(new Vector3(enemy.position.x, transform.position.y, enemy.position.z));
 
-        // 선딜레이 중이므로 RUNNING 반환
-        return NodeStatus.RUNNING;
-    }
+            if (animator != null)
+                animator.SetTrigger("IsAttacking");
 
-    // --- 추가될 코루틴 메서드 ---
-    private IEnumerator AttackWithPreDelay(float damageMultiplier)
-    {
-        // 적을 바라보기
-        if (enemy != null)
-        { 
-        transform.LookAt(new Vector3(enemy.position.x, transform.position.y, enemy.position.z));
-        }
-            
+            // --- [추가 시작] 돌진 공격 보너스 로직 ---
+            const float chargeSpeedThreshold = 1.0f; // '돌진'으로 인정할 최소 전진 속도
+            const float chargeDamageBonus = 2.0f;    // 돌진 시 추가 데미지 배율 (기존 배율에 곱해짐)
 
-        if (animator != null)
-        {
-            animator.SetTrigger("IsAttacking"); // 또는 "PrepareProactiveAttack"
-        }
+            // 현재 캐릭터가 바라보는 정면 방향으로의 속도를 계산합니다.
+            float forwardSpeed = Vector3.Dot(rb.linearVelocity, transform.forward);
 
-        // 선딜레이 시간만큼 대기
-        yield return new WaitForSeconds(attackPreDelay);
-
-        // 선딜레이 완료 후 실제 공격 로직 수행
-        Debug.Log($"{gameObject.name}이(가) {attackPreDelay}초 선딜레이 후 실제 공격 수행!");
-
-        // --- [기존 공격 로직 시작] ---
-
-        // 돌진 공격 보너스 로직 (기존과 동일)
-        const float chargeSpeedThreshold = 1.0f;
-        const float chargeDamageBonus = 2.0f;
-
-        float currentDamageMultiplier = damageMultiplier; // 전달받은 damageMultiplier 사용
-        float forwardSpeed = Vector3.Dot(rb.linearVelocity, transform.forward);
-
-        if (forwardSpeed > chargeSpeedThreshold)
-        {
-            Debug.Log("돌진 공격! 데미지 보너스 적용!");
-            currentDamageMultiplier *= chargeDamageBonus;
-        }
-
-        // 데미지 계산 (최종 배율 적용)
-        float attackDamage = 10f * currentDamageMultiplier;
-
-        // 데미지 판정 (기존과 동일)
-        if (Physics.SphereCast(transform.position + Vector3.up, 0.8f, transform.forward, out RaycastHit hit, attackRange))
-        {
-            AgentController enemyController = hit.collider.GetComponentInParent<AgentController>();
-            if (enemyController != null && enemyController != this)
+            // 만약 전진 속도가 기준치 이상이면, 돌진 보너스를 적용합니다.
+            if (forwardSpeed > chargeSpeedThreshold)
             {
-                Debug.Log($"{gameObject.name}이(가) {enemy.name}을(를) 공격하여 {attackDamage}(x{currentDamageMultiplier}) 데미지를 입혔습니다.");
-                enemyController.HandleDamage(attackDamage);
+                Debug.Log("돌진 공격! 데미지 보너스 적용!");
+                damageMultiplier *= chargeDamageBonus; // 기존 배율에 추가 배율을 곱합니다.
+            }
+            // --- [추가 끝] ---
+
+
+            // 데미지 계산 시 최종 배율을 곱해줍니다.
+            float attackDamage = 10f * damageMultiplier;
+
+            if (Physics.SphereCast(transform.position + Vector3.up, 0.8f, transform.forward, out RaycastHit hit, attackRange))
+            {
+                AgentController enemyController = hit.collider.GetComponentInParent<AgentController>();
+                if (enemyController != null && enemyController != this)
+                {
+                    Debug.Log($"{gameObject.name}이(가) {enemy.name}을(를) 공격하여 {attackDamage}(x{damageMultiplier}) 데미지를 입혔습니다.");
+                    enemyController.HandleDamage(attackDamage);
+                }
             }
         }
-        // --- [기존 공격 로직 끝] ---
 
-        // 공격 애니메이션 종료 플래그는 애니메이션 이벤트로 리셋되므로 여기서는 건드리지 않음.
-        // 대신 isAttacking과 isPreDelayingAttack 플래그를 여기서 바로 리셋.
-        isPreDelayingAttack = false; // 선딜레이 종료
-        blackboard.isAttacking = false; // 공격 상태 종료 (애니메이션이 끝난 후 다시 true로 설정될 수 있음)
+        // 공격이 아직 끝나지 않았으면 RUNNING
+        if (!attackFinished)
+            return NodeStatus.RUNNING;
 
-        // 공격 쿨타임 설정
+        // 공격 종료 시점
+        animationController.StopAttack();
+        attackFinished = false;
+
+        // 공격 중 종료 플래그
+        blackboard.isAttacking = false;
+
         blackboard.SetActionCooldown(AgentBlackboard.ATTACK_COOLDOWN_KEY);
 
-        // 이 코루틴은 PerformAttack이 NodeStatus.RUNNING을 반환한 후 비동기적으로 실행됨.
-        // 따라서 여기서 NodeStatus를 반환할 필요는 없음.
-    }
-
-    // ResetAllFlags 메서드에 선딜레이 플래그 초기화 추가
-    public void ResetAllFlags()
-    {
-        attackFinished = false;
-        evadeFinished = false;
-        getAttackFinished = false;
-        isPreDelayingAttack = false; // 추가된 플래그 초기화
-                                     // ... (나머지 기존 초기화 로직)
-        Rigidbody rb = GetComponent<Rigidbody>();
-        if (rb != null)
-        {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-        }
+        return NodeStatus.SUCCESS;
     }
 
     public virtual NodeStatus PerformDefend()
     {
         Debug.Log("행동: 방어 수행!");
-        blackboard.SetActionCooldown(AgentBlackboard.DEFEND_COOLDOWN_KEY); // 방어 쿨타임 설정 [cite: 10]
-        blackboard.StartInvincibility(blackboard.defendCooldownDuration); // 방어 시간 동안 무적 [cite: 10]
+        blackboard.SetActionCooldown(AgentBlackboard.DEFEND_COOLDOWN_KEY); // 방어 쿨타임 설정
+        blackboard.StartInvincibility(blackboard.defendCooldownDuration); // 방어 시간 동안 무적
 
         if (animator != null)
         {
@@ -371,7 +330,7 @@ public abstract class AgentController : MonoBehaviour
                 break;
         }
 
-        
+
 
         // Rigidbody를 사용하여 대시 즉시 적용
         // 기존 속도에 대시 벡터를 추가하여 순간적으로 큰 힘을 줍니다.
@@ -394,7 +353,7 @@ public abstract class AgentController : MonoBehaviour
     public virtual NodeStatus Idle()
     {
         Debug.Log("행동: 대기 중");
-        
+
         // [추가] 대기중 서로 상대방을 보도록
         if (enemy != null)
             transform.LookAt(new Vector3(enemy.position.x, transform.position.y, enemy.position.z));
@@ -463,39 +422,27 @@ public abstract class AgentController : MonoBehaviour
 
     public virtual NodeStatus PerformProactiveAttack()
     {
-        Debug.Log($"{gameObject.name}이(가) 행동: 선제 공격 수행 요청!");
+        Debug.Log("행동: 선제 공격 수행!");
 
-        if (isPreDelayingAttack || !blackboard.IsActionReady(AgentBlackboard.ATTACK_COOLDOWN_KEY))
-        {
-            // Debug.Log($"선제 공격 불가: 선딜레이 중이거나 쿨타임 미준비.");
+        if (!blackboard.IsActionReady(AgentBlackboard.ATTACK_COOLDOWN_KEY))
             return NodeStatus.FAILURE;
-        }
 
-        if (!blackboard.isAttacking)
-        {
-            blackboard.isAttacking = true;
-            isPreDelayingAttack = true;
-            StartCoroutine(ProactiveAttackWithPreDelay());
-            Debug.Log($"선제 공격 선딜레이 시작: {attackPreDelay}초");
-        }
+        // --- [수정 시작] ---
 
-        return NodeStatus.RUNNING;
-    }
+        // 1. 자신의 상태를 '공격 중'으로 변경
+        blackboard.isAttacking = true;
 
-    // --- 추가될 코루틴 메서드 ---
-    private IEnumerator ProactiveAttackWithPreDelay()
-    {
         if (enemy != null)
             transform.LookAt(new Vector3(enemy.position.x, transform.position.y, enemy.position.z));
 
         if (animator != null)
         {
-            animator.SetTrigger("IsAttacking"); // 또는 "PrepareProactiveAttack"
+            animator.SetTrigger("IsAttacking");
         }
 
-        yield return new WaitForSeconds(attackPreDelay);
-
-        Debug.Log($"{gameObject.name}이(가) {attackPreDelay}초 선딜레이 후 실제 선제 공격 수행!");
+        // 2. 공격 애니메이션이 끝날 시간 즈음에 isAttacking 플래그를 false로 되돌리도록 예약
+        //    (애니메이션 길이에 맞춰 1.5f 값을 조정하세요)
+        Invoke(nameof(ResetIsAttacking), 1.5f);
 
         // 데미지 판정 로직 (기존과 동일)
         float attackDamage = 40f;
@@ -509,11 +456,28 @@ public abstract class AgentController : MonoBehaviour
             }
         }
 
-        isPreDelayingAttack = false;
-        blackboard.isAttacking = false;
+        // --- [수정 끝] ---
+
+
 
         blackboard.SetActionCooldown(AgentBlackboard.ATTACK_COOLDOWN_KEY);
+
+        return NodeStatus.SUCCESS;
     }
 
-
+    // [추가] 모든 내부 플래그를 초기화하는 메서드
+    public void ResetAllFlags()
+    {
+        attackFinished = false;
+        evadeFinished = false;
+        getAttackFinished = false;
+        // Blackboard의 플래그는 RL 에이전트의 OnEpisodeBegin에서 직접 초기화합니다.
+        // Rigidbody의 속도도 초기화하여 이전 에피소드 잔여 움직임을 제거
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+    }
 }

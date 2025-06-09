@@ -16,8 +16,8 @@ public class DefensiveAgentController : AgentController
     }
     protected override void InitializeBehaviorTree()
     {
-        
-        
+
+
         rootNode = new BTSelector(blackboard, transform, new List<BTNode>
         {
             // --- [수정] 1순위: 적이 5초 이상 공격하지 않으면 '다가가서' 공격 ---
@@ -91,8 +91,8 @@ public class DefensiveAgentController : AgentController
             // 5. 기본 대기 상태 (이전과 동일)
             new IdleAction(blackboard, transform)
         });
-        
-        
+
+
     }
 
     // [추가] PerformAttack 메서드를 오버라이드하여 수비자 전용 인터럽트 로직을 포함
@@ -152,23 +152,14 @@ public class DefensiveAgentController : AgentController
 
         public override NodeStatus Tick()
         {
-            // [수정 전]
-            // return controller.PerformAttack(this.multiplier);
+            NodeStatus status = controller.PerformAttack(this.multiplier); // 첫 번째 호출
 
-            // [수정 후]
-            // 실제 공격 수행을 요청합니다.
-            NodeStatus result = controller.PerformAttack(this.multiplier);
-
-            // 공격 행동이 실패하지 않았다면 (성공적으로 시작되었다면),
-            // 반격 기회를 즉시 소모시킵니다.
-            if (result != NodeStatus.FAILURE)
+            if (status == NodeStatus.SUCCESS || status == NodeStatus.RUNNING) // 공격이 성공적으로 시작되거나 진행 중이라면
             {
-                blackboard.canCounterAttack = false;
-                // 디버깅을 위해 로그를 추가하여 플래그가 언제 false로 바뀌는지 확인할 수 있습니다.
-                Debug.Log("반격 기회 소모. canCounterAttack 플래그를 false로 설정합니다.");
+                blackboard.canCounterAttack = false; // 카운터 어택 플래그 리셋
+                Debug.Log("카운터 어택 시작! canCounterAttack 플래그 리셋.");
             }
-
-            return result;
+            return status; // 첫 번째 호출의 결과를 반환합니다.
         }
     }
 
@@ -181,4 +172,3 @@ public class DefensiveAgentController : AgentController
 
 
 }
-

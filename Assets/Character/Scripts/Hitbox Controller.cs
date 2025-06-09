@@ -21,7 +21,7 @@ public class HitboxController : MonoBehaviour
 
     private float blockCoolTime = 1.0f;
     private float blockCoolStartTime;
-   //private CapsuleCollider capsuleCollider;
+    //private CapsuleCollider capsuleCollider;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -39,7 +39,7 @@ public class HitboxController : MonoBehaviour
         m_collider = GetComponent<Collider>();
     }
 
-    private void OnTriggerEnter(Collider other) 
+    private void OnTriggerEnter(Collider other)
     {
         int thisLayer = gameObject.layer;
         int otherLayer = other.gameObject.layer;
@@ -64,7 +64,7 @@ public class HitboxController : MonoBehaviour
     void Update()
     {
         agentBlackboard.isGetAttacked = _isGetAttack;
-        agentBlackboard.canCounterAttack = _isBlocked;
+        agentBlackboard.canCounterAttack = _isBlocked; // 이 줄을 원래대로 복원
 
         if (_isGetAttack)
         {
@@ -73,7 +73,7 @@ public class HitboxController : MonoBehaviour
 
         if (_isBlocked)
         {
-            blockCoolStartTime = Time.time; 
+            blockCoolStartTime = Time.time;
         }
 
         if (Time.time - invincibilityStartTime > invincibilityDuration && invincibilityStartTime != 0)
@@ -81,7 +81,7 @@ public class HitboxController : MonoBehaviour
             _isGetAttack = false;
             invincibilityStartTime = 0;
         }
-            
+
         if (Time.time - blockCoolStartTime > blockCoolTime && blockCoolStartTime != 0)
         {
             _isBlocked = false;
