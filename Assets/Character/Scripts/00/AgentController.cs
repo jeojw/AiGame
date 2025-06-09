@@ -416,9 +416,8 @@ public abstract class AgentController : MonoBehaviour
     public virtual NodeStatus GetAttack()
     {
         Debug.Log($"{gameObject.name}이(가) {enemy.name}을(를) 공격하여 {blackboard.totalDamage} 데미지를 입혔습니다.");
-        blackboard.currentHealth -= blackboard.totalDamage;
+        blackboard.TakeDamage();
 
-        blackboard.isGetAttacked = false;
         hitbox.ResetHitFlag();
 
         return NodeStatus.SUCCESS;

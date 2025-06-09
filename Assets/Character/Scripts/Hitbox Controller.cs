@@ -50,6 +50,7 @@ public class HitboxController : MonoBehaviour
             (thisLayer == LayerMask.NameToLayer("DefensiverBody") && otherLayer == LayerMask.NameToLayer("OffensiverSword")))
         {
             _isGetAttack = true;
+            agentBlackboard.isGetAttacked = true;
             Debug.Log($"[피격] {gameObject.name}이(가) {other.gameObject.name}에게 맞음");
 
             OnHitReceived?.Invoke();

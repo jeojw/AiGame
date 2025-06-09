@@ -53,6 +53,8 @@ public class IsCooldownReadyCondition : BTConditionNode
     }
     public override bool CheckCondition()
     {
+        if (actionKey == "Defend")
+            Debug.Log("check cooldown");
         return blackboard.IsActionReady(actionKey); // �ش� �ൿ�� �غ�Ǿ����� ����
     }
 }
@@ -117,7 +119,7 @@ public class IsEnemyAttackingCondition : BTConditionNode
             // "Attack" �̶�� �±׸� ���� �ִϸ��̼� ���°� ��� ���̸� true�� ��ȯ
             if (enemyAnimator.GetCurrentAnimatorStateInfo(0).IsTag("Attack"))
             {
-                Debug.Log("���� ����: ���� ���� ���Դϴ�!");
+                Debug.Log("enemy is attack1!!");
                 return true;
             }
 
@@ -158,10 +160,6 @@ public class IsGetAttackCondition : BTConditionNode
     public IsGetAttackCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
     public override bool CheckCondition()
     {
-        if (blackboard.isGetAttacked)
-        {
-            Debug.Log("피격당함!!!");
-        }
         return blackboard.isGetAttacked;
     }
 }
