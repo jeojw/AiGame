@@ -643,6 +643,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemy: {fileID: 1442097112}
+  attackRange: 2
+  walkSpeed: 5
+  evadeSpeed: 30
+  evadeMoveDistance: 7
 --- !u!114 &355025715
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2594,6 +2598,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemy: {fileID: 355025711}
+  attackRange: 2
+  walkSpeed: 5
+  evadeSpeed: 70
+  evadeMoveDistance: 5
+  attackRangeTolerance: 0.2
 --- !u!114 &1858427098
 MonoBehaviour:
   m_ObjectHideFlags: 0

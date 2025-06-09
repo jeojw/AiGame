@@ -52,11 +52,13 @@ public class HitboxController : MonoBehaviour
             Debug.Log($"[피격] {gameObject.name} 이(가) {other.gameObject.name} 에게 맞았습니다. 남은 체력: {agentBlackboard.currentHealth}");
         }
 
+        // 방어 성공 시 _isBlocked를 true로 설정하고, canCounterAttack도 true로 설정
         if (thisLayer == LayerMask.NameToLayer("DefensiverShield") &&
             otherLayer == LayerMask.NameToLayer("OffensiverSword"))
         {
             _isBlocked = true;
-            Debug.Log($"[막힘] {gameObject.name} 의 공격이 {other.gameObject.name} 에 막혔습니다.");
+            agentBlackboard.canCounterAttack = true; // 여기서만 true로 설정
+            Debug.Log($"[막힘] {gameObject.name} 의 공격이 {other.gameObject.name} 에 막혔습니다. 카운터 어택 가능!");
         }
     }
 
@@ -64,7 +66,7 @@ public class HitboxController : MonoBehaviour
     void Update()
     {
         agentBlackboard.isGetAttacked = _isGetAttack;
-        agentBlackboard.canCounterAttack = _isBlocked; // 이 줄을 원래대로 복원
+        //agentBlackboard.canCounterAttack = _isBlocked; // 이 줄을 원래대로 복원
 
         if (_isGetAttack)
         {
