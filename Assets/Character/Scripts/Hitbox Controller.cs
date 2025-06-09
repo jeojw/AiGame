@@ -23,12 +23,6 @@ public class HitboxController : MonoBehaviour
         set { _isBlocked = value; }
     }
 
-    private float hitDuration = 0.1f;
-    private float hitStartTime;
-
-    private float blockCoolTime = 2.0f;
-    private float blockCoolStartTime;
-
     private int thisLayer;
    //private CapsuleCollider capsuleCollider;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -55,26 +49,21 @@ public class HitboxController : MonoBehaviour
         if ((thisLayer == LayerMask.NameToLayer("OffensiverBody") && otherLayer == LayerMask.NameToLayer("DefensiverSword")) ||
             (thisLayer == LayerMask.NameToLayer("DefensiverBody") && otherLayer == LayerMask.NameToLayer("OffensiverSword")))
         {
-            if (!_isGetAttack)
-            {
-                _isGetAttack = true;
-                Debug.Log($"[피격] {gameObject.name}이(가) {other.gameObject.name}에게 맞음");
+            _isGetAttack = true;
+            Debug.Log($"[피격] {gameObject.name}이(가) {other.gameObject.name}에게 맞음");
 
-                OnHitReceived?.Invoke();
-            }
+            OnHitReceived?.Invoke();
         }
 
         if (thisLayer == LayerMask.NameToLayer("DefensiverShield") &&
             otherLayer == LayerMask.NameToLayer("OffensiverSword"))
         {
-            if (_isBlocked)
-            {
-                _isBlocked = true;
-                Debug.Log($"[막힘] {gameObject.name} 의 공격이 {other.gameObject.name} 에 막혔습니다.");
+            _isBlocked = true;
+            agentBlackboard.canCounterAttack = true;
+            Debug.Log($"[막힘] {gameObject.name} 의 공격이 {other.gameObject.name} 에 막혔습니다.");
 
-                OnBlockReceived?.Invoke();
-            }
-           
+            OnBlockReceived?.Invoke();
+
         }
     }
 
@@ -91,10 +80,18 @@ public class HitboxController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (thisLayer == LayerMask.NameToLayer("OffensiverBody") ||
-            thisLayer == LayerMask.NameToLayer("DefensiverBody"))
+        if (thisLayer == LayerMask.NameToLayer("DefensiverSword") ||
+            thisLayer == LayerMask.NameToLayer("OffensiverSword"))
         {
-            agentBlackboard.isGetAttacked = _isGetAttack;
+            m_collider.enabled = agentBlackboard.isAttacking;
+        }
+        if (thisLayer == LayerMask.NameToLayer("DefensiverShield"))
+        {
+            if (agentBlackboard.owner.gameObject.CompareTag("Defensiver"))
+            {
+                m_collider.enabled = agentBlackboard.isDefending;
+            }
+                
         }
     }
 }

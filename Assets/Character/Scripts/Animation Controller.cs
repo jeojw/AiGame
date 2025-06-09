@@ -59,7 +59,7 @@ public class AnimationController : MonoBehaviour
 
     public void StopAttack()
     {
-        animator.SetTrigger("IsAttackingFinish");
+        animator.SetTrigger("IsAttackFinish");
     }
 
     public void PlayIdle()

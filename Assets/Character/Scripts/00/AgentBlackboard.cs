@@ -13,6 +13,7 @@ public class AgentBlackboard
     private bool _isDefending = false;
     private bool _isEvading = false;
     private bool _isGetAttacked = false;
+    private bool _cancelAttack = false;
     private bool _canCounterAttack = false;
     private bool _isDead = false;
     private float _totalDamage = 0;
@@ -20,6 +21,11 @@ public class AgentBlackboard
     // [추가] 적의 마지막 공격 시간을 기록할 변수
     public float lastEnemyAttackTime = 0f;
 
+    public bool cancelAttack
+    {
+        get { return _cancelAttack; }
+        set { _cancelAttack = value; }
+    }
     public bool canCounterAttack
     {
         get {  return _canCounterAttack; }

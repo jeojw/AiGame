@@ -148,6 +148,7 @@ public class DefendSuccessCondition : BTConditionNode
     public DefendSuccessCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
     public override bool CheckCondition()
     {
+        Debug.Log($"Block success!!!, {blackboard.canCounterAttack}");
         return blackboard.canCounterAttack;
     }
 }

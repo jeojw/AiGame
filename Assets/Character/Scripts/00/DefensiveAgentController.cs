@@ -52,14 +52,12 @@ public class DefensiveAgentController : AgentController
                     //}),
 
                     new BTSequence(blackboard, transform, new List<BTNode> {
-                        //new IsNotCooldwonReadyCondition(blackboard, transform, AgentBlackboard.EVADE_COOLDOWN_KEY),
                         new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.DEFEND_COOLDOWN_KEY),
                         new DefendAction(blackboard, transform),
                         new DefendSuccessCondition(blackboard, transform),
 
                         new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.ATTACK_COOLDOWN_KEY),
 
-                        new CanCounterAttackCondition(blackboard, transform),
                         new IsEnemyInAttackRangeCondition(blackboard, transform, attackRange),
                         new NotNode(new IsHealthLowCondition(blackboard, transform, counterAttackHealthThreshold)),
                         new CounterAttackAction(blackboard, transform, this, counterDamageMultiplier)
