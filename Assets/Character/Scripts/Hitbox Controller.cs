@@ -82,6 +82,10 @@ public class HitboxController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (thisLayer == LayerMask.NameToLayer("DefensiverBody"))
+        {
+            m_collider.enabled = !agentBlackboard.isDefending || !agentBlackboard.isEvading;
+        }
         if (thisLayer == LayerMask.NameToLayer("DefensiverSword") ||
             thisLayer == LayerMask.NameToLayer("OffensiverSword"))
         {

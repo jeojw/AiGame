@@ -177,22 +177,15 @@ public class AgentBlackboard
     // 데미지를 받는 메소드
     public void TakeDamage()
     {
-        if (!isInvincible) // 무적 상태가 아니라면
+        currentHealth -= totalDamage;
+        if (currentHealth < 0)
         {
-            currentHealth -= totalDamage;
-            if (currentHealth < 0)
-            {
-                currentHealth = 0;
-                isDead = true;
-            }
-            Debug.Log($"{owner.name} 에이전트가 {totalDamage} 데미지를 받음, 현재 체력: {currentHealth}");
-            totalDamage = 0;
-            isGetAttacked = false;
+            currentHealth = 0;
+            isDead = true;
         }
-        else
-        {
-            Debug.Log("에이전트가 무적 상태이므로 데미지를 받지 않음.");
-        }
+        Debug.Log($"{owner.name} 에이전트가 {totalDamage} 데미지를 받음, 현재 체력: {currentHealth}");
+        totalDamage = 0;
+        isGetAttacked = false;
     }
 
     // 무적 상태 시작 메소드

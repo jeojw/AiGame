@@ -81,8 +81,8 @@ public class DefensiveAgentController : AgentController
             new IdleAction(blackboard, transform),
 
             new BTSequence(blackboard, transform, new List<BTNode> {
-                    new IsDeadCondition(blackboard, transform),
-                    new DeadAction(blackboard, transform)
+                new IsDeadCondition(blackboard, transform),
+                new DeadAction(blackboard, transform)
             }),
         });
     }
