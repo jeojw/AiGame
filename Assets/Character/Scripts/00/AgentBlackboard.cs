@@ -124,8 +124,8 @@ public class AgentBlackboard
         get { return _EVADE_COOLDOWN_KEY; }
     }// 공격 쿨타임 키
 
-    private float _attackCooldownDuration = 2.5f; // 공격 쿨타임 지속 시간
-    private float _defendCooldownDuration = 2.5f; // 방어 쿨타임 지속 시간
+    private float _attackCooldownDuration = 1.5f; // 공격 쿨타임 지속 시간
+    private float _defendCooldownDuration = 3.5f; // 방어 쿨타임 지속 시간
     private float _evadeCooldownDuration = 5.0f;  // 회피 쿨타임 지속 시간
 
     public float attackCooldownDuration
@@ -185,7 +185,7 @@ public class AgentBlackboard
                 currentHealth = 0;
                 isDead = true;
             }
-            Debug.Log($"에이전트가 {totalDamage} 데미지를 받음, 현재 체력: {currentHealth}");
+            Debug.Log($"{owner.name} 에이전트가 {totalDamage} 데미지를 받음, 현재 체력: {currentHealth}");
             totalDamage = 0;
             isGetAttacked = false;
         }

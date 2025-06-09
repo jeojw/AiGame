@@ -21,7 +21,7 @@ public sealed class SelectorNode : INode
                 case INode.ENodeState.ENS_Running:
                     return INode.ENodeState.ENS_Running;
                 case INode.ENodeState.ENS_Success:
-                    return INode.ENodeState.ENS_Running;
+                    return INode.ENodeState.ENS_Success;
             }
         }
 

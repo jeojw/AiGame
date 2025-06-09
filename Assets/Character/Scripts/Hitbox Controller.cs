@@ -61,6 +61,7 @@ public class HitboxController : MonoBehaviour
         {
             _isBlocked = true;
             agentBlackboard.canCounterAttack = true;
+
             Debug.Log($"[막힘] {gameObject.name} 의 공격이 {other.gameObject.name} 에 막혔습니다.");
 
             OnBlockReceived?.Invoke();

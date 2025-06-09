@@ -12,10 +12,6 @@ public class DefensiveAgentController : AgentController
     {
         rootNode = new BTSelector(blackboard, transform, new List<BTNode>
         {
-            new BTSequence(blackboard, transform, new List<BTNode> {
-                new IsGetAttackCondition(blackboard, transform),
-                new GetAttackAction(blackboard, transform),
-            }),
             // --- [수정] 1순위: 적이 5초 이상 공격하지 않으면 '다가가서' 공격 ---
             new BTSequence(blackboard, transform, new List<BTNode>
             {
@@ -46,10 +42,10 @@ public class DefensiveAgentController : AgentController
                 new IsEnemyAttackingCondition(blackboard, transform), // 적이 공격 중인가?
                 new BTSelector(blackboard, transform, new List<BTNode> // 방어 또는 회피 중 하나를 선택
                 {
-                    //new BTSequence(blackboard, transform, new List<BTNode> {
-                    //    new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.EVADE_COOLDOWN_KEY),
-                    //    new EvadeAction(blackboard, transform)
-                    //}),
+                    new BTSequence(blackboard, transform, new List<BTNode> {
+                        new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.EVADE_COOLDOWN_KEY),
+                        new EvadeAction(blackboard, transform)
+                    }),
 
                     new BTSequence(blackboard, transform, new List<BTNode> {
                         new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.DEFEND_COOLDOWN_KEY),
@@ -60,15 +56,19 @@ public class DefensiveAgentController : AgentController
 
                         new IsEnemyInAttackRangeCondition(blackboard, transform, attackRange),
                         new NotNode(new IsHealthLowCondition(blackboard, transform, counterAttackHealthThreshold)),
-                        new CounterAttackAction(blackboard, transform, this, counterDamageMultiplier)
+                        new CounterAttackAction(blackboard, transform, this, counterDamageMultiplier),
                     }),
                     // 2순위: 방어가 불가능하면 회피 시도
                     
                     // 만약 방어와 회피 모두 쿨타임이라면, 이 Selector는 실패하고 에이전트는 공격을 맞게 됩니다.
-                })
+                }),
+                
             }),
             // ------------------------------------
-
+            new BTSequence(blackboard, transform, new List<BTNode> {
+                new IsGetAttackCondition(blackboard, transform),
+                new GetAttackAction(blackboard, transform),
+            }),
             // 3. 위치 선정: 이상적인 방어 거리를 유지 (이전과 동일)
             new BTSelector(blackboard, transform, new List<BTNode>
             {
@@ -78,13 +78,12 @@ public class DefensiveAgentController : AgentController
                 })
             }),
 
-            // 5. 기본 대기 상태 (이전과 동일)
             new IdleAction(blackboard, transform),
 
             new BTSequence(blackboard, transform, new List<BTNode> {
                     new IsDeadCondition(blackboard, transform),
                     new DeadAction(blackboard, transform)
-            })
+            }),
         });
     }
 

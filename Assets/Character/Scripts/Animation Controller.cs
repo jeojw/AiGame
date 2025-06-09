@@ -64,7 +64,7 @@ public class AnimationController : MonoBehaviour
 
     public void PlayIdle()
     {
-        animator.SetBool("isWalk", false);
+        animator.SetFloat("Speed", 0f);
     }
 
     public void PlayGetAttack()

@@ -10,7 +10,6 @@ public abstract class AgentController : MonoBehaviour
     protected float attackRange = 2f;      // 공격 범위
     private float closeRangeThreshold = 1f; // "너무 가까움" 판단 기준 거리
     private float lowHealthThreshold = 30f; // 체력 낮음 판단 기준 (비율 또는 절대값)
-    private float evadeDistance = 2.0f; // 이 변수는 이제 사용하지 않거나 대시 거리로 활용할 수 있습니다.
     private float dashSpeed = 15f; // [추가] 대시 속도를 위한 변수
 
     private Rigidbody rb;
@@ -19,6 +18,9 @@ public abstract class AgentController : MonoBehaviour
     private bool defendFinished = false;
     private bool evadeFinished = false;
     private bool getAttackFinished = false;
+
+    private float evadeDuration = 1.5f; // 회피 지속 시간 예시
+    private float evadeTimer = 0f;
 
     private HitboxController hitbox;
 
@@ -50,8 +52,6 @@ public abstract class AgentController : MonoBehaviour
 
     protected virtual void Start()
     {
-        Debug.Log($"[{gameObject.name}] animationController: {animationController}");
-
         InitializeBehaviorTree(); // 행동 트리 초기화
 
         if (hitbox != null)
@@ -114,10 +114,7 @@ public abstract class AgentController : MonoBehaviour
             blackboard.enemyTransform = null; // 적 없음
         }
 
-        if (rootNode != null) // 루트 노드가 있다면
-        {
-            rootNode.Tick(); // 행동 트리 실행
-        }
+        rootNode?.Tick(); // 행동 트리 실행
     }
 
     void FindEnemy()
@@ -217,6 +214,8 @@ public abstract class AgentController : MonoBehaviour
 
         if (!blackboard.isAttacking)
         {
+            blackboard.SetActionCooldown(AgentBlackboard.ATTACK_COOLDOWN_KEY);
+
             blackboard.isAttacking = true;
             blackboard.isDefending = false;
             if (enemy != null)
@@ -245,20 +244,18 @@ public abstract class AgentController : MonoBehaviour
             enemy.GetComponent<AgentController>().blackboard.totalDamage = attackDamage;
         }
 
-        if (enemy.GetComponent<AgentController>().blackboard.canCounterAttack)
-        {
-            if (animator != null)
-            {
-                animator.SetTrigger("AttackCancel");
-                animator.ResetTrigger("isDefending");
-            }
+        //if (enemy.GetComponent<AgentController>().blackboard.canCounterAttack)
+        //{
+        //    if (animator != null)
+        //    {
+        //        animator.SetTrigger("AttackCancel");
+        //        animator.ResetTrigger("isDefending");
+        //    }
                 
-            blackboard.SetActionCooldown(AgentBlackboard.ATTACK_COOLDOWN_KEY);
+        //    blackboard.SetActionCooldown(AgentBlackboard.ATTACK_COOLDOWN_KEY);
 
-            animator.SetTrigger("AttackCancel");
-
-            return NodeStatus.SUCCESS;
-        }
+        //    return NodeStatus.SUCCESS;
+        //}
             
 
         // 공격이 아직 끝나지 않았으면 RUNNING
@@ -273,20 +270,19 @@ public abstract class AgentController : MonoBehaviour
         blackboard.isAttacking = false;
         blackboard.canCounterAttack = false;
 
-        blackboard.SetActionCooldown(AgentBlackboard.ATTACK_COOLDOWN_KEY);
-
         return NodeStatus.SUCCESS;
     }
 
     public virtual NodeStatus PerformDefend()
     {
-        
         Debug.Log("행동: 방어 수행!");
         blackboard.SetActionCooldown(AgentBlackboard.DEFEND_COOLDOWN_KEY); // 방어 쿨타임 설정 [cite: 10]
-        blackboard.StartInvincibility(blackboard.defendCooldownDuration); // 방어 시간 동안 무적 [cite: 10]
-
-        if (!blackboard.IsActionReady(AgentBlackboard.ATTACK_COOLDOWN_KEY))
-            return NodeStatus.FAILURE;
+        if (!blackboard.isInvincible)
+        {
+            blackboard.StartInvincibility(blackboard.defendCooldownDuration);
+            CancelInvoke(nameof(StopDefendInvincibility));
+            Invoke(nameof(StopDefendInvincibility), blackboard.defendCooldownDuration);
+        }
 
         blackboard.isDefending = true;
 
@@ -294,7 +290,7 @@ public abstract class AgentController : MonoBehaviour
         {
             animator.SetTrigger("IsDefending");
         }
-        Invoke(nameof(StopDefendInvincibility), blackboard.defendCooldownDuration);
+        
 
         if (!blackboard.canCounterAttack)
         {
@@ -323,14 +319,38 @@ public abstract class AgentController : MonoBehaviour
 
     public virtual NodeStatus PerformEvade()
     {
-        Debug.Log("행동: 무작위 방향으로 회피 수행!");
-        blackboard.SetActionCooldown(AgentBlackboard.EVADE_COOLDOWN_KEY);
+        if (!blackboard.isEvading)
+        {
+            // 회피 시작
+            Debug.Log("행동: 무작위 방향으로 회피 수행!");
+            blackboard.SetActionCooldown(AgentBlackboard.EVADE_COOLDOWN_KEY);
+            blackboard.isEvading = true;
+            evadeTimer = 0f;
 
-        // 0:앞, 1:뒤, 2:왼쪽, 3:오른쪽 중 하나를 무작위로 선택
-        int randomDirection = Random.Range(0, 4);
-        PerformDirectionalDash(randomDirection); // 아래에서 만들 새로운 메소드 호출
+            if (animator != null)
+            {
+                animator.SetTrigger("IsEvading");
+            }
+        }
 
-        return NodeStatus.SUCCESS;
+        if (blackboard.isEvading)
+        {
+            evadeTimer += Time.deltaTime;
+
+            if (evadeTimer >= evadeDuration)
+            {
+                // 회피 완료
+                blackboard.isEvading = false;
+                return NodeStatus.SUCCESS;
+            }
+            else
+            {
+                // 회피 중
+                return NodeStatus.RUNNING;
+            }
+        }
+
+        return NodeStatus.FAILURE; // 예외 상황
     }
 
     // [추가] RL 에이전트가 방향을 지정하여 호출할 메소드
@@ -415,9 +435,10 @@ public abstract class AgentController : MonoBehaviour
 
     public virtual NodeStatus GetAttack()
     {
-        Debug.Log($"{gameObject.name}이(가) {enemy.name}을(를) 공격하여 {blackboard.totalDamage} 데미지를 입혔습니다.");
+        Debug.Log($"{enemy.name}이(가) {gameObject.name}로부터 피격당하여 {blackboard.totalDamage} 데미지를 입었습니다.");
         blackboard.TakeDamage();
 
+        blackboard.isGetAttacked = false;
         hitbox.ResetHitFlag();
 
         return NodeStatus.SUCCESS;

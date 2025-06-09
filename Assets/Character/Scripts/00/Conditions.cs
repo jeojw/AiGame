@@ -53,8 +53,6 @@ public class IsCooldownReadyCondition : BTConditionNode
     }
     public override bool CheckCondition()
     {
-        if (actionKey == "Defend")
-            Debug.Log("check cooldown");
         return blackboard.IsActionReady(actionKey); // �ش� �ൿ�� �غ�Ǿ����� ����
     }
 }
@@ -96,6 +94,7 @@ public class IsEnemyAttackingCondition : BTConditionNode
 
     public override bool CheckCondition()
     {
+        Debug.Log("checkCondition");
         // �������忡 �� ������ ������ �翬�� ���� ���� �ƴ�
         if (blackboard.enemyTransform == null) return false;
 
