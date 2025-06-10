@@ -12,9 +12,10 @@ public abstract class AgentController : MonoBehaviour
     private float lowHealthThreshold = 30f; // 체력 낮음 판단 기준 (비율 또는 절대값)
 
     [SerializeField] private float walkSpeed = 5f; // 일반 걷기/이동 속도 추가
-    [SerializeField] private float evadeSpeed = 15f; // 회피 이동 속도를 더 빠르게 설정
+    [SerializeField] private float evadeSpeed = 10f; // 회피 이동 속도를 더 빠르게 설정
 
-    [SerializeField] private float evadeMoveDistance = 7.0f; // 회피 시 이동할 거리
+    [SerializeField] private float evadeMoveDistance = 2.0f; // 회피 시 이동할 거리
+    [SerializeField] private float undefendableDuration = 1.0f; // 방어 불가능 상태 지속 시간
 
     private Rigidbody rb;
     private AnimationController animationController;
@@ -36,8 +37,7 @@ public abstract class AgentController : MonoBehaviour
 
     private Vector3 evadeTargetPosition;
     private float currentEvadeSpeed; // 이 변수는 이제 evadeSpeed 값을 받게 됩니다.
-    private bool isEvadingMovement = false;
-
+    private bool isEvadingMovement = false; // 현재 회피 이동 중인지 나타내는 플래그
 
     protected virtual void Awake()
     {
@@ -161,6 +161,7 @@ public abstract class AgentController : MonoBehaviour
         if (currentDistance >= desiredDistance)
         {
             rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
             if (animator != null) animator.SetFloat("Speed", 0f);
             Debug.Log("행동: 목표 지점으로부터 멀어지는 중 - 완료 (정지)");
             return NodeStatus.SUCCESS;
@@ -194,7 +195,8 @@ public abstract class AgentController : MonoBehaviour
 
             float forwardSpeed = Vector3.Dot(rb.linearVelocity, transform.forward);
 
-            if (forwardSpeed > chargeSpeedThreshold)
+            // 돌진 공격은 회피 이동 중에만 적용되도록 조건 추가
+            if (isEvadingMovement && forwardSpeed > chargeSpeedThreshold)
             {
                 Debug.Log("돌진 공격! 데미지 보너스 적용!");
                 damageMultiplier *= chargeDamageBonus;
@@ -259,22 +261,25 @@ public abstract class AgentController : MonoBehaviour
 
     public virtual NodeStatus PerformEvade()
     {
+        // 이 메서드는 랜덤 방향 회피를 시작하는 역할만 하도록 하고,
+        // 실제 이동 로직은 PerformDirectionalEvade로 위임
         if (!blackboard.IsActionReady(AgentBlackboard.EVADE_COOLDOWN_KEY))
             return NodeStatus.FAILURE;
 
         Debug.Log("행동: 무작위 방향으로 회피 수행!");
-        blackboard.SetActionCooldown(AgentBlackboard.EVADE_COOLDOWN_KEY);
-        int randomDirection = Random.Range(0, 4);
-
-        blackboard.isEvading = true;
-
-        return PerformDirectionalEvade(randomDirection);
+        return PerformDirectionalEvade(Random.Range(0, 2)); // 0:전방, 1:후방, 2:좌, 3:우
     }
 
     public virtual NodeStatus PerformDirectionalEvade(int direction)
     {
         if (!blackboard.IsActionReady(AgentBlackboard.EVADE_COOLDOWN_KEY))
             return NodeStatus.FAILURE;
+
+        // 이미 회피 이동 중이면 중복 시작 방지
+        if (isEvadingMovement)
+        {
+            return NodeStatus.RUNNING;
+        }
 
         Debug.Log($"행동: {direction} 방향으로 회피 수행!");
         blackboard.SetActionCooldown(AgentBlackboard.EVADE_COOLDOWN_KEY);
@@ -284,20 +289,44 @@ public abstract class AgentController : MonoBehaviour
         Vector3 initialPosition = transform.position;
         Vector3 targetDirection = Vector3.zero;
 
-        switch (direction)
+        if (enemy != null) // 적이 있을 경우에만 상대방 기준으로 회피 방향 설정
         {
-            case 0: // Forward
-                targetDirection = transform.forward;
-                break;
-            case 1: // Backward
-                targetDirection = -transform.forward;
-                break;
-            case 2: // Left
-                targetDirection = -transform.right;
-                break;
-            case 3: // Right
-                targetDirection = transform.right;
-                break;
+            Vector3 directionToEnemy = (enemy.position - transform.position);
+            directionToEnemy.y = 0; // Y축은 무시하고 수평 방향으로만 계산
+            directionToEnemy.Normalize(); // 단위 벡터로 정규화
+
+            switch (direction)
+            {
+                case 0: // Forward (상대방을 향하는 앞)
+                    targetDirection = directionToEnemy;
+                    // [핵심 수정]: 상대방의 방어 불가능 상태 설정
+                    AgentController enemyAgentController = enemy.GetComponent<AgentController>();
+                    if (enemyAgentController != null)
+                    {
+                        enemyAgentController.blackboard.canBeDefended = false;
+                        Invoke(nameof(ResetEnemyDefendableState), undefendableDuration); // 일정 시간 후 방어 가능 상태로 되돌림
+                        Debug.Log($"상대방 ({enemy.name})을(를) 향해 회피, 일시적으로 방어 불가능 상태로 설정됨.");
+                    }
+                    break;
+                case 1: // Backward (상대방으로부터 멀어지는 뒤)
+                    targetDirection = -directionToEnemy;
+                    break;
+                
+            }
+        }
+        else // 적이 없을 경우, 기존처럼 자신을 기준으로 설정 (비상 fallback)
+        {
+            Debug.LogWarning("적을 찾을 수 없어 자신을 기준으로 회피 방향을 설정합니다.");
+            switch (direction)
+            {
+                case 0: // Forward
+                    targetDirection = transform.forward;
+                    break;
+                case 1: // Backward
+                    targetDirection = -transform.forward;
+                    break;
+                
+            }
         }
 
         evadeTargetPosition = initialPosition + targetDirection * evadeMoveDistance;
@@ -309,11 +338,24 @@ public abstract class AgentController : MonoBehaviour
             animator.SetBool("isRun", true); // 'isRun' 파라미터가 있다면 활용
         }
 
-        isEvadingMovement = true;
+        isEvadingMovement = true; // 회피 이동 시작 플래그 설정
 
         animationController?.PlayWalk(); // 회피는 '빠르게 걷는' 모션으로 연출
 
-        return NodeStatus.RUNNING;
+        return NodeStatus.RUNNING; // 이동이 완료될 때까지 RUNNING 반환
+    }
+
+    private void ResetEnemyDefendableState()
+    {
+        if (enemy != null)
+        {
+            AgentController enemyAgentController = enemy.GetComponent<AgentController>();
+            if (enemyAgentController != null)
+            {
+                enemyAgentController.blackboard.canBeDefended = true;
+                Debug.Log($"상대방 ({enemy.name})의 방어 불가능 상태가 해제되었습니다.");
+            }
+        }
     }
 
     private void EndEvade()
@@ -329,7 +371,7 @@ public abstract class AgentController : MonoBehaviour
 
         evadeFinished = true;
         blackboard.isEvading = false;
-        isEvadingMovement = false;
+        isEvadingMovement = false; // 회피 이동 종료 플래그 해제
 
         Debug.Log("회피 이동 종료!");
     }
@@ -367,13 +409,24 @@ public abstract class AgentController : MonoBehaviour
 
     public void HandleDamage(float damage)
     {
+        // [수정]: blackboard.isInvincible && blackboard.canBeDefended 조건 추가
+        // 무적 상태이거나 방어 불가능 상태가 아니라면 데미지를 받음
         if (blackboard.isInvincible)
         {
-            Debug.Log(gameObject.name + "이(가) 공격을 무효화했습니다.");
+            Debug.Log(gameObject.name + "이(가) 공격을 무효화했습니다 (무적 상태).");
             return;
         }
 
-        blackboard.TakeDamage(damage);
+        if (!blackboard.canBeDefended) // 방어 불가능 상태일 경우 방어 메커니즘을 무시하고 데미지 적용
+        {
+            Debug.Log(gameObject.name + "이(가) 방어 불가능 상태이므로 공격을 막을 수 없습니다.");
+            blackboard.TakeDamage(damage); // Blackboard의 TakeDamage는 이제 canBeDefended를 내부적으로 확인
+        }
+        else // 무적 상태도 아니고 방어 불가능 상태도 아니면, 일반적인 데미지 처리
+        {
+            blackboard.TakeDamage(damage);
+        }
+
         if (blackboard.currentHealth <= 0)
         {
             Die();

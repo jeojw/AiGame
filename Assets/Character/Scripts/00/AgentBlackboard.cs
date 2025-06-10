@@ -13,13 +13,14 @@ public class AgentBlackboard
     private bool _isEvading = false;
     private bool _isGetAttacked = false;
     private bool _canCounterAttack = false;
+    private bool _canBeDefended = true; // [새로 추가] 방어 가능한 상태인지
 
     // [추가] 적의 마지막 공격 시간을 기록할 변수
     public float lastEnemyAttackTime = 0f;
 
     public bool canCounterAttack
     {
-        get {  return _canCounterAttack; }
+        get { return _canCounterAttack; }
         set { _canCounterAttack = value; }
     }
     public float maxHealth
@@ -56,11 +57,18 @@ public class AgentBlackboard
         get { return _isEvading; }
         set { _isEvading = value; }
     }
-    
+
     public bool isGetAttacked
     {
         get { return _isGetAttacked; }
         set { _isGetAttacked = value; }
+    }
+
+    // [새로 추가] 방어 가능한 상태인지
+    public bool canBeDefended
+    {
+        get { return _canBeDefended; }
+        set { _canBeDefended = value; }
     }
 
     // 적 정보
@@ -90,9 +98,9 @@ public class AgentBlackboard
     private const string _DEFEND_COOLDOWN_KEY = "Defend"; // 방어 쿨타임 키
     private const string _EVADE_COOLDOWN_KEY = "Evade";   // 회피 쿨타임 키
 
-    public static string ATTACK_COOLDOWN_KEY 
+    public static string ATTACK_COOLDOWN_KEY
     {
-        get {  return _ATTACK_COOLDOWN_KEY; }
+        get { return _ATTACK_COOLDOWN_KEY; }
     }// 공격 쿨타임 키
     public static string DEFEND_COOLDOWN_KEY
     {
@@ -124,6 +132,7 @@ public class AgentBlackboard
     public AgentBlackboard()
     {
         currentHealth = maxHealth; // 현재 체력을 최대 체력으로 초기화
+        canBeDefended = true; // 새로 추가된 플래그 초기화
     }
 
     // 적 정보 업데이트 메소드
@@ -156,13 +165,20 @@ public class AgentBlackboard
     // 데미지를 받는 메소드
     public void TakeDamage(float amount)
     {
-        if (!isInvincible) // 무적 상태가 아니라면
+        if (!isInvincible && canBeDefended) // 무적 상태가 아니고 방어 가능 상태라면
         {
             currentHealth -= amount;
             if (currentHealth < 0) currentHealth = 0;
             Debug.Log($"에이전트가 {amount} 데미지를 받음, 현재 체력: {currentHealth}");
         }
-        else
+        else if (!canBeDefended)
+        {
+            Debug.Log("에이전트가 방어 불가능 상태이므로 방어가 적용되지 않습니다.");
+            currentHealth -= amount; // 방어 불가능 상태에서는 데미지 그대로 받음
+            if (currentHealth < 0) currentHealth = 0;
+            Debug.Log($"에이전트가 {amount} 데미지를 받음 (방어 무시), 현재 체력: {currentHealth}");
+        }
+        else // isInvincible == true
         {
             Debug.Log("에이전트가 무적 상태이므로 데미지를 받지 않음.");
         }
