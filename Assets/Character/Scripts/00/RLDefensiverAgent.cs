@@ -11,7 +11,7 @@ public class RLDefensiveAgent : Agent
     [Header("Agent Components")]
     [SerializeField] private Transform enemyTransform;
     private AgentController myController;
-    private DefensiveAgentController myDefensiveController; // [Ãß°¡] DefensiveAgentController Å¸ÀÔ ÂüÁ¶
+    private DefensiveAgentController myDefensiveController; // [ï¿½ß°ï¿½] DefensiveAgentController Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     private AgentBlackboard myBlackboard;
 
     private AgentController enemyController;
@@ -35,7 +35,7 @@ public class RLDefensiveAgent : Agent
     public override void Initialize()
     {
         myController = GetComponent<AgentController>();
-        myDefensiveController = GetComponent<DefensiveAgentController>(); // [Ãß°¡] DefensiveAgentController ÄÄÆ÷³ÍÆ® °¡Á®¿À±â
+        myDefensiveController = GetComponent<DefensiveAgentController>(); // [ï¿½ß°ï¿½] DefensiveAgentController ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         myBlackboard = myController.blackboard;
 
         if (enemyTransform != null)
@@ -56,6 +56,17 @@ public class RLDefensiveAgent : Agent
 
     public override void OnEpisodeBegin()
     {
+        // --- UIManager È°ï¿½ï¿½È­ ï¿½ß°ï¿½ ---
+        UIManager uiManager = FindObjectOfType<UIManager>();
+        if (uiManager != null)
+        {
+            uiManager.enabled = true;
+            // ï¿½Ê¿ï¿½ï¿½Ï´Ù¸ï¿½ UIManager ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­ ï¿½Þ¼ï¿½ï¿½å¸¦ È£ï¿½ï¿½ï¿½Ï¿ï¿½ UIï¿½ï¿½ Ã³ï¿½ï¿½ ï¿½ï¿½ï¿½Â·ï¿½ ï¿½Çµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ö½ï¿½ï¿½Ï´ï¿½.
+            // ï¿½ï¿½: uiManager.ResetUI(); (UIManagerï¿½ï¿½ ï¿½ï¿½ ï¿½Þ¼ï¿½ï¿½å¸¦ ï¿½ß°ï¿½ï¿½Ø¾ï¿½ ï¿½ï¿½)
+        }
+        // --- UIManager È°ï¿½ï¿½È­ ï¿½ß°ï¿½ ï¿½ï¿½ ---
+
+
         if (enemyTransform != null)
         {
             previousDistanceToEnemy = Vector3.Distance(transform.position, enemyTransform.position);
@@ -66,16 +77,16 @@ public class RLDefensiveAgent : Agent
             }
             else
             {
-                Debug.LogError($"'{enemyTransform.name}' ¿ÀºêÁ§Æ®¿¡ AgentController ÄÄÆ÷³ÍÆ®°¡ ¾ø½À´Ï´Ù!", enemyTransform);
+                Debug.LogError($"'{enemyTransform.name}' ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ AgentController ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½!", enemyTransform);
                 enemyBlackboard = null;
             }
         }
         else
         {
-            Debug.LogError("'enemyTransform'ÀÌ(°¡) ÀÎ½ºÆåÅÍ¿¡ ÇÒ´çµÇÁö ¾Ê¾Ò½À´Ï´Ù!", this.gameObject);
+            Debug.LogError("'enemyTransform'ï¿½ï¿½(ï¿½ï¿½) ï¿½Î½ï¿½ï¿½ï¿½ï¿½Í¿ï¿½ ï¿½Ò´ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¾Ò½ï¿½ï¿½Ï´ï¿½!", this.gameObject);
         }
 
-        // --- Ã¼·Â ¹× ÀÌÀü »óÅÂ ÃÊ±âÈ­ ---
+        // --- Ã¼ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­ ---
         myBlackboard.currentHealth = myBlackboard.maxHealth;
         previousMyHealth = myBlackboard.maxHealth;
 
@@ -85,7 +96,7 @@ public class RLDefensiveAgent : Agent
             previousEnemyHealth = enemyBlackboard.maxHealth;
         }
 
-        // --- À§Ä¡ ¹× ¹°¸® »óÅÂ ¸®¼Â ---
+        // --- ï¿½ï¿½Ä¡ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ---
         transform.position = initialPosition;
         transform.rotation = initialRotation;
         Rigidbody rb = GetComponent<Rigidbody>();
@@ -107,25 +118,27 @@ public class RLDefensiveAgent : Agent
             }
         }
 
-        // --- ºü¸¥ ½Â¸® º¸»óÀ» À§ÇÑ ½Ã°£ ÃÊ±âÈ­ ---
+        // --- ï¿½ï¿½ï¿½ï¿½ ï¿½Â¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½Ê±ï¿½È­ ---
         episodeStartTime = Time.time;
 
-        // --- [Ãß°¡] ÇÙ½É ÃÊ±âÈ­ ·ÎÁ÷: ¸ðµç °ü·Ã ÇÃ·¡±×¿Í »óÅÂ ÃÊ±âÈ­ ---
+        // --- [ï¿½ß°ï¿½] ï¿½Ù½ï¿½ ï¿½Ê±ï¿½È­ ï¿½ï¿½ï¿½ï¿½: ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½×¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­ ---
 
-        // 1. AgentControllerÀÇ ³»ºÎ ÇÃ·¡±× ÃÊ±âÈ­
+        // 1. AgentControllerï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­
         if (myController != null)
         {
-            myController.ResetAllFlags(); // À§¿¡¼­ Ãß°¡ÇÑ ¸Þ¼­µå È£Ãâ
-            myController.enabled = true; // ½ºÅ©¸³Æ®°¡ ºñÈ°¼ºÈ­µÇ¾î ÀÖ¾ú´Ù¸é ´Ù½Ã È°¼ºÈ­
+            myController.ResetAllFlags(); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½ï¿½ï¿½ ï¿½Þ¼ï¿½ï¿½ï¿½ È£ï¿½ï¿½
+            myController.enabled = true; // ï¿½ï¿½Å©ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½È°ï¿½ï¿½È­ï¿½Ç¾ï¿½ ï¿½Ö¾ï¿½ï¿½Ù¸ï¿½ ï¿½Ù½ï¿½ È°ï¿½ï¿½È­
         }
-        if (enemyController != null) // Àû ¿¡ÀÌÀüÆ®ÀÇ ÄÁÆ®·Ñ·¯µµ ¸®¼Â
+        if (enemyController != null) // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½Æ®ï¿½Ñ·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         {
             enemyController.ResetAllFlags();
-            enemyController.enabled = true; // Àû ¿¡ÀÌÀüÆ® ÄÁÆ®·Ñ·¯ È°¼ºÈ­
+            enemyController.enabled = true; // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½Æ®ï¿½Ñ·ï¿½ È°ï¿½ï¿½È­
         }
 
 
-        // 2. AgentBlackboardÀÇ ¸ðµç »óÅÂ ÇÃ·¡±× ÃÊ±âÈ­
+        // 2. AgentBlackboardï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­ (BT ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ Blackboardï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ý´Ï´ï¿½)
+        // ï¿½ï¿½ ï¿½Îºï¿½ï¿½ï¿½ RL ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½Ú½ï¿½ï¿½ï¿½ blackboardï¿½ï¿½ ï¿½Ê±ï¿½È­ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,
+        // enemyBlackboardï¿½ï¿½ BT ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ blackboardï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¹Ç·ï¿½ ï¿½Ô²ï¿½ ï¿½Ê±ï¿½È­ï¿½Ç´ï¿½ï¿½ï¿½ È®ï¿½ï¿½ ï¿½Ê¿ï¿½
         myBlackboard.isAttacking = false;
         myBlackboard.isDefending = false;
         myBlackboard.isEvading = false;
@@ -133,10 +146,12 @@ public class RLDefensiveAgent : Agent
         myBlackboard.isGetAttacked = false;
         myBlackboard.canCounterAttack = false;
         myBlackboard.isDead = false;
-        myBlackboard.lastEnemyAttackTime = 0f; // ÀûÀÇ ¸¶Áö¸· °ø°Ý ½Ã°£ ÃÊ±âÈ­
+        myBlackboard.lastEnemyAttackTime = 0f; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½Ê±ï¿½È­
 
         if (enemyBlackboard != null)
         {
+            // [ï¿½ß¿ï¿½] ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ Blackboard ï¿½ï¿½ï¿½Âµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­ï¿½Õ´Ï´ï¿½.
+            // ï¿½Ì°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ç¸ï¿½ BT ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ç¼Òµï¿½ ï¿½ï¿½ï¿½Â°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ç¼Òµå¿¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½Ö½ï¿½ï¿½Ï´ï¿½.
             enemyBlackboard.isAttacking = false;
             enemyBlackboard.isDefending = false;
             enemyBlackboard.isEvading = false;
@@ -144,13 +159,13 @@ public class RLDefensiveAgent : Agent
             enemyBlackboard.isGetAttacked = false;
             enemyBlackboard.canCounterAttack = false;
             enemyBlackboard.isDead = false;
-            // enemyBlackboard.lastEnemyAttackTimeÀº »ó´ë¹æ ¿¡ÀÌÀüÆ®ÀÇ blackboard¿¡¼­ ÃÊ±âÈ­
+            // enemyBlackboard.lastEnemyAttackTimeï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ blackboardï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­
         }
 
-        // 3. ÇöÀç RL Agent ½ºÅ©¸³Æ® ÀÚÃ¼µµ È°¼ºÈ­ È®ÀÎ (¾ÈÀü ÀåÄ¡)
+        // 3. ï¿½ï¿½ï¿½ï¿½ RL Agent ï¿½ï¿½Å©ï¿½ï¿½Æ® ï¿½ï¿½Ã¼ï¿½ï¿½ È°ï¿½ï¿½È­ È®ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡)
         this.enabled = true;
 
-        // --- [Ãß°¡ ³¡] ---
+        // --- [ï¿½ß°ï¿½ ï¿½ï¿½] ---
 
 
     }
@@ -194,7 +209,7 @@ public class RLDefensiveAgent : Agent
 
         if (myBlackboard.currentHealth >= healthBeforeDodge)
         {
-            Debug.Log("È¸ÇÇ ¼º°ø! º¸»ó +0.5");
+            Debug.Log("È¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½! ï¿½ï¿½ï¿½ï¿½ +0.5");
             AddReward(0.5f);
         }
     }
@@ -214,7 +229,7 @@ public class RLDefensiveAgent : Agent
 
         if (myBlackboard.currentHealth >= healthBeforeDefend - 0.1f)
         {
-            Debug.Log("¹æ¾î ¼º°ø! º¸»ó +1.0");
+            Debug.Log("ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½! ï¿½ï¿½ï¿½ï¿½ +1.0");
             AddReward(1.0f);
         }
     }
@@ -222,7 +237,7 @@ public class RLDefensiveAgent : Agent
 
     public override void OnActionReceived(ActionBuffers actions)
     {
-        Debug.Log($"[RL Defensive Agent] 1. OnActionReceived È£ÃâµÊ. ¹ÞÀº ¾×¼Ç: {actions.DiscreteActions[0]}, È¸ÇÇ¹æÇâ: {actions.DiscreteActions[1]}");
+        Debug.Log($"[RL Defensive Agent] 1. OnActionReceived È£ï¿½ï¿½ï¿½. ï¿½ï¿½ï¿½ï¿½ ï¿½×¼ï¿½: {actions.DiscreteActions[0]}, È¸ï¿½Ç¹ï¿½ï¿½ï¿½: {actions.DiscreteActions[1]}");
 
         int mainAction = actions.DiscreteActions[0];
         int evadeDirection = actions.DiscreteActions[1];
@@ -238,7 +253,7 @@ public class RLDefensiveAgent : Agent
             case 2:
                 myController.MoveAwayFrom(enemyTransform.position, 3f, 7f);
                 break;
-            case 3: // °ø°Ý (Ä«¿îÅÍ °ø°Ý Æ÷ÇÔ)
+            case 3: // ï¿½ï¿½ï¿½ï¿½ (Ä«ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
                 if (myBlackboard.IsActionReady(AgentBlackboard.ATTACK_COOLDOWN_KEY))
                 {
                     if (myBlackboard.canCounterAttack && myDefensiveController != null)
@@ -348,7 +363,7 @@ public class RLDefensiveAgent : Agent
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
-        Debug.Log("[RL Defensive Agent] Heuristic() ¸Þ¼Òµå°¡ È£ÃâµÇ¾ú½À´Ï´Ù!");
+        Debug.Log("[RL Defensive Agent] Heuristic() ï¿½Þ¼Òµå°¡ È£ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½Ï´ï¿½!");
 
         var discreteActions = actionsOut.DiscreteActions;
         discreteActions[0] = 0;

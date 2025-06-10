@@ -1,1 +1,104 @@
-{"count":1,"self":7.2855776,"total":14.3935766,"children":{"InitializeActuators":{"count":1,"self":0.0010059,"total":0.0010059,"children":null},"InitializeSensors":{"count":1,"self":0,"total":0,"children":null},"AgentSendState":{"count":8617,"self":0.0280428,"total":0.058206799999999996,"children":{"CollectObservations":{"count":1724,"self":0.0025176,"total":0.0025176,"children":null},"WriteActionMask":{"count":1724,"self":0,"total":0,"children":null},"RequestDecision":{"count":1724,"self":0.011523199999999999,"total":0.027646399999999998,"children":{"AgentInfo.ToProto":{"count":1724,"self":0.0065086,"total":0.0161232,"children":{"GenerateSensorData":{"count":1724,"self":0.0096146,"total":0.0096146,"children":null}}}}}}},"DecideAction":{"count":8617,"self":5.1181111999999995,"total":5.1181111999999995,"children":null},"AgentAct":{"count":8617,"self":1.9306755999999998,"total":1.9306755,"children":{"AgentInfo.ToProto":{"count":7,"self":0,"total":0,"children":{"GenerateSensorData":{"count":7,"self":0,"total":0,"children":null}}}}}},"gauges":{"DefensiveRL.CumulativeReward":{"count":7,"max":206.648514,"min":36.2860031,"runningAverage":85.22231,"value":61.5790024,"weightedAverage":89.94987}},"metadata":{"timer_format_version":"0.1.0","start_time_seconds":"1749556224","unity_version":"6000.0.46f1","command_line_arguments":"C:\\Program Files\\Unity\\Hub\\Editor\\6000.0.46f1\\Editor\\Unity.exe -projectpath C:\\AiGame -useHub -hubIPC -cloudEnvironment production","communication_protocol_version":"1.5.0","com.unity.ml-agents_version":"3.0.0","scene_name":"RLDefensiverScene","end_time_seconds":"1749556238"}}
+{
+  "count": 1,
+  "self": 30.358985599999997,
+  "total": 64.6732562,
+  "children": {
+    "InitializeActuators": {
+      "count": 1,
+      "self": 0.00050599999999999994,
+      "total": 0.00050599999999999994,
+      "children": null
+    },
+    "InitializeSensors": {
+      "count": 1,
+      "self": 0.0004969,
+      "total": 0.0004969,
+      "children": null
+    },
+    "AgentSendState": {
+      "count": 48151,
+      "self": 0.11850569999999999,
+      "total": 0.3954756,
+      "children": {
+        "CollectObservations": {
+          "count": 9631,
+          "self": 0.0526839,
+          "total": 0.0526839,
+          "children": null
+        },
+        "WriteActionMask": {
+          "count": 9631,
+          "self": 0.0165736,
+          "total": 0.0165736,
+          "children": null
+        },
+        "RequestDecision": {
+          "count": 9631,
+          "self": 0.0597138,
+          "total": 0.2077124,
+          "children": {
+            "AgentInfo.ToProto": {
+              "count": 9631,
+              "self": 0.0449966,
+              "total": 0.14799859999999998,
+              "children": {
+                "GenerateSensorData": {
+                  "count": 9631,
+                  "self": 0.103002,
+                  "total": 0.103002,
+                  "children": null
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "DecideAction": {
+      "count": 48151,
+      "self": 23.741324799999997,
+      "total": 23.7413244,
+      "children": null
+    },
+    "AgentAct": {
+      "count": 48151,
+      "self": 10.1759656,
+      "total": 10.1759658,
+      "children": {
+        "AgentInfo.ToProto": {
+          "count": 10,
+          "self": 0,
+          "total": 0,
+          "children": {
+            "GenerateSensorData": {
+              "count": 10,
+              "self": 0,
+              "total": 0,
+              "children": null
+            }
+          }
+        }
+      }
+    }
+  },
+  "gauges": {
+    "DefensiveRL.CumulativeReward": {
+      "count": 10,
+      "max": 495.64032,
+      "min": 57.4967232,
+      "runningAverage": 151.923676,
+      "value": 495.64032,
+      "weightedAverage": 245.396164
+    }
+  },
+  "metadata": {
+    "timer_format_version": "0.1.0",
+    "start_time_seconds": "1749554942",
+    "unity_version": "6000.0.46f1",
+    "command_line_arguments": "C:\\Program Files\\Unity\\Hub\\Editor\\6000.0.46f1\\Editor\\Unity.exe -projectpath C:\\Users\\Home\\Documents\\Github\\AiGame -useHub -hubIPC -cloudEnvironment production",
+    "communication_protocol_version": "1.5.0",
+    "com.unity.ml-agents_version": "3.0.0",
+    "scene_name": "RLDefensiverScene",
+    "end_time_seconds": "1749555006"
+  }
+}
