@@ -6,7 +6,7 @@ public class DefensiveAgentController : AgentController
 {
     private float defensiveStanceRange = 7f;
     private float counterAttackHealthThreshold = 50f;
-    private float _counterDamageMultiplier = 2.0f; // private 필드로 변경
+    private float _counterDamageMultiplier = 1.5f; // private 필드로 변경
 
     // [추가] public 속성으로 외부에서 값을 읽을 수 있도록 함
     public float counterDamageMultiplier
@@ -24,7 +24,7 @@ public class DefensiveAgentController : AgentController
             new BTSequence(blackboard, transform, new List<BTNode>
             {
                 // 조건 1: 적이 5초 이상 가만히 있었는가? (기존과 동일)
-                new IsEnemyIdleForDurationCondition(blackboard, transform, 5.0f),
+                new IsEnemyIdleForDurationCondition(blackboard, transform, 10.0f),
                 // 조건 2: 내 공격 쿨타임이 준비되었는가? (기존과 동일)
                 new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.ATTACK_COOLDOWN_KEY),
 

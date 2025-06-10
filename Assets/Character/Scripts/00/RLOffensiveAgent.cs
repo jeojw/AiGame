@@ -246,7 +246,7 @@ public class RLOffensiveAgent : Agent
         if (myBlackboard.currentHealth >= healthBeforeDodge)
         {
             Debug.Log("회피 성공! 보상 +0.5");
-            AddReward(0.5f);
+            AddReward(0.1f);
         }
     }
 
@@ -291,7 +291,7 @@ public class RLOffensiveAgent : Agent
                 if (myBlackboard.IsActionReady(AgentBlackboard.ATTACK_COOLDOWN_KEY))
                 {
                     myController.PerformAttack();
-                    AddReward(0.05f); // 공격 시도 시 보상
+                    AddReward(0.02f); // 공격 시도 시 보상
                 }
                 break;
             case 4: // 회피
@@ -301,7 +301,7 @@ public class RLOffensiveAgent : Agent
                     if (myController.PerformDirectionalEvade(evadeDirection) == NodeStatus.SUCCESS)
                     {
                         // 앞으로 회피(direction == 0) 시 보상 가중치 추가
-                        float dodgeReward = 0.01f; // 기본 회피 보상
+                        float dodgeReward = 0.03f; // 기본 회피 보상
                         if (evadeDirection == 0) // 앞으로 회피 (전방)
                         {
                             dodgeReward += 0.2f; // 앞으로 회피 성공 시 추가 보상 (값은 훈련을 통해 조정)
@@ -314,7 +314,7 @@ public class RLOffensiveAgent : Agent
                                 enemyTransform != null &&
                                 Vector3.Distance(transform.position, enemyTransform.position) <= myController.attackRange + 0.1f)
                             {
-                                Debug.Log("RLOffensiveAgent: 앞으로 회피 후 바로 공격 시도!");
+                                
                                 myController.PerformAttack();
                                 AddReward(0.5f); // 연계 공격 시도에 대한 추가 보상 (값을 조정)
                             }
@@ -404,7 +404,7 @@ public class RLOffensiveAgent : Agent
                 timeBonus = Mathf.Max(0, maxEpisodeTimeBonus * (1.0f - (episodeDuration / (episodeDurationForMaxBonus * 2.0f))));
             }
 
-            SetReward(10.0f + timeBonus);
+            SetReward(50.0f + timeBonus);
             EndEpisode();
         }
     }

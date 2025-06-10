@@ -193,33 +193,26 @@ public abstract class AgentController : MonoBehaviour
             if (animator != null)
                 animator.SetTrigger("IsAttacking");
 
-            const float chargeSpeedThreshold = 1.0f;
-            const float chargeDamageBonus = 3.0f;
+            
 
-            // [수정 시작] 돌진 공격 로직을 "상대가 방어 무력화 상태일 때" 적용되게 변경
-            // 1. 상대방 AgentController를 가져옵니다.
-            AgentController enemyAgentController = null;
-            if (enemy != null)
+            // [수정 시작] 돌진 공격 로직 - 자신의 태그 확인 추가
+            // 공격자(OffensiveAgent) 태그를 가진 에이전트만 이 돌진 공격 로직을 수행합니다.
+            if (this.gameObject.CompareTag("Offensiver")) // OffensiveAgent 태그를 확인
             {
-                enemyAgentController = enemy.GetComponent<AgentController>();
-            }
+                
+                const float chargeDamageBonus = 8.0f;
+                AgentController enemyAgentController = null;
+                if (enemy != null)
+                {
+                    enemyAgentController = enemy.GetComponent<AgentController>();
+                }
 
-            // 2. 상대방이 존재하고, 그 상대방의 blackboard.canBeDefended가 false (방어 무력화 상태)일 때
-            //    혹은, 기존 돌진 공격 조건(isEvadingMovement && forwardSpeed)도 여전히 적용하고 싶다면 OR로 연결합니다.
-            //    여기서는 요청에 따라 '상대가 방어 무력화 상태일 때'를 주 조건으로 변경합니다.
-            if (enemyAgentController != null && !enemyAgentController.blackboard.canBeDefended)
-            {
-                Debug.Log("방어 무력화된 적에게 돌진 공격! 데미지 보너스 적용!");
-                damageMultiplier *= chargeDamageBonus; // 방어 무력화 보너스 적용
+                if (enemyAgentController != null && !enemyAgentController.blackboard.canBeDefended)
+                {
+                    Debug.Log($"[{gameObject.name}] (OffensiveAgent) 방어 무력화된 적에게 돌진 공격! 데미지 보너스 적용!");
+                    damageMultiplier *= chargeDamageBonus; // AgentController의 chargeDamageBonus 사용
+                }
             }
-            // 기존의 isEvadingMovement 및 forwardSpeed 조건의 돌진 공격을 유지하고 싶다면,
-            // 아래와 같이 조건을 OR로 연결하거나 별도의 if 블록으로 분리할 수 있습니다.
-            // else if (isEvadingMovement && forwardSpeed > chargeSpeedThreshold)
-            // {
-            //     Debug.Log("일반 돌진 공격! 데미지 보너스 적용!");
-            //     damageMultiplier *= chargeDamageBonus;
-            // }
-
             // [수정 끝]
 
             StartCoroutine(AttackWithPreDelay(0.5f, damageMultiplier));
@@ -533,7 +526,7 @@ public abstract class AgentController : MonoBehaviour
 
         Invoke(nameof(ResetIsAttacking), 0.3f);
 
-        float attackDamage = 40f;
+        float attackDamage = 15f;
         if (Physics.SphereCast(transform.position + Vector3.up, 0.8f, transform.forward, out RaycastHit hit, attackRange))
         {
             AgentController enemyController = hit.collider.GetComponentInParent<AgentController>();
