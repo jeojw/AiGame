@@ -89,6 +89,8 @@ public class UIManager : MonoBehaviour
                     Debug.LogError($"<color=red>게임 데이터 저장 중 오류 발생:</color> {e.Message}");
                 }
 
+                TimeText.text = 0.ToString();
+
                 // 저장이 완료되었음을 표시하여 이 블록이 다시 실행되지 않도록 합니다.
                 hasGameEndedAndSaved = true;
 

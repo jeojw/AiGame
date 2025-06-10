@@ -2,22 +2,22 @@
     "DefensiveRL": {
         "checkpoints": [
             {
-                "steps": 4187,
-                "file_path": "results\\BT_Offensive_vs_RL_Defensive_1\\DefensiveRL\\DefensiveRL-4187.onnx",
-                "reward": 191.95486753847865,
-                "creation_time": 1749384034.4959846,
+                "steps": 4706,
+                "file_path": "results\\BT_Offensive_vs_RL_Defensive_1\\DefensiveRL\\DefensiveRL-4706.onnx",
+                "reward": 77.93852622268929,
+                "creation_time": 1749556238.8963223,
                 "auxillary_file_paths": [
-                    "results\\BT_Offensive_vs_RL_Defensive_1\\DefensiveRL\\DefensiveRL-4187.pt"
+                    "results\\BT_Offensive_vs_RL_Defensive_1\\DefensiveRL\\DefensiveRL-4706.pt"
                 ]
             }
         ],
         "final_checkpoint": {
-            "steps": 4187,
+            "steps": 4706,
             "file_path": "results\\BT_Offensive_vs_RL_Defensive_1\\DefensiveRL.onnx",
-            "reward": 191.95486753847865,
-            "creation_time": 1749384034.4959846,
+            "reward": 77.93852622268929,
+            "creation_time": 1749556238.8963223,
             "auxillary_file_paths": [
-                "results\\BT_Offensive_vs_RL_Defensive_1\\DefensiveRL\\DefensiveRL-4187.pt"
+                "results\\BT_Offensive_vs_RL_Defensive_1\\DefensiveRL\\DefensiveRL-4706.pt"
             ]
         }
     },

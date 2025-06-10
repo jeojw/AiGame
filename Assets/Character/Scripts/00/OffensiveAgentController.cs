@@ -26,22 +26,6 @@ public class OffensiveAgentController : AgentController
                 new GetAttackAction(blackboard, transform),
             }),
 
-            // 1. 체력이 매우 낮고 회피가 준비되었으면 회피 (기존 로직)
-            new BTSequence(blackboard, transform, new List<BTNode>
-            {
-                new IsHealthLowCondition(blackboard, transform, fleeHealthThreshold), // 체력이 도망 기준치 이하인가?
-                new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.EVADE_COOLDOWN_KEY), // 회피 쿨타임이 준비되었는가?
-                new EvadeAction(blackboard, transform) // 회피 행동 (또는 FleeAction)
-            }),
-
-            // [추가] 2. 적이 공격 중이고 회피가 준비되었으면 회피
-            new BTSequence(blackboard, transform, new List<BTNode>
-            {
-                new IsEnemyAttackingCondition(blackboard, transform), // 적이 공격 중인가?
-                new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.EVADE_COOLDOWN_KEY), // 회피 쿨타임이 준비되었는가?
-                new EvadeAction(blackboard, transform) // 회피 행동
-            }),
-
             // 3. 적이 보이고, 범위 내에 있으며, 공격이 준비되었으면 공격
             new BTSequence(blackboard, transform, new List<BTNode>
             {
