@@ -645,9 +645,9 @@ MonoBehaviour:
   enemy: {fileID: 1442097112}
   attackRange: 2
   walkSpeed: 5
-  evadeSpeed: 15
+  evadeSpeed: 10
   evadeMoveDistance: 5
-  undefendableDuration: 0.5
+  undefendableDuration: 1
 --- !u!114 &355025715
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2601,9 +2601,9 @@ MonoBehaviour:
   enemy: {fileID: 355025711}
   attackRange: 2
   walkSpeed: 5
-  evadeSpeed: 15
+  evadeSpeed: 20
   evadeMoveDistance: 5
-  undefendableDuration: 0.5
+  undefendableDuration: 1
   attackRangeTolerance: 0.2
 --- !u!114 &1858427098
 MonoBehaviour:

@@ -23,23 +23,23 @@ public class DefensiveAgentController : AgentController
             // --- [수정] 1순위: 적이 5초 이상 공격하지 않으면 '다가가서' 공격 ---
             new BTSequence(blackboard, transform, new List<BTNode>
             {
-    // 조건 1: 적이 5초 이상 가만히 있었는가? (기존과 동일)
+                // 조건 1: 적이 5초 이상 가만히 있었는가? (기존과 동일)
                 new IsEnemyIdleForDurationCondition(blackboard, transform, 5.0f),
-    // 조건 2: 내 공격 쿨타임이 준비되었는가? (기존과 동일)
+                // 조건 2: 내 공격 쿨타임이 준비되었는가? (기존과 동일)
                 new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.ATTACK_COOLDOWN_KEY),
 
-    // --- 핵심 수정: Selector를 이용한 거리별 행동 분기 ---
+                // --- 핵심 수정: Selector를 이용한 거리별 행동 분기 ---
                 new BTSelector(blackboard, transform, new List<BTNode>
                 {
-        // 우선 순위 1: 이미 공격 범위 안이라면 즉시 공격
+                    // 우선 순위 1: 이미 공격 범위 안이라면 즉시 공격
                     new BTSequence(blackboard, transform, new List<BTNode>
                     {
                         new IsEnemyInAttackRangeCondition(blackboard, transform, attackRange),
                         new ProactiveAttackEnemyAction(blackboard, transform)
                     }),
 
-                // 우선 순위 2: 공격 범위 밖이라면 적에게 접근 (위 시퀀스가 실패했을 때만 실행됨)
-                // 적 공격 범위의 90% 지점까지 다가가도록 설정합니다.
+                    // 우선 순위 2: 공격 범위 밖이라면 적에게 접근 (위 시퀀스가 실패했을 때만 실행됨)
+                    // 적 공격 범위의 90% 지점까지 다가가도록 설정합니다.
                     new MoveTowardsEnemyAction(blackboard, transform, 5f, attackRange * 0.9f)
                 })
             }),
@@ -50,14 +50,10 @@ public class DefensiveAgentController : AgentController
                 new IsEnemyAttackingCondition(blackboard, transform), // 적이 공격 중인가?
                 new BTSelector(blackboard, transform, new List<BTNode> // 방어 또는 회피 중 하나를 선택
                 {
-                    //new BTSequence(blackboard, transform, new List<BTNode> {
-                    //    new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.EVADE_COOLDOWN_KEY),
-                    //    new EvadeAction(blackboard, transform)
-                    //}),
-
                     new BTSequence(blackboard, transform, new List<BTNode> {
-                        //new IsNotCooldwonReadyCondition(blackboard, transform, AgentBlackboard.EVADE_COOLDOWN_KEY),
+                        //new IsNotCooldwonReadyCondition(blackboard, transform, AgentBlackboard.EVADE_COOLDown_KEY), // 이 조건은 필요 없습니다.
                         new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.DEFEND_COOLDOWN_KEY),
+                        new IsNotEvadingCondition(blackboard, transform), // [추가] 회피 중이 아닌지 확인
                         new DefendAction(blackboard, transform),
                         new DefendSuccessCondition(blackboard, transform),
 
@@ -66,12 +62,13 @@ public class DefensiveAgentController : AgentController
                         new ChangeDefendToAttack(blackboard, transform),
                         new CanCounterAttackCondition(blackboard, transform),
                         new IsEnemyInAttackRangeCondition(blackboard, transform, attackRange),
-                        
+
                         new CounterAttackAction(blackboard, transform, this, counterDamageMultiplier)
                     }),
                     // 2순위: 방어가 불가능하면 회피 시도
                     new BTSequence(blackboard, transform, new List<BTNode> {
                         new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.EVADE_COOLDOWN_KEY), // 회피 쿨타임이 준비되었는가?
+                        new IsNotDefendingCondition(blackboard, transform), // [추가] 방어 중이 아닌지 확인
                         new EvadeAction(blackboard, transform) // 회피 행동
                     }),
                     // 만약 방어와 회피 모두 쿨타임이라면, 이 Selector는 실패하고 에이전트는 공격을 맞게 됩니다.
@@ -152,10 +149,13 @@ public class DefensiveAgentController : AgentController
 
         public override NodeStatus Tick()
         {
+
+            
             NodeStatus status = controller.PerformAttack(this.multiplier); // 첫 번째 호출
 
             if (status == NodeStatus.SUCCESS || status == NodeStatus.RUNNING) // 공격이 성공적으로 시작되거나 진행 중이라면
             {
+                blackboard.isInvincible = false;
                 blackboard.canCounterAttack = false; // 카운터 어택 플래그 리셋
                 Debug.Log("카운터 어택 시작! canCounterAttack 플래그 리셋.");
             }

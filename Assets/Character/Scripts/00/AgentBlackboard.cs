@@ -20,7 +20,7 @@ public class AgentBlackboard
 
     public bool canCounterAttack
     {
-        get { return _canCounterAttack; }
+        get {  return _canCounterAttack; }
         set { _canCounterAttack = value; }
     }
     public float maxHealth
@@ -100,7 +100,7 @@ public class AgentBlackboard
 
     public static string ATTACK_COOLDOWN_KEY
     {
-        get { return _ATTACK_COOLDOWN_KEY; }
+        get {  return _ATTACK_COOLDOWN_KEY; }
     }// 공격 쿨타임 키
     public static string DEFEND_COOLDOWN_KEY
     {

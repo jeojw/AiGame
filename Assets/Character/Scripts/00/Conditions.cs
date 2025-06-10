@@ -214,3 +214,24 @@ public class IsEnemyIdleForDurationCondition : BTConditionNode
         return (Time.time - blackboard.lastEnemyAttackTime) > duration;
     }
 }
+
+
+// [새로 추가] 현재 방어 중이 아닌지 확인하는 조건 노드
+public class IsNotDefendingCondition : BTConditionNode
+{
+    public IsNotDefendingCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
+    public override bool CheckCondition()
+    {
+        return !blackboard.isDefending; // 블랙보드의 isDefending 플래그 확인
+    }
+}
+
+// [새로 추가] 현재 회피 중이 아닌지 확인하는 조건 노드
+public class IsNotEvadingCondition : BTConditionNode
+{
+    public IsNotEvadingCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
+    public override bool CheckCondition()
+    {
+        return !blackboard.isEvading; // 블랙보드의 isEvading 플래그 확인
+    }
+}

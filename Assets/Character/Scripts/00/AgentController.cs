@@ -58,6 +58,7 @@ public abstract class AgentController : MonoBehaviour
 
         if (animationController != null)
         {
+
             animationController.onAttackFinished += () =>
             {
                 attackFinished = true;
@@ -236,17 +237,38 @@ public abstract class AgentController : MonoBehaviour
     }
 
     public virtual NodeStatus PerformDefend()
+
+
     {
+
+        if (blackboard.isAttacking || blackboard.isEvading)
+        {
+            Debug.Log("현재 다른 행동 중이라 방어 불가");
+            return NodeStatus.FAILURE;
+        }
         Debug.Log("행동: 방어 수행!");
         blackboard.SetActionCooldown(AgentBlackboard.DEFEND_COOLDOWN_KEY);
         blackboard.StartInvincibility(blackboard.defendCooldownDuration);
-
+        blackboard.isDefending = true; // 이 줄을 추가합니다
         if (animator != null)
         {
             animator.SetTrigger("IsDefending");
         }
         Invoke(nameof(StopDefendInvincibility), blackboard.defendCooldownDuration);
+
+        StartCoroutine(CompleteDefendActionAfterDelay(1.0f));
+        
+
         return NodeStatus.SUCCESS;
+    }
+
+    // [추가] 방어 행동 완료를 지연시키는 코루틴
+    private IEnumerator CompleteDefendActionAfterDelay(float delayTime)
+    {
+
+        yield return new WaitForSeconds(delayTime);
+        blackboard.isDefending = false;
+
     }
 
     public virtual NodeStatus PerformChangeDefendToAttack()
@@ -263,7 +285,13 @@ public abstract class AgentController : MonoBehaviour
     {
         // 이 메서드는 랜덤 방향 회피를 시작하는 역할만 하도록 하고,
         // 실제 이동 로직은 PerformDirectionalEvade로 위임
-        if (!blackboard.IsActionReady(AgentBlackboard.EVADE_COOLDOWN_KEY))
+        if (blackboard.isAttacking || blackboard.isDefending)
+        {
+            Debug.Log("현재 다른 행동 중이라 회피 불가");
+            return NodeStatus.FAILURE;
+        }
+
+            if (!blackboard.IsActionReady(AgentBlackboard.EVADE_COOLDOWN_KEY))
             return NodeStatus.FAILURE;
 
         Debug.Log("행동: 무작위 방향으로 회피 수행!");
@@ -274,6 +302,7 @@ public abstract class AgentController : MonoBehaviour
     {
         if (!blackboard.IsActionReady(AgentBlackboard.EVADE_COOLDOWN_KEY))
             return NodeStatus.FAILURE;
+        
 
         // 이미 회피 이동 중이면 중복 시작 방지
         if (isEvadingMovement)
@@ -466,7 +495,7 @@ public abstract class AgentController : MonoBehaviour
             animator.SetTrigger("IsAttacking");
         }
 
-        Invoke(nameof(ResetIsAttacking), 1.5f);
+        Invoke(nameof(ResetIsAttacking), 0.3f);
 
         float attackDamage = 40f;
         if (Physics.SphereCast(transform.position + Vector3.up, 0.8f, transform.forward, out RaycastHit hit, attackRange))
