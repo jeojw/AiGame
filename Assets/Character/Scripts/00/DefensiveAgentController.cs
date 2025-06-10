@@ -16,7 +16,7 @@ public class DefensiveAgentController : AgentController
     }
     protected override void InitializeBehaviorTree()
     {
-
+        
 
         rootNode = new BTSelector(blackboard, transform, new List<BTNode>
         {
@@ -90,7 +90,7 @@ public class DefensiveAgentController : AgentController
             // 5. 기본 대기 상태 (이전과 동일)
             new IdleAction(blackboard, transform)
         });
-
+        
 
     }
 

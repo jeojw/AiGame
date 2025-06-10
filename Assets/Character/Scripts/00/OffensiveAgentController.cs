@@ -20,19 +20,9 @@ public class OffensiveAgentController : AgentController
 
         rootNode = new BTSelector(blackboard, transform, new List<BTNode>
         {
-            // [수정] 0. 피격 시의 대응을 최우선 순위로
-            new BTSequence(blackboard, transform, new List<BTNode> {
-                new IsGetAttackCondition(blackboard, transform),
-                new GetAttackAction(blackboard, transform),
-            }),
+            
 
-            // 1. 체력이 매우 낮고 회피가 준비되었으면 회피 (기존 로직)
-            new BTSequence(blackboard, transform, new List<BTNode>
-            {
-                new IsHealthLowCondition(blackboard, transform, fleeHealthThreshold), // 체력이 도망 기준치 이하인가?
-                new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.EVADE_COOLDOWN_KEY), // 회피 쿨타임이 준비되었는가?
-                new EvadeAction(blackboard, transform) // 회피 행동 (또는 FleeAction)
-            }),
+            
 
             // [추가] 2. 적이 공격 중이고 회피가 준비되었으면 회피
             new BTSequence(blackboard, transform, new List<BTNode>

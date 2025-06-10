@@ -56,6 +56,17 @@ public class RLDefensiveAgent : Agent
 
     public override void OnEpisodeBegin()
     {
+        // --- UIManager 활성화 추가 ---
+        UIManager uiManager = FindObjectOfType<UIManager>();
+        if (uiManager != null)
+        {
+            uiManager.enabled = true;
+            // 필요하다면 UIManager 내부의 초기화 메서드를 호출하여 UI를 처음 상태로 되돌릴 수도 있습니다.
+            // 예: uiManager.ResetUI(); (UIManager에 이 메서드를 추가해야 함)
+        }
+        // --- UIManager 활성화 추가 끝 ---
+
+
         if (enemyTransform != null)
         {
             previousDistanceToEnemy = Vector3.Distance(transform.position, enemyTransform.position);
@@ -125,24 +136,31 @@ public class RLDefensiveAgent : Agent
         }
 
 
-        // 2. AgentBlackboard의 모든 상태 플래그 초기화
+        // 2. AgentBlackboard의 모든 상태 플래그 초기화 (BT 에이전트의 Blackboard에도 영향을 줍니다)
+        // 이 부분은 RL 에이전트 자신의 blackboard를 초기화하는 것이지만,
+        // enemyBlackboard도 BT 에이전트의 blackboard를 참조하므로 함께 초기화되는지 확인 필요
         myBlackboard.isAttacking = false;
         myBlackboard.isDefending = false;
         myBlackboard.isEvading = false;
         myBlackboard.isInvincible = false;
         myBlackboard.isGetAttacked = false;
         myBlackboard.canCounterAttack = false;
-        myBlackboard.lastEnemyAttackTime = 0f; // 적의 마지막 공격 시간 초기화
+        myBlackboard.lastEnemyAttackTime = 0f;
 
         if (enemyBlackboard != null)
         {
+            // [중요] 적 에이전트의 Blackboard 상태도 명시적으로 초기화합니다.
+            // 이것이 누락되면 BT 에이전트의 이전 에피소드 상태가 다음 에피소드에 영향을 줄 수 있습니다.
             enemyBlackboard.isAttacking = false;
             enemyBlackboard.isDefending = false;
             enemyBlackboard.isEvading = false;
             enemyBlackboard.isInvincible = false;
             enemyBlackboard.isGetAttacked = false;
             enemyBlackboard.canCounterAttack = false;
-            // enemyBlackboard.lastEnemyAttackTime은 상대방 에이전트의 blackboard에서 초기화
+            enemyBlackboard.lastEnemyAttackTime = 0f;
+            enemyBlackboard.currentHealth = enemyBlackboard.maxHealth; // 체력도 초기화
+            enemyBlackboard.isDead = false; // 사망 플래그 초기화
+            enemyBlackboard.recentlyDefended = false; // 방어 플래그 초기화
         }
 
         // 3. 현재 RL Agent 스크립트 자체도 활성화 확인 (안전 장치)

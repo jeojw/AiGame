@@ -1,8 +1,8 @@
 {
-    "TimeText": "48.2",
+    "TimeText": "113.0",
     "OffensiverHp": 0.0,
-    "DefensiverHp": 0.10000000149011612,
+    "DefensiverHp": 1.0,
     "OffensiverScore": 0.0,
-    "DefensvierScore": 0.0,
-    "GameResult": ""
+    "DefensvierScore": 200.0,
+    "GameResult": "방어자 승리"
 }
