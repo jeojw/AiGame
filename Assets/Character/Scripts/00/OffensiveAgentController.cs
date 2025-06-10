@@ -14,7 +14,7 @@ public class OffensiveAgentController : AgentController
 
     protected override void InitializeBehaviorTree()
     {
-        
+        /*
         // ������ ������Ʈ�� �ൿ Ʈ�� ����
         // ����: ���� �켱, ü���� ���ų� ���� ���� ���̸� ȸ��, �ʿ�� ���ġ.
 
@@ -63,6 +63,6 @@ public class OffensiveAgentController : AgentController
             // 6. ���� ���ų� �ٸ� ������ �������� ������ ���
             new IdleAction(blackboard, transform)
         });
-        
+        */
     }
 }

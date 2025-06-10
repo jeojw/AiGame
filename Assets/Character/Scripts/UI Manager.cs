@@ -18,43 +18,34 @@ public class UIManager : MonoBehaviour
     private AgentBlackboard OffensiverStat;
     private AgentBlackboard DefensiverStat;
 
-    private AgentController offensiverController; // Offensiver의 AgentController 참조
-    private AgentController defensiverController; // Defensiver의 AgentController 참조
+    private AgentController offensiverController;
+    private AgentController defensiverController;
 
 
     private bool hasGameEndedAndSaved = false;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+
     void Start()
     {
-        // Offensive Agent의 AgentController를 가져옵니다.
         offensiverController = Offensiver.GetComponent<OffensiveAgentController>();
         OffensiverStat = offensiverController.blackboard;
         OffensiverStat.isDead = false;
 
-        // Defensive Agent의 AgentController를 가져옵니다.
         defensiverController = Defensiver.GetComponent<DefensiveAgentController>();
         DefensiverStat = defensiverController.blackboard;
         DefensiverStat.isDead = false;
     }
 
-    // Update is called once per frame
     void Update()
     {
         OffensiverHP.value = (OffensiverStat.currentHealth / OffensiverStat.maxHealth);
         DefensiverHP.value = (DefensiverStat.currentHealth / DefensiverStat.maxHealth);
 
-        if (!(OffensiverStat.isDead || DefensiverStat.isDead))
+        // 게임 종료 조건 확인 (에이전트가 죽었는지)
+        if (OffensiverStat.isDead || DefensiverStat.isDead)
         {
-            // 게임이 끝나지 않았다면 시간 업데이트
-            TimeText.text = Time.time.ToString("N1");
-            hasGameEndedAndSaved = false; // 게임이 다시 시작되거나 진행 중일 때 초기화
-        }
-        else // 게임이 종료되었다면 (누군가 죽었다면)
-        {
-            // 게임 종료 후 저장이 아직 되지 않았다면
             if (!hasGameEndedAndSaved)
             {
-                // 1. 저장할 GameData 객체 생성 및 데이터 할당
+                // 게임 데이터 저장 로직 (기존과 동일)
                 GameData data = new GameData();
                 data.TimeText = TimeText.text;
                 data.OffensiverHp = OffensiverHP.value;
@@ -78,13 +69,9 @@ public class UIManager : MonoBehaviour
                     data.GameResult = "무승부";
                 }
 
-                // 2. GameData 객체를 JSON 문자열로 변환
                 string jsonString = JsonUtility.ToJson(data, true);
-
-                // 3. 데이터를 저장할 파일 경로 설정
                 string filePath = Path.Combine(Application.dataPath, "game_save.json");
 
-                // 4. JSON 문자열을 파일에 쓰기 (기존 파일이 있다면 덮어씁니다)
                 try
                 {
                     File.WriteAllText(filePath, jsonString);
@@ -95,37 +82,45 @@ public class UIManager : MonoBehaviour
                     Debug.LogError($"<color=red>게임 데이터 저장 중 오류 발생:</color> {e.Message}");
                 }
 
-                TimeText.text = 0.ToString();
-
-                // 저장이 완료되었음을 표시하여 이 블록이 다시 실행되지 않도록 합니다.
                 hasGameEndedAndSaved = true;
 
-                // 에이전트 초기화 및 재활성화 로직
-                Debug.Log("게임 종료! 에이전트를 초기화합니다.");
+                // --- [수정] ML-Agents 학습 환경에 맞게 에이전트 초기화 ---
+                // 여기에 바로 초기화 로직을 두는 대신, 에이전트의 EndEpisode() (RL 에이전트의 경우)
+                // 또는 외부 리셋 메커니즘에 의존해야 합니다.
+                // BT 에이전트의 경우, 직접 EndEpisode을 호출하는 것이 아니라,
+                // RL 에이전트가 EndEpisode을 호출할 때 해당 에이전트도 함께 초기화되도록 연결해야 합니다.
 
-                // Offensive Agent 초기화 (공격자가 죽었을 때 움직이도록)
-                // Offensive Agent의 초기 위치를 정확히 지정해야 합니다. (예: new Vector3(0, 0, -5))
-                InitializeAgent(offensiverController, Offensiver, new Vector3(0, 0, -5));
+                // 임시적으로 이 곳에서 BT 에이전트를 초기화하지만,
+                // ML-Agents 환경에서는 에피소드 종료 시 모든 에이전트가 재시작되는 것이 더 적합합니다.
+                Debug.Log("게임 종료! 에이전트를 초기화합니다. (Time.timeScale 조정 안 함)");
 
-                // Defensive Agent 초기화 (필요하다면, 방어자가 죽었을 때도 초기화)
-                // Defensive Agent의 초기 위치를 정확히 지정해야 합니다. (예: new Vector3(0, 0, 5))
-                InitializeAgent(defensiverController, Defensiver, new Vector3(0, 0, 5));
+                // BT Offensive 에이전트 초기화
+                //InitializeAgent(offensiverController, Offensiver, new Vector3(0, 0, -5));
+                // RL Defensive 에이전트는 EndEpisode()이 호출되면 자동으로 재시작되므로
+                // 여기서 별도로 InitializeAgent를 호출하지 않습니다.
+                // 만약 RL Defensive 에이전트도 여기서 초기화해야 한다면,
+                // RLDefensiveAgent.cs에서 EndEpisode() 대신 이 UIManager 로직을 따르도록 해야 합니다.
 
-                Time.timeScale = 0f; // 게임 일시 정지 (선택 사항이며, 수동 재시작을 위해 유용)
+                // Time.timeScale = 0f; // ★★★ 이 줄을 제거하거나 주석 처리합니다! ★★★
             }
+            // 게임이 종료된 후에는 UI 업데이트(시간 텍스트)를 멈춥니다.
+            TimeText.text = "Game Over";
+        }
+        else // 게임이 진행 중일 때만 시간 업데이트
+        {
+            TimeText.text = Time.time.ToString("N1");
+            hasGameEndedAndSaved = false;
         }
     }
 
-    // 에이전트 초기화 헬퍼 메서드
+    // InitializeAgent 메서드는 기존과 동일하게 유지 (여기서는 BT 에이전트를 위한 재사용)
     private void InitializeAgent(AgentController agentController, GameObject agentObject, Vector3 initialPosition)
     {
         if (agentController != null)
         {
-            // 에이전트의 위치와 회전을 초기화합니다.
-            agentObject.transform.position = initialPosition;
-            agentObject.transform.rotation = Quaternion.identity; // 기본 회전 (변경 가능)
+            agentObject.transform.position = initialPosition + Vector3.up * 0.1f; // 0.1f는 예시, 콜라이더 크기에 맞게 조정
+            agentObject.transform.rotation = Quaternion.identity;
 
-            // Rigidbody가 있다면 속도를 리셋합니다.
             Rigidbody rb = agentObject.GetComponent<Rigidbody>();
             if (rb != null)
             {
@@ -133,7 +128,7 @@ public class UIManager : MonoBehaviour
                 rb.angularVelocity = Vector3.zero;
             }
 
-            // 블랙보드 상태 초기화
+            // Blackboard 상태 초기화
             agentController.blackboard.currentHealth = agentController.blackboard.maxHealth;
             agentController.blackboard.isDead = false;
             agentController.blackboard.isAttacking = false;
@@ -142,17 +137,18 @@ public class UIManager : MonoBehaviour
             agentController.blackboard.isInvincible = false;
             agentController.blackboard.isGetAttacked = false;
             agentController.blackboard.canCounterAttack = false;
+            agentController.blackboard.canBeDefended = true;
             agentController.blackboard.recentlyDefended = false;
             agentController.blackboard.lastEnemyAttackTime = 0f;
-            agentController.blackboard.score = 0; // 점수도 초기화 (필요시)
-            agentController.blackboard.attackCount = 0; // 스탯 초기화 (필요시)
+            agentController.blackboard.score = 0;
+            agentController.blackboard.attackCount = 0;
             agentController.blackboard.defendCount = 0;
             agentController.blackboard.counterAttackCount = 0;
             agentController.blackboard.evadeCount = 0;
 
             // AgentController 스크립트 활성화
             agentController.enabled = true;
-            agentController.ResetAllFlags(); // AgentController 내부 플래그도 리셋
+            agentController.ResetAllFlags();
             Debug.Log($"{agentObject.name}이(가) 초기화되고 재활성화되었습니다.");
         }
     }

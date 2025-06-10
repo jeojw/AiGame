@@ -45,6 +45,13 @@ public class RLOffensiveAgent : Agent
             enemyController = enemyTransform.GetComponent<AgentController>();
             enemyBlackboard = enemyController.blackboard;
         }
+        else
+        {
+            // 초기 Initialize 시 enemyTransform이 null이면 enemyBlackboard도 null일 수 있습니다.
+            // OnEpisodeBegin에서 확실히 처리할 예정입니다.
+            enemyController = null;
+            enemyBlackboard = null;
+        }
 
         // 이 스크립트가 처음 초기화될 때, 시작 위치와 회전 값을 저장합니다.
         this.initialPosition = transform.position;
@@ -63,7 +70,11 @@ public class RLOffensiveAgent : Agent
     /// </summary>
     public override void OnEpisodeBegin()
     {
-        // 에피소드가 시작될 때마다 상대방의 참조가 유효한지 다시 확인합니다.
+        // --- enemyController 및 enemyBlackboard 참조 및 초기화 로직 보강 ---
+        // 에피소드 시작 시 기존 참조를 초기화합니다.
+        enemyController = null;
+        enemyBlackboard = null;
+
         if (enemyTransform != null)
         {
             previousDistanceToEnemy = Vector3.Distance(transform.position, enemyTransform.position);
@@ -74,24 +85,30 @@ public class RLOffensiveAgent : Agent
             }
             else
             {
-                Debug.LogError($"'{enemyTransform.name}' 오브젝트에 AgentController 컴포넌트가 없습니다!", enemyTransform);
-                enemyBlackboard = null;
+                Debug.LogError($"'{enemyTransform.name}' 오브젝트에 AgentController 컴포넌트가 없습니다! 이 에이전트의 enemyBlackboard는 더미로 생성됩니다.", enemyTransform);
+                // enemyController가 없으면 enemyBlackboard는 여기서 null로 유지
             }
         }
         else
         {
-            Debug.LogError("'enemyTransform'이(가) 인스펙터에 할당되지 않았습니다!", this.gameObject);
+            Debug.LogError("'enemyTransform'이(가) 인스펙터에 할당되지 않았습니다! 이 에이전트의 enemyBlackboard는 더미로 생성됩니다.", this.gameObject);
+            // enemyTransform이 null이면 enemyController와 enemyBlackboard는 여기서 null로 유지
         }
+
+        // enemyBlackboard가 여전히 null이면 새로운 인스턴스를 생성하여 NullReferenceException을 방지합니다.
+        if (enemyBlackboard == null)
+        {
+            enemyBlackboard = new AgentBlackboard(); // 새로운(더미) Blackboard 인스턴스 생성
+        }
+        // --- enemyController 및 enemyBlackboard 초기화 로직 보강 끝 ---
 
         // --- 체력 및 이전 상태 초기화 ---
         myBlackboard.currentHealth = myBlackboard.maxHealth;
         previousMyHealth = myBlackboard.maxHealth; // 에피소드 시작 시 내 체력 초기화
 
-        if (enemyBlackboard != null)
-        {
-            enemyBlackboard.currentHealth = enemyBlackboard.maxHealth;
-            previousEnemyHealth = enemyBlackboard.maxHealth; // [추가] 적 체력 초기화
-        }
+        // 적 체력 및 이전 상태 초기화 (enemyBlackboard는 이제 항상 유효한 인스턴스임을 보장합니다)
+        enemyBlackboard.currentHealth = enemyBlackboard.maxHealth;
+        previousEnemyHealth = enemyBlackboard.maxHealth; // [추가] 적 체력 초기화
 
         // --- 캐릭터 위치 및 물리 상태 리셋 로직 ---
         transform.position = initialPosition;
@@ -121,51 +138,56 @@ public class RLOffensiveAgent : Agent
         // --- 빠른 승리 보상을 위한 시간 초기화 ---
         episodeStartTime = Time.time;
 
-        // --- [추가] 핵심 초기화 로직: 모든 관련 플래그와 상태 초기화 ---
+        // --- 핵심 초기화 로직: 모든 관련 플래그와 상태 초기화 ---
 
         // 1. AgentController의 내부 플래그 초기화 및 활성화
         if (myController != null)
         {
-            myController.ResetAllFlags(); // AgentController에 ResetAllFlags() 메서드 추가 필요
-            myController.enabled = true; // 스크립트 활성화 확인
-            // Debug.Log($"{gameObject.name}의 myController 활성화됨.");
+            myController.ResetAllFlags();
+            myController.enabled = true;
         }
         // 적 에이전트의 컨트롤러도 리셋 (상대방이 RL이든 BT든 일관된 초기화를 위해 필요)
-        if (enemyController != null)
+        if (enemyController != null) // enemyController는 null일 수 있으므로 null 검사
         {
-            enemyController.ResetAllFlags(); // AgentController에 ResetAllFlags() 메서드 추가 필요
-            enemyController.enabled = true; // 스크립트 활성화 확인
-            // Debug.Log($"{enemyTransform.name}의 enemyController 활성화됨.");
+            enemyController.ResetAllFlags();
+            enemyController.enabled = true;
         }
 
         // 2. AgentBlackboard의 모든 상태 플래그 초기화
         myBlackboard.isAttacking = false;
-        myBlackboard.isDefending = false; // 방어 상태 초기화
+        myBlackboard.isDefending = false;
         myBlackboard.isEvading = false;
         myBlackboard.isInvincible = false;
         myBlackboard.isGetAttacked = false;
         myBlackboard.canCounterAttack = false;
         myBlackboard.isDead = false;
-        myBlackboard.lastEnemyAttackTime = 0f; // 적의 마지막 공격 시간 초기화
+        myBlackboard.lastEnemyAttackTime = 0f;
+        myBlackboard.recentlyDefended = false; // [추가]
+        myBlackboard.score = 0; // [추가]
+        myBlackboard.attackCount = 0; // [추가]
+        myBlackboard.defendCount = 0; // [추가]
+        myBlackboard.counterAttackCount = 0; // [추가]
+        myBlackboard.evadeCount = 0; // [추가]
 
-        if (enemyBlackboard != null)
-        {
-            // 상대방의 Blackboard도 초기화 (상대방도 RL 에이전트일 경우)
-            enemyBlackboard.isAttacking = false;
-            enemyBlackboard.isDefending = false; // 상대방 방어 상태 초기화
-            enemyBlackboard.isEvading = false;
-            enemyBlackboard.isInvincible = false;
-            enemyBlackboard.isGetAttacked = false;
-            enemyBlackboard.canCounterAttack = false;
-            enemyBlackboard.isDead = false;
-            // enemyBlackboard.lastEnemyAttackTime은 상대방 에이전트의 blackboard에서 관리되므로 여기서 직접 초기화할 필요 없음
-        }
+
+        // 상대방의 Blackboard도 초기화 (enemyBlackboard는 이제 항상 유효합니다)
+        enemyBlackboard.isAttacking = false;
+        enemyBlackboard.isDefending = false;
+        enemyBlackboard.isEvading = false;
+        enemyBlackboard.isInvincible = false;
+        enemyBlackboard.isGetAttacked = false;
+        enemyBlackboard.canCounterAttack = false;
+        enemyBlackboard.isDead = false;
+        enemyBlackboard.lastEnemyAttackTime = 0f; // [추가]
+        enemyBlackboard.recentlyDefended = false; // [추가]
+        enemyBlackboard.score = 0; // [추가]
+        enemyBlackboard.attackCount = 0; // [추가]
+        enemyBlackboard.defendCount = 0; // [추가]
+        enemyBlackboard.counterAttackCount = 0; // [추가]
+        enemyBlackboard.evadeCount = 0; // [추가]
 
         // 3. 현재 RL Agent 스크립트 자체도 활성화 확인 (안전 장치)
         this.enabled = true;
-        // Debug.Log($"{gameObject.name}의 RLOffensiveAgent 활성화됨.");
-
-        // --- [추가 끝] ---
     }
 
     /// <summary>
@@ -178,23 +200,29 @@ public class RLOffensiveAgent : Agent
         sensor.AddObservation(myBlackboard.currentHealth / myBlackboard.maxHealth); // 정규화된 내 체력
         sensor.AddObservation(myBlackboard.IsActionReady(AgentBlackboard.ATTACK_COOLDOWN_KEY)); // 공격 가능 여부
         sensor.AddObservation(myBlackboard.IsActionReady(AgentBlackboard.EVADE_COOLDOWN_KEY));  // 회피 가능 여부
-        sensor.AddObservation(myBlackboard.isInvincible); // [추가] 무적 상태 여부
+        sensor.AddObservation(myBlackboard.isInvincible); // 무적 상태 여부
 
+        // enemyBlackboard는 이제 항상 유효한 인스턴스임을 보장하므로,
+        // enemyTransform == null 체크를 제거하고 enemyBlackboard를 직접 사용합니다.
+        // 다만, enemyTransform이 null이면 상대적 위치 계산이 불가능합니다.
+        // 이 경우 0으로 채우는 기존 로직을 유지하면서, enemyTransform이 유효한지 확인하는 것이 좋습니다.
         if (enemyTransform == null)
         {
             sensor.AddObservation(new float[6]); // 상대가 없으면 0으로 채움 (기존 5개 + isDefending 1개)
+            // Debug.LogWarning("[RLOffensiveAgent] enemyTransform이 null입니다. 관찰값을 0으로 채웁니다.");
             return;
         }
 
-        // 상대방 정보
+        // 상대방 정보 (enemyTransform이 null이 아닐 때만 유효)
         Vector3 relativePos = transform.InverseTransformPoint(enemyTransform.position);
         sensor.AddObservation(relativePos.x); // 상대적 위치 X
         sensor.AddObservation(relativePos.z); // 상대적 위치 Z
         sensor.AddObservation(Vector3.Distance(transform.position, enemyTransform.position)); // 상대와의 거리
 
+        // enemyBlackboard는 항상 유효하므로 직접 접근
         sensor.AddObservation(enemyBlackboard.currentHealth / enemyBlackboard.maxHealth); // 정규화된 상대 체력
         sensor.AddObservation(enemyBlackboard.isAttacking); // 상대가 공격 중인지 여부
-        sensor.AddObservation(enemyBlackboard.isDefending); // [추가] 상대가 방어 중인지 여부 (총 6개 관찰)
+        sensor.AddObservation(enemyBlackboard.isDefending); // 상대가 방어 중인지 여부 (총 6개 관찰)
     }
 
     /// <summary>
@@ -203,7 +231,8 @@ public class RLOffensiveAgent : Agent
     /// <param name="delay">체크 전 대기 시간</param>
     private IEnumerator CheckDodgeSuccess(float delay)
     {
-        bool enemyWasAttacking = (enemyBlackboard != null && enemyBlackboard.isAttacking);
+        // enemyBlackboard는 이제 항상 유효하므로 null 검사 제거
+        bool enemyWasAttacking = enemyBlackboard.isAttacking;
 
         if (!enemyWasAttacking)
         {
@@ -227,7 +256,7 @@ public class RLOffensiveAgent : Agent
     /// </summary>
     public override void OnActionReceived(ActionBuffers actions)
     {
-        Debug.Log($"[RL Offensive Agent] OnActionReceived 호출됨. 받은 액션: {actions.DiscreteActions[0]}"); // 회피방향 로그 추가
+        // Debug.Log($"[RL Offensive Agent] OnActionReceived 호출됨. 받은 액션: {actions.DiscreteActions[0]}");
 
         int mainAction = actions.DiscreteActions[0];
 
@@ -237,29 +266,68 @@ public class RLOffensiveAgent : Agent
                 myController.Idle();
                 break;
             case 1: // 적에게 다가가기 (Forward)
-                // stopDistance를 0f 대신 공격 범위의 0.8f 정도로 조정하여, 에이전트가 공격 범위 근처까지 가면
-                // 이동 행동이 SUCCESS를 반환하고 다음 행동(공격)으로 넘어갈 수 있도록 유도
-                myController.MoveTowards(enemyTransform.position, 5f, myController.attackRange * 0.8f);
+                // enemyTransform이 null일 수 있으므로 검사 추가
+                if (enemyTransform != null)
+                {
+                    myController.MoveTowards(enemyTransform.position, 5f, myController.attackRange * 0.8f);
+                }
+                else
+                {
+                    myController.Idle(); // 적이 없으면 대기
+                }
                 break;
             case 2: // 적에게서 멀어지기 (Backward)
-                myController.MoveAwayFrom(enemyTransform.position, 3f, myController.attackRange + 1.0f); // 공격 범위 밖으로 충분히 멀어지도록
+                // enemyTransform이 null일 수 있으므로 검사 추가
+                if (enemyTransform != null)
+                {
+                    myController.MoveAwayFrom(enemyTransform.position, 3f, myController.attackRange + 1.0f);
+                }
+                else
+                {
+                    myController.Idle(); // 적이 없으면 대기
+                }
                 break;
             case 3: // 공격
                 if (myBlackboard.IsActionReady(AgentBlackboard.ATTACK_COOLDOWN_KEY))
                 {
                     myController.PerformAttack();
-                    AddReward(0.05f); // 공격 시도 시 보상 (0.005f -> 0.05f로 상향, RLDefensiveAgent와 균형 맞춤)
+                    AddReward(0.05f); // 공격 시도 시 보상
                 }
                 break;
             case 4: // 회피
-                // 이산 행동 공간에서 회피 방향도 포함되어 있으므로, actions.DiscreteActions[1]를 사용
                 int evadeDirection = actions.DiscreteActions[1];
-                if (myController.PerformDirectionalEvade(evadeDirection) == NodeStatus.SUCCESS)
+                if (myBlackboard.IsActionReady(AgentBlackboard.EVADE_COOLDOWN_KEY)) // 회피 쿨타임 확인
                 {
+                    if (myController.PerformDirectionalEvade(evadeDirection) == NodeStatus.SUCCESS)
+                    {
+                        // 앞으로 회피(direction == 0) 시 보상 가중치 추가
+                        float dodgeReward = 0.01f; // 기본 회피 보상
+                        if (evadeDirection == 0) // 앞으로 회피 (전방)
+                        {
+                            dodgeReward += 0.2f; // 앞으로 회피 성공 시 추가 보상 (값은 훈련을 통해 조정)
+                            Debug.Log("RLOffensiveAgent: 앞으로 회피 성공! 추가 보상!");
 
-                    StartCoroutine(CheckDodgeSuccess(0.5f));
+                            // [수정 시작] 앞으로 회피 후 바로 공격 시도
+                            // Attack 쿨타임이 준비되었고, enemyTransform이 null이 아니며,
+                            // 적이 공격 범위 내에 충분히 가까이 있다면 바로 공격을 시도합니다.
+                            if (myBlackboard.IsActionReady(AgentBlackboard.ATTACK_COOLDOWN_KEY) &&
+                                enemyTransform != null &&
+                                Vector3.Distance(transform.position, enemyTransform.position) <= myController.attackRange + 0.1f)
+                            {
+                                Debug.Log("RLOffensiveAgent: 앞으로 회피 후 바로 공격 시도!");
+                                myController.PerformAttack();
+                                AddReward(0.5f); // 연계 공격 시도에 대한 추가 보상 (값을 조정)
+                            }
+                            // [수정 끝]
+                        }
+                        AddReward(dodgeReward);
+
+                        StartCoroutine(CheckDodgeSuccess(0.5f));
+                    }
                 }
                 break;
+
+
         }
 
         HandleRewards();
@@ -278,33 +346,24 @@ public class RLOffensiveAgent : Agent
         {
             float currentDistance = Vector3.Distance(transform.position, enemyTransform.position);
 
-            // [수정] 거리 보상을 더 정교하게: 공격 범위 내에 있으면 보상, 너무 멀면 페널티
-            if (currentDistance <= myController.attackRange + 0.1f) // 공격 범위 근처에 있으면 보상
+            if (currentDistance <= myController.attackRange + 0.1f)
             {
-                AddReward(0.002f); // 0.01f -> 0.02f로 상향
+                AddReward(0.002f);
             }
-            else if (currentDistance > myController.attackRange + 2.0f) // 공격 범위에서 너무 멀면 페널티
+            else if (currentDistance > myController.attackRange + 2.0f)
             {
                 AddReward(-0.001f);
             }
-            // 기존 previousDistanceToEnemy 기반 보상은 제거하거나 통합 (아래 체력 우위/열세에 집중)
-            // if (currentDistance < previousDistanceToEnemy)
-            // {
-            //     AddReward(0.01f);
-            // }
-            // else if (currentDistance > previousDistanceToEnemy)
-            // {
-            //     AddReward(-0.01f);
-            // }
-            previousDistanceToEnemy = currentDistance; // 다음 프레임을 위해 거리 업데이트는 유지
+            previousDistanceToEnemy = currentDistance;
+        }
+        else // enemyTransform이 null인 경우 거리 관련 보상/페널티 방지
+        {
+            AddReward(-0.0005f); // 적이 없으면 소량의 페널티 (적을 찾도록 유도)
         }
 
-        // 3. 체력 우위 보상
-        if (myBlackboard != null && enemyBlackboard != null)
-        {
-            float healthAdvantage = (myBlackboard.currentHealth - enemyBlackboard.currentHealth) / myBlackboard.maxHealth;
-            AddReward(healthAdvantage * 0.003f);
-        }
+        // 3. 체력 우위 보상 (enemyBlackboard는 이제 항상 유효하므로 null 검사 제거)
+        float healthAdvantage = (myBlackboard.currentHealth - enemyBlackboard.currentHealth) / myBlackboard.maxHealth;
+        AddReward(healthAdvantage * 0.003f);
 
         // 4. 잃은 체력에 대한 페널티
         if (myBlackboard != null)
@@ -312,32 +371,28 @@ public class RLOffensiveAgent : Agent
             float healthLost = previousMyHealth - myBlackboard.currentHealth;
             if (healthLost > 0)
             {
-                AddReward(-healthLost / myBlackboard.maxHealth * 0.5f); // 페널티 강도 조절 (1.0f는 임의 값)
+                AddReward(-healthLost / myBlackboard.maxHealth * 0.5f);
             }
             previousMyHealth = myBlackboard.currentHealth;
         }
 
-        // 5. 적에게 데미지 적용 보상
-        // RLDefensiveAgent처럼 previousEnemyHealth를 사용하여 적의 체력 손실을 측정하는 것이 더 정확합니다.
-        if (enemyBlackboard != null)
+        // 5. 적에게 데미지 적용 보상 (enemyBlackboard는 이제 항상 유효하므로 null 검사 제거)
+        float enemyHealthLost = previousEnemyHealth - enemyBlackboard.currentHealth;
+        if (enemyHealthLost > 0)
         {
-            float enemyHealthLost = previousEnemyHealth - enemyBlackboard.currentHealth;
-            if (enemyHealthLost > 0)
-            {
-                AddReward(enemyHealthLost / enemyBlackboard.maxHealth * 3.0f); // 데미지 적용 보상
-            }
-            previousEnemyHealth = enemyBlackboard.currentHealth;
+            AddReward(enemyHealthLost / enemyBlackboard.maxHealth * 3.0f);
         }
+        previousEnemyHealth = enemyBlackboard.currentHealth;
 
-        // 6. 게임 종료 조건 (승리의 가치를 매우 높게 설정)
+        // 6. 게임 종료 조건 
         if (myBlackboard != null && myBlackboard.currentHealth <= 0)
         {
-            SetReward(-30.0f); // 패배의 고통
+            SetReward(-30.0f);
             EndEpisode();
         }
-        else if (enemyBlackboard != null && enemyBlackboard.currentHealth <= 0)
+        else if (enemyBlackboard.currentHealth <= 0) // enemyBlackboard는 이제 항상 유효
         {
-            float episodeDuration = Time.time - episodeStartTime; // 에피소드 진행 시간
+            float episodeDuration = Time.time - episodeStartTime;
             float timeBonus = 0f;
 
             if (episodeDuration < episodeDurationForMaxBonus)
@@ -349,7 +404,7 @@ public class RLOffensiveAgent : Agent
                 timeBonus = Mathf.Max(0, maxEpisodeTimeBonus * (1.0f - (episodeDuration / (episodeDurationForMaxBonus * 2.0f))));
             }
 
-            SetReward(10.0f + timeBonus); // 기본 승리 보상 + 시간 보너스
+            SetReward(10.0f + timeBonus);
             EndEpisode();
         }
     }

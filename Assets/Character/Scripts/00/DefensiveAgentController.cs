@@ -17,7 +17,7 @@ public class DefensiveAgentController : AgentController
     protected override void InitializeBehaviorTree()
     {
         
-        /*
+        
         rootNode = new BTSelector(blackboard, transform, new List<BTNode>
         {
             // --- [수정] 1순위: 적이 5초 이상 공격하지 않으면 '다가가서' 공격 ---
@@ -91,7 +91,7 @@ public class DefensiveAgentController : AgentController
             new IdleAction(blackboard, transform)
         });
 
-        */
+        
         
 
     }

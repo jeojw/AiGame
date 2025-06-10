@@ -194,16 +194,33 @@ public abstract class AgentController : MonoBehaviour
                 animator.SetTrigger("IsAttacking");
 
             const float chargeSpeedThreshold = 1.0f;
-            const float chargeDamageBonus = 2.0f;
+            const float chargeDamageBonus = 3.0f;
 
-            float forwardSpeed = Vector3.Dot(rb.linearVelocity, transform.forward);
-
-            // 돌진 공격은 회피 이동 중에만 적용되도록 조건 추가
-            if (isEvadingMovement && forwardSpeed > chargeSpeedThreshold)
+            // [수정 시작] 돌진 공격 로직을 "상대가 방어 무력화 상태일 때" 적용되게 변경
+            // 1. 상대방 AgentController를 가져옵니다.
+            AgentController enemyAgentController = null;
+            if (enemy != null)
             {
-                Debug.Log("돌진 공격! 데미지 보너스 적용!");
-                damageMultiplier *= chargeDamageBonus;
+                enemyAgentController = enemy.GetComponent<AgentController>();
             }
+
+            // 2. 상대방이 존재하고, 그 상대방의 blackboard.canBeDefended가 false (방어 무력화 상태)일 때
+            //    혹은, 기존 돌진 공격 조건(isEvadingMovement && forwardSpeed)도 여전히 적용하고 싶다면 OR로 연결합니다.
+            //    여기서는 요청에 따라 '상대가 방어 무력화 상태일 때'를 주 조건으로 변경합니다.
+            if (enemyAgentController != null && !enemyAgentController.blackboard.canBeDefended)
+            {
+                Debug.Log("방어 무력화된 적에게 돌진 공격! 데미지 보너스 적용!");
+                damageMultiplier *= chargeDamageBonus; // 방어 무력화 보너스 적용
+            }
+            // 기존의 isEvadingMovement 및 forwardSpeed 조건의 돌진 공격을 유지하고 싶다면,
+            // 아래와 같이 조건을 OR로 연결하거나 별도의 if 블록으로 분리할 수 있습니다.
+            // else if (isEvadingMovement && forwardSpeed > chargeSpeedThreshold)
+            // {
+            //     Debug.Log("일반 돌진 공격! 데미지 보너스 적용!");
+            //     damageMultiplier *= chargeDamageBonus;
+            // }
+
+            // [수정 끝]
 
             StartCoroutine(AttackWithPreDelay(0.5f, damageMultiplier));
         }
@@ -211,7 +228,7 @@ public abstract class AgentController : MonoBehaviour
         
 
         animationController.StopAttack();
-        attackFinished = false;
+        attackFinished = true;
         blackboard.isAttacking = false;
 
         blackboard.attackCount += 1;
