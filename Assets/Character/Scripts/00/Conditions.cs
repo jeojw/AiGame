@@ -235,3 +235,14 @@ public class IsNotEvadingCondition : BTConditionNode
         return !blackboard.isEvading; // 블랙보드의 isEvading 플래그 확인
     }
 }
+
+
+// [새로 추가] 최근에 방어했는지 확인하는 조건 노드
+public class WasRecentlyDefendedCondition : BTConditionNode
+{
+    public WasRecentlyDefendedCondition(AgentBlackboard blackboard, Transform agentTransform) : base(blackboard, agentTransform) { }
+    public override bool CheckCondition()
+    {
+        return blackboard.recentlyDefended;
+    }
+}

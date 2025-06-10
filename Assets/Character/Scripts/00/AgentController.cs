@@ -23,6 +23,8 @@ public abstract class AgentController : MonoBehaviour
     private bool evadeFinished = false;
     private bool getAttackFinished = false;
 
+    
+
     private Animator enemyAnimator;
 
     protected AgentBlackboard _blackboard; // 블랙보드 참조
@@ -248,19 +250,34 @@ public abstract class AgentController : MonoBehaviour
             return NodeStatus.FAILURE;
         }
         Debug.Log("행동: 방어 수행!");
+
+        
+
+        blackboard.isDefending = true;
         blackboard.SetActionCooldown(AgentBlackboard.DEFEND_COOLDOWN_KEY);
         blackboard.StartInvincibility(blackboard.defendCooldownDuration);
-        blackboard.isDefending = true; // 이 줄을 추가합니다
+
+        // [추가] recentlyDefended 플래그 설정 및 리셋 코루틴 시작
+        blackboard.recentlyDefended = true;
+        StartCoroutine(ResetRecentlyDefendedFlag(2.5f)); // 1.5초 후에 리셋 (회피 쿨타임보다 길게)
+                                                         // 이 줄을 추가합니다
         if (animator != null)
         {
             animator.SetTrigger("IsDefending");
         }
-        Invoke(nameof(StopDefendInvincibility), blackboard.defendCooldownDuration);
+        Invoke(nameof(StopDefendInvincibility), 1.0f);
 
         StartCoroutine(CompleteDefendActionAfterDelay(1.0f));
 
         blackboard.defendCount += 1;
         return NodeStatus.SUCCESS;
+    }
+
+    // [추가] 플래그 리셋 코루틴
+    private IEnumerator ResetRecentlyDefendedFlag(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        blackboard.recentlyDefended = false;
     }
 
     // [추가] 방어 행동 완료를 지연시키는 코루틴

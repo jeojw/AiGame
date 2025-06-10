@@ -57,6 +57,15 @@ public class AgentBlackboard
         set { _isDead = value; }
     }
 
+    private bool _recentlyDefended = false; // [추가]
+
+    // [추가]
+    public bool recentlyDefended
+    {
+        get { return _recentlyDefended; }
+        set { _recentlyDefended = value; }
+    }
+
     // [추가] 적의 마지막 공격 시간을 기록할 변수
     public float lastEnemyAttackTime = 0f;
 

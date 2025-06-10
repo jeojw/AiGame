@@ -67,7 +67,9 @@ public class DefensiveAgentController : AgentController
                     }),
                     // 2순위: 방어가 불가능하면 회피 시도
                     new BTSequence(blackboard, transform, new List<BTNode> {
+
                         new IsCooldownReadyCondition(blackboard, transform, AgentBlackboard.EVADE_COOLDOWN_KEY), // 회피 쿨타임이 준비되었는가?
+                        new NotNode(new WasRecentlyDefendedCondition(blackboard, transform)), // [추가] 최근에 방어하지 않았는가?
                         new IsNotDefendingCondition(blackboard, transform), // [추가] 방어 중이 아닌지 확인
                         new EvadeAction(blackboard, transform) // 회피 행동
                     }),
@@ -101,25 +103,20 @@ public class DefensiveAgentController : AgentController
             AgentController enemyController = blackboard.enemyTransform.GetComponent<AgentController>();
             if (enemyController != null && enemyController != this)
             {
-                // 적이 공격 중이며, 내가 무적 상태가 아니고, 적의 공격 범위 내에 있다면 공격 중단
-                if (enemyController.blackboard.isAttacking &&
+                // [수정] 지금이 반격 상황(canCounterAttack == true)이 아닐 때만 이 안전장치를 작동시킵니다.
+                if (!blackboard.canCounterAttack && // ★★★ 이 조건을 추가!
+                    enemyController.blackboard.isAttacking &&
                     !blackboard.isInvincible &&
-                    Vector3.Distance(transform.position, enemyController.transform.position) <= enemyController.attackRange) // 이 attackRange는 적의 attackRange입니다.
+                    Vector3.Distance(transform.position, enemyController.transform.position) <= enemyController.attackRange)
                 {
                     Debug.Log($"[Defensive Agent] 공격 중 적의 위협적인 반격 감지 → 공격 중단하고 방어/회피 고려");
                     blackboard.isAttacking = false;
-                    // attackFinished = false; // 공격 애니메이션이 시작 안되었을 수 있으므로 이 플래그는 건드리지 않는게 좋음
-                    return NodeStatus.FAILURE; // 공격 행동 실패로 간주
+                    return NodeStatus.FAILURE;
                 }
             }
         }
         // [수비자 전용 인터럽트 로직 끝]
 
-        // 부모 클래스(AgentController)의 PerformAttack 로직 호출
-        // 이 부분을 호출하면 부모 클래스의 PerformAttack 로직이 실행됩니다.
-        // 현재 AgentController의 PerformAttack에는 인터럽트가 없으므로
-        // 이 오버라이드된 메서드가 먼저 인터럽트 로직을 처리한 후,
-        // 필요하다면 부모의 나머지 공격 준비 및 실행 로직을 따르게 됩니다.
         return base.PerformAttack(damageMultiplier);
     }
 
