@@ -458,6 +458,7 @@ public abstract class AgentController : MonoBehaviour
 
         if (blackboard.currentHealth <= 0)
         {
+            blackboard.isDead = true;
             Die();
         }
     }

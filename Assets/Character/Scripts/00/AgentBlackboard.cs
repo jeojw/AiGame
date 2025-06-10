@@ -14,6 +14,13 @@ public class AgentBlackboard
     private bool _isGetAttacked = false;
     private bool _canCounterAttack = false;
     private bool _canBeDefended = true; // [새로 추가] 방어 가능한 상태인지
+    private bool _isDead = false;
+
+    public bool isDead
+    {
+        get { return _isDead; }
+        set { _isDead = value; }
+    }
 
     // [추가] 적의 마지막 공격 시간을 기록할 변수
     public float lastEnemyAttackTime = 0f;
@@ -168,14 +175,22 @@ public class AgentBlackboard
         if (!isInvincible && canBeDefended) // 무적 상태가 아니고 방어 가능 상태라면
         {
             currentHealth -= amount;
-            if (currentHealth < 0) currentHealth = 0;
+            if (currentHealth < 0) 
+            {
+                currentHealth = 0;
+                _isDead = true;
+            } 
             Debug.Log($"에이전트가 {amount} 데미지를 받음, 현재 체력: {currentHealth}");
         }
         else if (!canBeDefended)
         {
             Debug.Log("에이전트가 방어 불가능 상태이므로 방어가 적용되지 않습니다.");
             currentHealth -= amount; // 방어 불가능 상태에서는 데미지 그대로 받음
-            if (currentHealth < 0) currentHealth = 0;
+            if (currentHealth < 0)
+            {
+                currentHealth = 0;
+                _isDead = true;
+            }
             Debug.Log($"에이전트가 {amount} 데미지를 받음 (방어 무시), 현재 체력: {currentHealth}");
         }
         else // isInvincible == true
