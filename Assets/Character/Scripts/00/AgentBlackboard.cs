@@ -15,6 +15,15 @@ public class AgentBlackboard
     private bool _canCounterAttack = false;
     private bool _canBeDefended = true; // [새로 추가] 방어 가능한 상태인지
 
+    private bool _recentlyDefended = false; // [추가]
+
+    // [추가]
+    public bool recentlyDefended
+    {
+        get { return _recentlyDefended; }
+        set { _recentlyDefended = value; }
+    }
+
     // [추가] 적의 마지막 공격 시간을 기록할 변수
     public float lastEnemyAttackTime = 0f;
 
