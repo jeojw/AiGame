@@ -313,7 +313,7 @@ public abstract class AgentController : MonoBehaviour
     {
         // 이 메서드는 랜덤 방향 회피를 시작하는 역할만 하도록 하고,
         // 실제 이동 로직은 PerformDirectionalEvade로 위임
-        if (blackboard.isAttacking || blackboard.isDefending)
+        if (blackboard.isDefending)
         {
             Debug.Log("현재 다른 행동 중이라 회피 불가");
             return NodeStatus.FAILURE;
@@ -333,11 +333,7 @@ public abstract class AgentController : MonoBehaviour
             return NodeStatus.FAILURE;
         
 
-        // 이미 회피 이동 중이면 중복 시작 방지
-        if (isEvadingMovement)
-        {
-            return NodeStatus.RUNNING;
-        }
+        
 
         Debug.Log($"행동: {direction} 방향으로 회피 수행!");
         blackboard.SetActionCooldown(AgentBlackboard.EVADE_COOLDOWN_KEY);

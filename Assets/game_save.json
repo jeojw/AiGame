@@ -1,8 +1,8 @@
 {
-    "TimeText": "11.1",
-    "OffensiverHp": 0.8500000238418579,
-    "DefensiverHp": 0.0,
-    "OffensiverScore": 185.0,
-    "DefensvierScore": 0.0,
-    "GameResult": "Attacker Wins"
+    "TimeText": "23.6",
+    "OffensiverHp": 0.0,
+    "DefensiverHp": 0.6000000238418579,
+    "OffensiverScore": 0.0,
+    "DefensvierScore": 160.0,
+    "GameResult": "Defender Wins"
 }
