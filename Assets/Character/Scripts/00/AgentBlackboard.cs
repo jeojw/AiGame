@@ -16,6 +16,41 @@ public class AgentBlackboard
     private bool _canBeDefended = true; // [새로 추가] 방어 가능한 상태인지
     private bool _isDead = false;
 
+    private float _score;
+    private int _attackCount;
+    private int _defendCount;
+    private int _counterAttackCount;
+    private int _evadeCount;
+
+    public float score
+    {
+        get { return _score; }
+        set { _score = value; }
+    }
+
+    public int attackCount
+    {
+        get { return _attackCount; }
+        set { _attackCount = value; }
+    }
+
+    public int defendCount
+    {
+        get { return _defendCount; }
+        set { _defendCount = value; }
+    }
+
+    public int counterAttackCount
+    {
+        get { return _counterAttackCount; }
+        set { _counterAttackCount = value; }
+    }
+
+    public int evadeCount
+    {
+        get { return _evadeCount; }
+        set { _evadeCount = value; }
+    }
     public bool isDead
     {
         get { return _isDead; }

@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.IO;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
@@ -47,6 +48,24 @@ public class UIManager : MonoBehaviour
                 data.TimeText = TimeText.text;
                 data.OffensiverHp = OffensiverHP.value;
                 data.DefensiverHp = DefensiverHP.value;
+                data.DefensvierScore = DefensiverStat.score;
+                data.OffensiverScore = OffensiverStat.score;
+                if (OffensiverStat.isDead && !DefensiverStat.isDead)
+                {
+                    data.GameResult = "방어자 승리";
+                    data.DefensvierScore += data.DefensiverHp * 100f;
+                    data.DefensvierScore += 100f;
+                }
+                else if (!OffensiverStat.isDead && DefensiverStat.isDead)
+                {
+                    data.GameResult = "공격자 승리";
+                    data.OffensiverScore += data.OffensiverHp * 100f;
+                    data.OffensiverScore += 100f;
+                }
+                else
+                {
+                    data.GameResult = "무승부";
+                }
 
                 // 2. GameData 객체를 JSON 문자열로 변환
                 // true는 가독성 좋게 포맷팅 (들여쓰기) 해줍니다.

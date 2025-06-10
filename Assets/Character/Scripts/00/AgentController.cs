@@ -212,6 +212,7 @@ public abstract class AgentController : MonoBehaviour
         animationController.StopAttack();
         attackFinished = false;
         blackboard.isAttacking = false;
+        blackboard.attackCount += 1;
         blackboard.SetActionCooldown(AgentBlackboard.ATTACK_COOLDOWN_KEY);
 
         return NodeStatus.SUCCESS;
@@ -257,8 +258,8 @@ public abstract class AgentController : MonoBehaviour
         Invoke(nameof(StopDefendInvincibility), blackboard.defendCooldownDuration);
 
         StartCoroutine(CompleteDefendActionAfterDelay(1.0f));
-        
 
+        blackboard.defendCount += 1;
         return NodeStatus.SUCCESS;
     }
 
@@ -295,6 +296,7 @@ public abstract class AgentController : MonoBehaviour
             return NodeStatus.FAILURE;
 
         Debug.Log("행동: 무작위 방향으로 회피 수행!");
+        
         return PerformDirectionalEvade(Random.Range(0, 2)); // 0:전방, 1:후방, 2:좌, 3:우
     }
 
