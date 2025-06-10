@@ -200,7 +200,7 @@ public abstract class AgentController : MonoBehaviour
             if (this.gameObject.CompareTag("Offensiver")) // OffensiveAgent 태그를 확인
             {
                 
-                const float chargeDamageBonus = 8.0f;
+                const float chargeDamageBonus = 5.0f;
                 AgentController enemyAgentController = null;
                 if (enemy != null)
                 {
@@ -498,6 +498,7 @@ public abstract class AgentController : MonoBehaviour
         {
             animator.SetTrigger("Die");
         }
+
 
         this.enabled = false;
     }

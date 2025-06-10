@@ -52,21 +52,23 @@ public class UIManager : MonoBehaviour
                 data.DefensiverHp = DefensiverHP.value;
                 data.DefensvierScore = DefensiverStat.score;
                 data.OffensiverScore = OffensiverStat.score;
+
+                // 누가 이겼는지 판별하여 GameResult 설정 (영어로 변경)
                 if (OffensiverStat.isDead && !DefensiverStat.isDead)
                 {
-                    data.GameResult = "방어자 승리";
+                    data.GameResult = "Defender Wins"; // [수정] 방어자 승리 -> Defender Wins
                     data.DefensvierScore += data.DefensiverHp * 100f;
                     data.DefensvierScore += 100f;
                 }
                 else if (!OffensiverStat.isDead && DefensiverStat.isDead)
                 {
-                    data.GameResult = "공격자 승리";
+                    data.GameResult = "Attacker Wins"; // [수정] 공격자 승리 -> Attacker Wins
                     data.OffensiverScore += data.OffensiverHp * 100f;
                     data.OffensiverScore += 100f;
                 }
                 else
                 {
-                    data.GameResult = "무승부";
+                    data.GameResult = "Draw"; // [수정] 무승부 -> Draw
                 }
 
                 string jsonString = JsonUtility.ToJson(data, true);
@@ -84,27 +86,14 @@ public class UIManager : MonoBehaviour
 
                 hasGameEndedAndSaved = true;
 
-                // --- [수정] ML-Agents 학습 환경에 맞게 에이전트 초기화 ---
-                // 여기에 바로 초기화 로직을 두는 대신, 에이전트의 EndEpisode() (RL 에이전트의 경우)
-                // 또는 외부 리셋 메커니즘에 의존해야 합니다.
-                // BT 에이전트의 경우, 직접 EndEpisode을 호출하는 것이 아니라,
-                // RL 에이전트가 EndEpisode을 호출할 때 해당 에이전트도 함께 초기화되도록 연결해야 합니다.
+                Debug.Log("게임 종료! 에이전트가 죽은 상태로 유지됩니다.");
 
-                // 임시적으로 이 곳에서 BT 에이전트를 초기화하지만,
-                // ML-Agents 환경에서는 에피소드 종료 시 모든 에이전트가 재시작되는 것이 더 적합합니다.
-                Debug.Log("게임 종료! 에이전트를 초기화합니다. (Time.timeScale 조정 안 함)");
+                // TimeText에 게임 결과 표시
+                TimeText.text = data.GameResult;
 
-                // BT Offensive 에이전트 초기화
-                //InitializeAgent(offensiverController, Offensiver, new Vector3(0, 0, -5));
-                // RL Defensive 에이전트는 EndEpisode()이 호출되면 자동으로 재시작되므로
-                // 여기서 별도로 InitializeAgent를 호출하지 않습니다.
-                // 만약 RL Defensive 에이전트도 여기서 초기화해야 한다면,
-                // RLDefensiveAgent.cs에서 EndEpisode() 대신 이 UIManager 로직을 따르도록 해야 합니다.
-
-                // Time.timeScale = 0f; // ★★★ 이 줄을 제거하거나 주석 처리합니다! ★★★
+                // 게임 정지 로직
+                Time.timeScale = 0f;
             }
-            // 게임이 종료된 후에는 UI 업데이트(시간 텍스트)를 멈춥니다.
-            TimeText.text = "Game Over";
         }
         else // 게임이 진행 중일 때만 시간 업데이트
         {
@@ -118,7 +107,7 @@ public class UIManager : MonoBehaviour
     {
         if (agentController != null)
         {
-            agentObject.transform.position = initialPosition + Vector3.up * 0.1f; // 0.1f는 예시, 콜라이더 크기에 맞게 조정
+            agentObject.transform.position = initialPosition + Vector3.up * 0.1f;
             agentObject.transform.rotation = Quaternion.identity;
 
             Rigidbody rb = agentObject.GetComponent<Rigidbody>();
@@ -146,7 +135,6 @@ public class UIManager : MonoBehaviour
             agentController.blackboard.counterAttackCount = 0;
             agentController.blackboard.evadeCount = 0;
 
-            // AgentController 스크립트 활성화
             agentController.enabled = true;
             agentController.ResetAllFlags();
             Debug.Log($"{agentObject.name}이(가) 초기화되고 재활성화되었습니다.");

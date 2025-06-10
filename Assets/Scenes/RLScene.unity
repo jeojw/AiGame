@@ -644,7 +644,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemy: {fileID: 1442097112}
   attackRange: 2
-  attackPreDelay: 0.3
+  walkSpeed: 5
+  evadeSpeed: 10
+  evadeMoveDistance: 2
+  undefendableDuration: 1
 --- !u!114 &355025715
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -748,12 +751,12 @@ MonoBehaviour:
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
-      BranchSizes: 0500000004000000
-    VectorActionSize: 0500000004000000
+      BranchSizes: 0500000002000000
+    VectorActionSize: 0500000002000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: 4747590b8f538ae449682c85e8119b9e, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: 3604ccdae8b8c4e4f916f44506828393, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 2
   m_BehaviorName: DefensiveRL
@@ -2726,12 +2729,12 @@ MonoBehaviour:
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
-      BranchSizes: 0500000004000000
-    VectorActionSize: 0500000004000000
+      BranchSizes: 0500000002000000
+    VectorActionSize: 0500000002000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: d26c7c6eca4443b45a445145e77d0ff1, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: 689be458e5663234e9c5e549b69c9dc4, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 2
   m_BehaviorName: OffensiveRL
@@ -2754,7 +2757,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemy: {fileID: 355025711}
   attackRange: 2
-  attackPreDelay: 0.3
+  walkSpeed: 5
+  evadeSpeed: 10
+  evadeMoveDistance: 2
+  undefendableDuration: 1
   attackRangeTolerance: 0.2
 --- !u!114 &1858427105
 MonoBehaviour:
