@@ -1,5 +1,5 @@
+// File: UI Manager.cs
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using TMPro;
 using UnityEngine;
@@ -18,13 +18,22 @@ public class UIManager : MonoBehaviour
     private AgentBlackboard OffensiverStat;
     private AgentBlackboard DefensiverStat;
 
+    private AgentController offensiverController; // Offensiver의 AgentController 참조
+    private AgentController defensiverController; // Defensiver의 AgentController 참조
+
+
     private bool hasGameEndedAndSaved = false;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        OffensiverStat = Offensiver.GetComponent<OffensiveAgentController>().blackboard;
+        // Offensive Agent의 AgentController를 가져옵니다.
+        offensiverController = Offensiver.GetComponent<OffensiveAgentController>();
+        OffensiverStat = offensiverController.blackboard;
         OffensiverStat.isDead = false;
-        DefensiverStat = Defensiver.GetComponent<DefensiveAgentController>().blackboard;
+
+        // Defensive Agent의 AgentController를 가져옵니다.
+        defensiverController = Defensiver.GetComponent<DefensiveAgentController>();
+        DefensiverStat = defensiverController.blackboard;
         DefensiverStat.isDead = false;
     }
 
@@ -70,13 +79,10 @@ public class UIManager : MonoBehaviour
                 }
 
                 // 2. GameData 객체를 JSON 문자열로 변환
-                // true는 가독성 좋게 포맷팅 (들여쓰기) 해줍니다.
                 string jsonString = JsonUtility.ToJson(data, true);
 
                 // 3. 데이터를 저장할 파일 경로 설정
-                // Path.Combine을 사용하여 운영체제에 맞는 경로 구분자를 자동으로 처리합니다.
-                // Application.persistentDataPath는 앱이 제거되기 전까지 유지되는 안전한 저장 공간입니다.
-                string filePath = Path.Combine(Application.dataPath, "game_save.json"); // 파일 확장자 .json 추가
+                string filePath = Path.Combine(Application.dataPath, "game_save.json");
 
                 // 4. JSON 문자열을 파일에 쓰기 (기존 파일이 있다면 덮어씁니다)
                 try
@@ -92,9 +98,60 @@ public class UIManager : MonoBehaviour
                 // 저장이 완료되었음을 표시하여 이 블록이 다시 실행되지 않도록 합니다.
                 hasGameEndedAndSaved = true;
 
-                // 이 스크립트의 Update() 함수가 더 이상 호출되지 않도록 비활성화
-                // (선택 사항: 게임 오버 UI를 띄우거나 씬을 전환하는 등의 후속 처리를 할 수 있습니다.)
+                // 에이전트 초기화 및 재활성화 로직
+                Debug.Log("게임 종료! 에이전트를 초기화합니다.");
+
+                // Offensive Agent 초기화 (공격자가 죽었을 때 움직이도록)
+                // Offensive Agent의 초기 위치를 정확히 지정해야 합니다. (예: new Vector3(0, 0, -5))
+                InitializeAgent(offensiverController, Offensiver, new Vector3(0, 0, -5));
+
+                // Defensive Agent 초기화 (필요하다면, 방어자가 죽었을 때도 초기화)
+                // Defensive Agent의 초기 위치를 정확히 지정해야 합니다. (예: new Vector3(0, 0, 5))
+                InitializeAgent(defensiverController, Defensiver, new Vector3(0, 0, 5));
+
+                Time.timeScale = 0f; // 게임 일시 정지 (선택 사항이며, 수동 재시작을 위해 유용)
             }
+        }
+    }
+
+    // 에이전트 초기화 헬퍼 메서드
+    private void InitializeAgent(AgentController agentController, GameObject agentObject, Vector3 initialPosition)
+    {
+        if (agentController != null)
+        {
+            // 에이전트의 위치와 회전을 초기화합니다.
+            agentObject.transform.position = initialPosition;
+            agentObject.transform.rotation = Quaternion.identity; // 기본 회전 (변경 가능)
+
+            // Rigidbody가 있다면 속도를 리셋합니다.
+            Rigidbody rb = agentObject.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+            }
+
+            // 블랙보드 상태 초기화
+            agentController.blackboard.currentHealth = agentController.blackboard.maxHealth;
+            agentController.blackboard.isDead = false;
+            agentController.blackboard.isAttacking = false;
+            agentController.blackboard.isDefending = false;
+            agentController.blackboard.isEvading = false;
+            agentController.blackboard.isInvincible = false;
+            agentController.blackboard.isGetAttacked = false;
+            agentController.blackboard.canCounterAttack = false;
+            agentController.blackboard.recentlyDefended = false;
+            agentController.blackboard.lastEnemyAttackTime = 0f;
+            agentController.blackboard.score = 0; // 점수도 초기화 (필요시)
+            agentController.blackboard.attackCount = 0; // 스탯 초기화 (필요시)
+            agentController.blackboard.defendCount = 0;
+            agentController.blackboard.counterAttackCount = 0;
+            agentController.blackboard.evadeCount = 0;
+
+            // AgentController 스크립트 활성화
+            agentController.enabled = true;
+            agentController.ResetAllFlags(); // AgentController 내부 플래그도 리셋
+            Debug.Log($"{agentObject.name}이(가) 초기화되고 재활성화되었습니다.");
         }
     }
 

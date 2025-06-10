@@ -208,12 +208,12 @@ public abstract class AgentController : MonoBehaviour
             StartCoroutine(AttackWithPreDelay(0.5f, damageMultiplier));
         }
 
-        if (!attackFinished)
-            return NodeStatus.RUNNING;
+        
 
         animationController.StopAttack();
         attackFinished = false;
         blackboard.isAttacking = false;
+
         blackboard.attackCount += 1;
         blackboard.SetActionCooldown(AgentBlackboard.ATTACK_COOLDOWN_KEY);
 

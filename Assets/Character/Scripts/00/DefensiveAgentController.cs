@@ -17,7 +17,7 @@ public class DefensiveAgentController : AgentController
     protected override void InitializeBehaviorTree()
     {
         
-
+        /*
         rootNode = new BTSelector(blackboard, transform, new List<BTNode>
         {
             // --- [수정] 1순위: 적이 5초 이상 공격하지 않으면 '다가가서' 공격 ---
@@ -90,6 +90,8 @@ public class DefensiveAgentController : AgentController
             // 5. 기본 대기 상태 (이전과 동일)
             new IdleAction(blackboard, transform)
         });
+
+        */
         
 
     }
@@ -97,6 +99,11 @@ public class DefensiveAgentController : AgentController
     // [추가] PerformAttack 메서드를 오버라이드하여 수비자 전용 인터럽트 로직을 포함
     public override NodeStatus PerformAttack(float damageMultiplier = 1.0f)
     {
+
+        if (!blackboard.canCounterAttack)
+        {
+            return NodeStatus.FAILURE; // 공격 수행하지 않음
+        }
         // [수비자 전용 인터럽트 로직 시작]
         if (blackboard.enemyTransform != null)
         {

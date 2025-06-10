@@ -7,7 +7,7 @@ public class OffensiveAgentController : AgentController
 {
     private float offensiveAttackRange = 2.0f; // 공격형 에이전트의 공격 범위 (기본값과 다를 수 있음)
     private float repositionDistance = 3.0f;   // 선호하는 전투 거리 (재배치 기준)
-    private float fleeHealthThreshold = 20f;   // 도망을 고려할 체력 기준치
+    //private float fleeHealthThreshold = 20f;   // 도망을 고려할 체력 기준치
 
     // [추가] 공격 범위 허용 오차 (공격 조건의 관대함을 위한 변수)
     [SerializeField] private float attackRangeTolerance = 0.2f; // 공격 범위에 이 값만큼 추가 허용

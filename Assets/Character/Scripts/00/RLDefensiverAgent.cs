@@ -159,6 +159,7 @@ public class RLDefensiveAgent : Agent
             enemyBlackboard.isGetAttacked = false;
             enemyBlackboard.canCounterAttack = false;
             enemyBlackboard.isDead = false;
+
             // enemyBlackboard.lastEnemyAttackTime�� ���� ������Ʈ�� blackboard���� �ʱ�ȭ
         }
 

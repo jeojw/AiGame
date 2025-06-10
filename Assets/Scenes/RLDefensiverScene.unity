@@ -644,6 +644,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemy: {fileID: 1442097112}
   attackRange: 2
+  walkSpeed: 5
+  evadeSpeed: 10
+  evadeMoveDistance: 2
+  undefendableDuration: 1
 --- !u!114 &355025715
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -762,8 +766,8 @@ MonoBehaviour:
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
-      BranchSizes: 0500000004000000
-    VectorActionSize: 0500000004000000
+      BranchSizes: 0500000002000000
+    VectorActionSize: 0500000002000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
@@ -2694,6 +2698,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemy: {fileID: 355025711}
   attackRange: 2
+  walkSpeed: 5
+  evadeSpeed: 10
+  evadeMoveDistance: 2
+  undefendableDuration: 1
   attackRangeTolerance: 0.2
 --- !u!1 &1983485350
 GameObject:
