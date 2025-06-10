@@ -475,9 +475,8 @@ public abstract class AgentController : MonoBehaviour
             blackboard.TakeDamage(damage);
         }
 
-        if (blackboard.currentHealth <= 0)
+        if (blackboard.isDead)
         {
-            blackboard.isDead = true;
             Die();
         }
     }

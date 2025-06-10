@@ -145,6 +145,7 @@ public class RLOffensiveAgent : Agent
         myBlackboard.isInvincible = false;
         myBlackboard.isGetAttacked = false;
         myBlackboard.canCounterAttack = false;
+        myBlackboard.isDead = false;
         myBlackboard.lastEnemyAttackTime = 0f; // 적의 마지막 공격 시간 초기화
 
         if (enemyBlackboard != null)
@@ -156,6 +157,7 @@ public class RLOffensiveAgent : Agent
             enemyBlackboard.isInvincible = false;
             enemyBlackboard.isGetAttacked = false;
             enemyBlackboard.canCounterAttack = false;
+            enemyBlackboard.isDead = false;
             // enemyBlackboard.lastEnemyAttackTime은 상대방 에이전트의 blackboard에서 관리되므로 여기서 직접 초기화할 필요 없음
         }
 

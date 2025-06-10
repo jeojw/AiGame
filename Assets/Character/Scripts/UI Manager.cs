@@ -23,7 +23,9 @@ public class UIManager : MonoBehaviour
     void Start()
     {
         OffensiverStat = Offensiver.GetComponent<OffensiveAgentController>().blackboard;
+        OffensiverStat.isDead = false;
         DefensiverStat = Defensiver.GetComponent<DefensiveAgentController>().blackboard;
+        DefensiverStat.isDead = false;
     }
 
     // Update is called once per frame
@@ -92,7 +94,6 @@ public class UIManager : MonoBehaviour
 
                 // 이 스크립트의 Update() 함수가 더 이상 호출되지 않도록 비활성화
                 // (선택 사항: 게임 오버 UI를 띄우거나 씬을 전환하는 등의 후속 처리를 할 수 있습니다.)
-                this.enabled = false;
             }
         }
     }
